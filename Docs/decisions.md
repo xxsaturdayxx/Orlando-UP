@@ -159,3 +159,26 @@ back door in a shared environment `[V]` `ronatrip-website/CLAUDE.md`. **[assista
 **D24 — Secrets never enter the repository.** User-secrets in development, App Service settings
 in Azure. `appsettings.json` carries only shape and non-secret defaults. A pre-commit hook greps
 the staged content for the usual secret shapes. **[assistant]**
+
+## Amendments
+
+**D25 — 2026-09-04 (after the closing of conversation 1) — Hosting starts on Ronatrip's existing
+Windows App Service plan (Basic), as a separate app; own plan and resource group only when demand
+or the LLC justifies it. Supersedes the "Linux, own resource group" part of D13 and the "B1 app"
+cost lines of D14; everything else in D13/D14 stands (GitHub Actions deploy, staging before live
+payments, separate databases).** **[operator]**, on the question "could it stay on the plan we
+already have?". Reasons: (1) an App Service plan is billed per plan, not per app, so a second app
+on the existing Basic plan costs nothing extra in compute — only the Azure SQL Basic database
+(≈ US$ 5/month) is new; (2) a plan is tied to one OS, and Ronatrip's is Windows, so sharing it
+means Windows — ASP.NET Core 10 runs identically there, and the two things that differ (Windows
+time-zone ids and a case-insensitive file system) are already handled by D9/01 (`IClock` tries
+the IANA id first, then `Eastern Standard Time`) and by the `nome-exato` control type in
+`Docs/medir-controles.sh`; (3) Linux was suggested only because a **new** plan is far cheaper on
+Linux and the case-sensitive file system catches path bugs early — neither reason applies to a
+plan that already exists. Staging (D14) becomes a second app on the same plan
+(`app-orlandoup-stg`, its own Basic database), still ≈ US$ 5/month. **Trigger to leave the shared
+plan:** sustained CPU above ~50 % or memory above ~70 % on the plan (Application Insights), or the
+LLC — at that point Orlando Up moves to its own plan in `rg-orlandoup-prod`; moving an app
+between plans needs the same resource group, region and OS, and a move to another subscription is
+a redeploy from GitHub plus a database restore, which is why the deploy stays in Actions and the
+schema in migrations. Open question Q8 is closed by this decision.
