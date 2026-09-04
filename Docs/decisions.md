@@ -182,3 +182,14 @@ LLC — at that point Orlando Up moves to its own plan in `rg-orlandoup-prod`; m
 between plans needs the same resource group, region and OS, and a move to another subscription is
 a redeploy from GitHub plus a database restore, which is why the deploy stays in Actions and the
 schema in migrations. Open question Q8 is closed by this decision.
+
+**D25 — note of 2026-09-04 (later the same day).** The existing plan already hosts three apps
+(Ronatrip, RonaMagic, MathWithLucas) `[operator]`; Orlando Up adds two (production and staging).
+Scaling the plan **up** (B1 → B2/B3, or Basic → Standard/Premium v3) is a portal action on the
+plan ("Scale up") that restarts the apps for a moment and needs **no change and no redeploy on
+our side** — code, settings, domains and certificates stay; every app on the plan gets the extra
+capacity. The "redeploy" mentioned in D25 applies only to moving Orlando Up to a **different
+subscription** (the LLC scenario). Gate for phase 5, before creating the two apps: read the plan's
+*Memory Percentage* and *CPU Percentage* for the last 30 days; above ~60 % memory, scale up to B2
+(2 cores, 3.5 GB) first — B1 is 1 core and 1.75 GB shared by everything on the plan. Decide the
+tier by metrics at that moment, never in advance; scaling down is the same click.
