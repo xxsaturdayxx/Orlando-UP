@@ -201,6 +201,8 @@ fleet photos at real hotels, people of all ages, never stock "hospital" imagery.
 big date/location picker, product cards with capacity badge and "fits Disney buses" pill, sticky
 price summary in checkout, large tap targets.
 
+**Note 2026-09-04 (conversation 2, leva 01 plan review).** Orange `#F26B1D` reaches only 2.91:1 on the off-white and 3.05:1 under white text, so it is a *surface* token (ink text on it, 4.85:1), never a text colour. Orange as text or icon uses the derived token **`--color-action-text: #B84A0C`** (4.99:1 on off-white, 5.22:1 under white). Same hue, darker; the brand colour is unchanged.
+
 ## 13. Testing and quality gates
 
 Unit tests for pricing tiers, availability with turnaround, status machine, coupon rules;

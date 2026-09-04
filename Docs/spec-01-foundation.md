@@ -11,6 +11,46 @@ inherits; a shortcut here is paid for in every leva after it.
 spec skeleton; the control rules it relies on are in `Docs/regras-de-controle.md` (Portuguese,
 copied from the operator's skill on 2026-09-04).
 
+> **Review note — 2026-09-04, conversation 2 (Claude Web), after reading `scratchpad/leva01/plano.md`.**
+> The body below is unchanged; where this note and the body disagree, **this note wins**.
+>
+> **Decisions taken by Rod on the plan's open points (K4, K5, C17):**
+> - **K4 → (a).** `#F26B1D` stays as the action *surface* (ink `#1F2933` text on it, 4.85:1). When
+>   orange is *text or icon* (links, highlighted price) the site uses the derived token
+>   **`--color-action-text: #B84A0C`** (4.99:1 on off-white). Registered in `Docs/architecture.md` §12.
+>   The name is `action-text`, not `action-ink` — `ink` is already the `#1F2933` token.
+> - **K5 → (a).** §8 item (4) is amended: the generator meta emits `OrlandoUp <short hash>` plus the
+>   suffix `+dirty` while the working tree has uncommitted changes; the conference records the value
+>   seen and states that `+dirty` **is** the proof of a fresh build. The two-commit closing of
+>   `Docs/fila-cc.md` stands.
+> - **C17/C18 stay** in `Docs/controles/foundation.tsv` (D15). 18 controls.
+>
+> **Corrections the plan must absorb before the first file changes (numbered; the report answers each):**
+> 1. The `IDesignTimeDbContextFactory` reads `ConnectionStrings:DefaultConnection` from
+>    user-secrets (`AddUserSecrets(typeof(Program).Assembly, optional: true)`) and environment
+>    variables, and only falls back to `UseSqlServer()` without a string when the key is absent —
+>    otherwise `dotnet ef database update` fails in E6. No connection string in any file.
+> 2. The startup fail-fast on a missing connection string must be bypassable by the test host: the
+>    test `WebApplicationFactory` injects the key via `UseSetting` and replaces `DbContextOptions`
+>    with SQLite in-memory — otherwise `dotnet test` (C15) and `ci.yml` on Ubuntu never pass.
+> 3. C05 pattern becomes `DateTime(Offset)?[.](Now|Today)`; a sibling control asserts `UtcNow`
+>    occurs in exactly one file of `src/` (the `IClock` implementation), file name in the label.
+> 4. C11 becomes discriminating: `grep -rIlE 'using (Markdig|Ganss)' --include='*.cs' src | sort |
+>    paste -sd,` expected `src/OrlandoUp.Web/Application/RichText.cs`.
+> 5. Rule 3 of `Docs/regras-de-controle.md` applies inside `src/`: no code comment transcribes the
+>    forms C05/C09/C17 search for (schema-creation calls, local clock reads, coalescing to zero).
+> 6. Middleware order is written in `Program.cs` with a comment: `UseRequestLocalization` after
+>    `UseRouting` (the culture provider reads a route value) and before authorization / endpoints.
+> 7. The language switcher link to English from a `/pt/...` page overrides the ambient route value
+>    explicitly (`asp-route-culture=""`).
+> 8. P1 gains a human item: `dotnet dev-certs https --check`, else `dotnet dev-certs https --trust`.
+> 9. Two gaps of this spec, decided now: public pages list only `IsActive = true` products; a
+>    translation missing for the requested culture falls back to `en-US`, never 404.
+>
+> **Also noted:** §3 "24 decisions" reads 26 today by the same command (D25 and its note); the
+> step-0 grep of the radical excludes `scratchpad/`; the P2 migration review is done by Claude Web
+> in the conversation — the agent stops, commits the report and waits.
+
 ---
 
 ## 0. Execution surface
