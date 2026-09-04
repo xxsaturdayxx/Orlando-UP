@@ -23,3 +23,10 @@ O que muda aqui:
 5. **Abertura de conversa:** `git log --oneline -15` procurando a última linha
    `docs: resumo da conversa N`; trabalho acima dela sem resumo é conversa aberta (skill
    `resumo-frente-projeto`). Depois, `git status --short` e `Docs/fila-cc.md` inteira.
+6. **O Claude Web commita os próprios documentos, direto pela ponte de arquivos** (`git` no shell
+   da pasta), em vez de abrir linha de fila de FECHAMENTO para o Claude Code — na Ronatrip cada
+   fechamento custa uma sessão inteira do agente e já precisou de emenda. Pré-requisito de toda
+   conversa que vai commitar: **permissão de exclusão na pasta** (o `git` apaga os próprios
+   `index.lock` e `tmp_obj_*`; sem ela o primeiro commit trava — medido na conversa 1). O push
+   continua sendo do operador. Mensagem do commit de fechamento: exatamente
+   `docs: resumo da conversa N` (é o que a abertura procura).
