@@ -1,0 +1,66 @@
+#!/bin/sh
+# =============================================================================
+# pre-commit — three cheap checks on the STAGED content, plus a build when a
+# solution exists. Install once per clone:  git config core.hooksPath .githooks
+# Bypass consciously:                       git commit --no-verify
+#
+# 1. secret shapes (connection strings with passwords, Stripe/Brevo/Azure keys)
+# 2. encoding: UTF-16 or BOM-prefixed text files (PowerShell ">" writes UTF-16 and
+#    git then treats the file as binary — every text check passes without matching)
+# 3. CLAUDE.md size ceiling (the file is loaded whole in every agent session)
+# 4. dotnet build, only when OrlandoUp.sln exists
+# Nothing here prints a secret value — only file, line number and the key name.
+# =============================================================================
+set -u
+
+CEILING_CLAUDE_MD=200
+FAIL=0
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged_files" ] && exit 0
+
+# 1. secrets --------------------------------------------------------------
+for f in $staged_files; do
+  # binaries are skipped; this hook is skipped because its own pattern line matches itself
+  case "$f" in *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.woff|*.woff2|*.pdf|*.zip|.githooks/*) continue;; esac
+  hits=$(git show ":$f" | grep -n -i -E \
+    '(password|pwd)=[^;"'"'"' ]{3,}|sk_(live|test)_[0-9A-Za-z]{8,}|whsec_[0-9A-Za-z]{8,}|xkeysib-[0-9a-f]{16,}|AccountKey=[0-9A-Za-z+/=]{20,}|SharedAccessSignature=|"ConnectionStrings"[^}]*"Server=' \
+    | cut -d: -f1 | head -5)
+  if [ -n "$hits" ]; then
+    echo "pre-commit: possible secret in $f (lines: $(echo $hits | tr '\n' ' '))"
+    FAIL=1
+  fi
+done
+
+# 2. encoding -------------------------------------------------------------
+for f in $staged_files; do
+  case "$f" in *.png|*.jpg|*.jpeg|*.gif|*.webp|*.ico|*.woff|*.woff2|*.pdf|*.zip) continue;; esac
+  head2=$(git show ":$f" | head -c 2 | od -An -tx1 | tr -d ' \n')
+  head3=$(git show ":$f" | head -c 3 | od -An -tx1 | tr -d ' \n')
+  if [ "$head2" = "fffe" ] || [ "$head2" = "feff" ]; then
+    echo "pre-commit: $f is UTF-16 — rewrite it as UTF-8 without BOM"
+    FAIL=1
+  elif [ "$head3" = "efbbbf" ]; then
+    echo "pre-commit: $f starts with a UTF-8 BOM — remove it"
+    FAIL=1
+  fi
+done
+
+# 3. CLAUDE.md ceiling ----------------------------------------------------
+if echo "$staged_files" | grep -qx "CLAUDE.md"; then
+  lines=$(git show ":CLAUDE.md" | wc -l | tr -d ' ')
+  if [ "$lines" -gt "$CEILING_CLAUDE_MD" ]; then
+    echo "pre-commit: CLAUDE.md has $lines lines, ceiling is $CEILING_CLAUDE_MD — move narrative to Docs/"
+    FAIL=1
+  fi
+fi
+
+# 4. build ----------------------------------------------------------------
+if [ -f OrlandoUp.sln ] && echo "$staged_files" | grep -q -E '\.(cs|csproj|cshtml|resx|json)$'; then
+  if ! dotnet build OrlandoUp.sln --nologo -v q >/dev/null 2>&1; then
+    echo "pre-commit: dotnet build failed — run 'dotnet build OrlandoUp.sln' to see why"
+    FAIL=1
+  fi
+fi
+
+exit $FAIL

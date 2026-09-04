@@ -1,0 +1,25 @@
+# Normalize line endings: LF in the repository. Windows editors and Visual Studio handle LF fine,
+# and the Linux shell used by the planning assistant writes LF — one convention avoids the
+# whole-file CRLF churn that hides real diffs.
+* text=auto eol=lf
+
+*.sh text eol=lf
+.githooks/* text eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binaries
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.zip binary
+*.xlsx binary
+*.docx binary
+*.pptx binary

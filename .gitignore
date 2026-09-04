@@ -1,0 +1,38 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vs/
+.vscode/
+*.swp
+TestResults/
+artifacts/
+publish/
+*.publishsettings
+*.pubxml
+*.pubxml.user
+PublishProfiles/
+
+# Node (only if a tooling step ever needs it)
+node_modules/
+
+# Local secrets and environment — never committed (Docs/decisions.md D24)
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.local.json
+*.pfx
+*.env
+.env*
+secrets.json
+
+# Agent scratch
+scratchpad/
+.claude/settings.local.json
+.playwright-mcp/
+
+# OS
+.DS_Store
+Thumbs.db
