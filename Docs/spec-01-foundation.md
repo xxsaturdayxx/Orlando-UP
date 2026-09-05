@@ -50,6 +50,18 @@ copied from the operator's skill on 2026-09-04).
 > **Also noted:** §3 "24 decisions" reads 26 today by the same command (D25 and its note); the
 > step-0 grep of the radical excludes `scratchpad/`; the P2 migration review is done by Claude Web
 > in the conversation — the agent stops, commits the report and waits.
+>
+> **P2 review — 2026-09-04, conversation 2, migration `20260904233355_InitialCreate` (report
+> `Docs/relatorio-leva-01-etapa-1.md`).** SQL script classified independently by Claude Web: 40
+> statements, 0 destructive, 21 attention items all justified (12 cascades on child-only rows, the
+> two history-bearing FKs `Units→Products` and `DeliveryLocations→DeliveryZones` are NO ACTION, 10
+> unique indexes on tables born empty, the only INSERT is `__EFMigrationsHistory`). Every column of
+> §4 matched against the SQL; the 7 enums carry explicit values; no `HasData` in `src/`. **Approved.**
+> Accepted deviations (improvements, spec amended here): the options class is
+> **`SiteLocalizationOptions`** (the framework already owns `LocalizationOptions`); `dotnet new sln
+> --format sln` is required on SDK 10 (default is `.slnx`); tool-generated files carry a UTF-8 BOM the
+> pre-commit hook refuses — strip it after every `migrations add` and `dotnet new`.
+
 
 ---
 
