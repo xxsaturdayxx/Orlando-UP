@@ -78,6 +78,9 @@ architecture test enforces the layering.
   create repository files with PowerShell `>` (writes UTF-16) — use the editor tools or
   `[IO.File]::WriteAllText` with UTF-8 without BOM. Never rewrite a whole file with a tool that
   normalizes line endings.
+- Tooling on SDK 10, measured in leva 01: `dotnet new sln --format sln` (the default is `.slnx`,
+  which the hook and the controls do not know); `dotnet new`, `dotnet ef migrations add` and
+  some builds write a UTF-8 BOM the pre-commit hook refuses — strip it before staging.
 - **No push from the agent** unless the queue line says so: the remote and its credentials are the
   operator's, and a pushed commit cannot be rewritten (its hash may already be recorded).
 

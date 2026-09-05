@@ -9,8 +9,10 @@ Stripe · Azure App Service.
 
 ## Status
 
-Phase 0 — repository foundation (2026-09-04). No application code yet; the first application
-front is `Docs/spec-01-foundation.md`. See `Docs/roadmap.md`.
+Phase 1 — application foundation, done 2026-09-05 (leva 01, content commit `5d538ba`): the site
+runs in English and Portuguese from the database, with the catalog seed, staff login at `/admin`,
+63 tests and 18 controls green. Prices and company data are placeholders (`Docs/open-questions.md`
+Q1, Q2, Q9). Next: phase 2, the public site with real fleet data. See `Docs/roadmap.md`.
 
 ## Start here
 
