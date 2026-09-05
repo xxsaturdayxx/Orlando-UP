@@ -1,0 +1,38 @@
+@model OrlandoUp.Application.Catalog.ProductCard
+<li class="product-card">
+    <div class="product-card__art">
+        <img src="@(Model.ImagePath is null ? CategoryArt.PathFor(Model.Category) : "/" + Model.ImagePath)"
+             alt="@Model.Name" width="200" height="140" loading="lazy" />
+    </div>
+    <div class="product-card__body">
+        <h3 class="product-card__name">@Model.Name</h3>
+        @if (!string.IsNullOrWhiteSpace(Model.Tagline))
+        {
+            <p class="product-card__tagline">@Model.Tagline</p>
+        }
+
+        @* A missing price is written as a missing price. Turning it into a zero would advertise a
+           free rental, and no test of a number can tell those two apart (D15). *@
+        <p class="product-card__price">
+            @if (Model.FromPricePerDay is decimal daily)
+            {
+                @L["Product_FromPerDay", MoneyFormat.Usd(daily)]
+            }
+            else
+            {
+                @L["Product_PriceOnRequest"]
+            }
+        </p>
+
+        @if (Model.FitsDisneyTransport)
+        {
+            <ul class="badges">
+                <li class="badge badge--transport">@L["Product_FitsDisneyBuses"]</li>
+            </ul>
+        }
+
+        <p class="product-card__link">
+            <a asp-page="/Rentals/Details" asp-route-culture="@CultureLink.Current" asp-route-slug="@Model.Slug">@L["Product_Details"]</a>
+        </p>
+    </div>
+</li>

@@ -1,0 +1,31 @@
+@page "/admin/login"
+@model OrlandoUp.Pages.Admin.LoginModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_SignInTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_SignInTitle"]</h1>
+
+        @if (Model.Problem is not null)
+        {
+            <p class="error-summary" role="alert">@Model.Problem</p>
+        }
+
+        <form method="post">
+            <div class="field">
+                <label for="email">@L["Admin_Email"]</label>
+                <input id="email" name="Email" type="email" value="@Model.Email"
+                       autocomplete="username" required />
+            </div>
+            <div class="field">
+                <label for="password">@L["Admin_Password"]</label>
+                <input id="password" name="Password" type="password"
+                       autocomplete="current-password" required />
+            </div>
+            <button type="submit" class="button button--primary">@L["Admin_SignIn"]</button>
+        </form>
+    </div>
+</section>

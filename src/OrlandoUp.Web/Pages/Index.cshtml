@@ -1,0 +1,72 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = L["Home_Title"].Value;
+    ViewData["MetaDescription"] = L["Home_MetaDescription"].Value;
+}
+
+<section class="page hero">
+    <h1>@L["Home_HeroHeadline"]</h1>
+    <p>@L["Home_HeroSubheadline"]</p>
+    <p><a class="button button--primary" asp-page="/Rentals/Index" asp-route-culture="@CultureLink.Current">@L["Home_HeroCta"]</a></p>
+</section>
+
+<section class="section section--tint">
+    <div class="page">
+        <h2>@L["Home_AudienceTitle"]</h2>
+        <ul class="grid grid--3">
+            <li class="card">
+                <h3>@L["Home_AudienceFamilyTitle"]</h3>
+                <p>@L["Home_AudienceFamilyText"]</p>
+            </li>
+            <li class="card">
+                <h3>@L["Home_AudienceMedicalTitle"]</h3>
+                <p>@L["Home_AudienceMedicalText"]</p>
+            </li>
+            <li class="card">
+                <h3>@L["Home_AudienceSeniorsTitle"]</h3>
+                <p>@L["Home_AudienceSeniorsText"]</p>
+            </li>
+        </ul>
+    </div>
+</section>
+
+<section class="section">
+    <div class="page">
+        <h2>@L["Home_ProductsTitle"]</h2>
+        <p class="section__lead">@L["Home_ProductsSubtitle"]</p>
+
+        <ul class="grid grid--4">
+            @foreach (var card in Model.Cards)
+            {
+                <partial name="_ProductCard" model="card" />
+            }
+        </ul>
+
+        <p><a class="button button--quiet" asp-page="/Rentals/Index" asp-route-culture="@CultureLink.Current">@L["Home_SeeAll"]</a></p>
+    </div>
+</section>
+
+<section class="section section--tint">
+    <div class="page">
+        <h2>@L["Home_HowTitle"]</h2>
+        <ul class="grid grid--4 steps">
+            <li class="card">
+                <h3>@L["Home_Step1Title"]</h3>
+                <p>@L["Home_Step1Text"]</p>
+            </li>
+            <li class="card">
+                <h3>@L["Home_Step2Title"]</h3>
+                <p>@L["Home_Step2Text"]</p>
+            </li>
+            <li class="card">
+                <h3>@L["Home_Step3Title"]</h3>
+                <p>@L["Home_Step3Text"]</p>
+            </li>
+            <li class="card">
+                <h3>@L["Home_Step4Title"]</h3>
+                <p>@L["Home_Step4Text"]</p>
+            </li>
+        </ul>
+    </div>
+</section>

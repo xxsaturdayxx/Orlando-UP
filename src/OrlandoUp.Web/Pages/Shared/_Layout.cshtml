@@ -1,0 +1,133 @@
+@inject IOptions<CompanyOptions> CompanyOptionsAccessor
+@inject IClock Clock
+@inject IOptions<SeoOptions> SeoOptionsAccessor
+@{
+    CompanyOptions company = CompanyOptionsAccessor.Value;
+    SeoOptions seo = SeoOptionsAccessor.Value;
+
+    string uiCulture = CultureInfo.CurrentUICulture.Name;
+    bool isPortuguese = string.Equals(uiCulture, SiteCultures.Portuguese, StringComparison.OrdinalIgnoreCase);
+    string htmlLang = isPortuguese ? SiteCultures.Portuguese : "en";
+
+    string currentPage = ViewContext.RouteData.Values["page"] as string ?? "/Index";
+
+    string englishPath = LocalizedPaths.English(Context.Request.Path);
+    string portuguesePath = LocalizedPaths.Portuguese(Context.Request.Path);
+    string origin = $"{Context.Request.Scheme}://{seo.CanonicalHost}";
+
+    string title = ViewData["Title"] as string ?? company.TradeName;
+    string description = ViewData["MetaDescription"] as string ?? string.Empty;
+}
+<!DOCTYPE html>
+<html lang="@htmlLang">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title — @company.TradeName</title>
+    @if (!string.IsNullOrWhiteSpace(description))
+    {
+        <meta name="description" content="@description" />
+    }
+
+    @* While the catalog carries placeholder prices the site must not be indexed (D11/01). *@
+    @if (!seo.AllowIndexing)
+    {
+        <meta name="robots" content="noindex" />
+    }
+
+    @* The stamp of the build that rendered this page. The marker for an uncommitted tree is part
+       of it on purpose: it is what proves the page came from the working tree in front of you. *@
+    @if (!string.IsNullOrEmpty(BuildInfo.Revision))
+    {
+        <meta name="generator" content="OrlandoUp @BuildInfo.Revision" />
+    }
+
+    <link rel="canonical" href="@(origin + (isPortuguese ? portuguesePath : englishPath))" />
+    <link rel="alternate" hreflang="en-US" href="@(origin + englishPath)" />
+    <link rel="alternate" hreflang="pt-BR" href="@(origin + portuguesePath)" />
+    <link rel="alternate" hreflang="x-default" href="@(origin + englishPath)" />
+
+    <meta property="og:site_name" content="@company.TradeName" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="@title" />
+    @if (!string.IsNullOrWhiteSpace(description))
+    {
+        <meta property="og:description" content="@description" />
+    }
+    <meta property="og:locale" content="@(isPortuguese ? "pt_BR" : "en_US")" />
+    <meta property="og:url" content="@(origin + (isPortuguese ? portuguesePath : englishPath))" />
+
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="icon" href="~/favicon.ico" />
+    @await RenderSectionAsync("Head", required: false)
+</head>
+<body>
+    <a class="skip-link" href="#main">@L["Nav_SkipToContent"]</a>
+
+    <header class="site-header">
+        <div class="page site-header__inner">
+            <a class="wordmark" asp-page="/Index" asp-route-culture="@CultureLink.Current">Orlando <span>Up</span></a>
+
+            <nav class="site-nav" aria-label="@L["Nav_MainMenu"]">
+                <ul>
+                    <li><a asp-page="/Rentals/Index" asp-route-culture="@CultureLink.Current">@L["Nav_Rentals"]</a></li>
+                    <li><a asp-page="/HowItWorks" asp-route-culture="@CultureLink.Current">@L["Nav_HowItWorks"]</a></li>
+                    <li><a asp-page="/Faq" asp-route-culture="@CultureLink.Current">@L["Nav_Faq"]</a></li>
+                    <li><a asp-page="/Contact" asp-route-culture="@CultureLink.Current">@L["Nav_Contact"]</a></li>
+                </ul>
+            </nav>
+
+            @* The English link has to say, out loud, that it wants no culture segment: the current
+               page already carries one as an ambient route value, and silence would bring it back. *@
+            <div class="lang-switch">
+                <span class="visually-hidden" id="lang-label">@L["Lang_Label"]</span>
+                @if (isPortuguese)
+                {
+                    <a asp-page="@currentPage" asp-route-culture="" aria-describedby="lang-label">@L["Lang_English"]</a>
+                    <span aria-current="true">@L["Lang_Portuguese"]</span>
+                }
+                else
+                {
+                    <span aria-current="true">@L["Lang_English"]</span>
+                    <a asp-page="@currentPage" asp-route-culture="pt" aria-describedby="lang-label">@L["Lang_Portuguese"]</a>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main id="main">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <div class="page">
+            <div class="site-footer__cols">
+                <div>
+                    <h2>@L["Footer_ContactTitle"]</h2>
+                    <ul>
+                        <li>@L["Footer_Phone"]: <partial name="_CompanyValue" model="company.Phone" /></li>
+                        <li>@L["Footer_WhatsApp"]: <partial name="_CompanyValue" model="company.WhatsApp" /></li>
+                        <li>@L["Footer_Email"]: <partial name="_CompanyValue" model="company.Email" /></li>
+                        <li>@L["Footer_Hours"]: <partial name="_CompanyValue" model="company.Hours" /></li>
+                        <li>@L["Footer_Address"]: <partial name="_CompanyValue" model="company.Address" /></li>
+                    </ul>
+                </div>
+                <div>
+                    <h2>@L["Footer_LinksTitle"]</h2>
+                    <ul>
+                        <li><a asp-page="/Rentals/Index" asp-route-culture="@CultureLink.Current">@L["Nav_Rentals"]</a></li>
+                        <li><a asp-page="/HowItWorks" asp-route-culture="@CultureLink.Current">@L["Nav_HowItWorks"]</a></li>
+                        <li><a asp-page="/Faq" asp-route-culture="@CultureLink.Current">@L["Nav_Faq"]</a></li>
+                        <li><a asp-page="/Contact" asp-route-culture="@CultureLink.Current">@L["Nav_Contact"]</a></li>
+                        <li><a asp-page="/Privacy" asp-route-culture="@CultureLink.Current">@L["Footer_Privacy"]</a></li>
+                        <li><a asp-page="/Terms" asp-route-culture="@CultureLink.Current">@L["Footer_Terms"]</a></li>
+                    </ul>
+                </div>
+            </div>
+            <p class="site-footer__legal">
+                @L["Footer_Rights", Clock.TodayInOrlando().Year, company.TradeName]
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

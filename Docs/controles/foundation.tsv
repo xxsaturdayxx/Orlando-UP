@@ -1,0 +1,21 @@
+# Controles da leva 01 — application foundation. Spec: Docs/spec-01-foundation.md §9.2.
+# Um controle por linha, campos separados por TAB.
+# tipo <TAB> alvo <TAB> padrao <TAB> rotulo <TAB> esperado
+nome-exato	.	OrlandoUp.sln	C01 a solucao existe na raiz	sim
+nome-exato	src/OrlandoUp.Web	OrlandoUp.Web.csproj	C02 o projeto web existe	sim
+nome-exato	tests/OrlandoUp.Tests	OrlandoUp.Tests.csproj	C03 o projeto de teste existe	sim
+nome-exato	src/OrlandoUp.Web/Resources	SharedResource.pt-BR.resx	C04 o recurso pt-BR existe	sim
+cmd	src	grep -rIE 'DateTime(Offset)?[.](Now|Today)' --include='*.cs' --include='*.cshtml' src | wc -l	C05 D16 nenhuma leitura de relogio local em src	0
+cmd	src	grep -rIlE '(DateTime|DateTimeOffset)[.]UtcNow' --include='*.cs' src | sort | paste -sd,	C06 IRMAO de C05 o relogio real e lido num arquivo so Infrastructure/SystemClock.cs	src/OrlandoUp.Web/Infrastructure/SystemClock.cs
+conta	src/OrlandoUp.Web/appsettings.json	ConnectionStrings	C07 D24 nenhuma secao de conexao no arquivo commitado	0
+presenca	src/OrlandoUp.Web/appsettings.json	Company	C08 ALCANCE de C07 o arquivo tem a secao de empresa	sim
+cmd	src	grep -rIE '(Migrate|MigrateAsync|EnsureCreated|EnsureCreatedAsync)[(]' --include='*.cs' src | wc -l	C09 D12 nenhuma criacao de schema na subida	0
+cmd	src	test $(grep -rIl 'UseSqlServer' --include='*.cs' src | wc -l) -ge 1 && echo sim || echo nao	C10 ALCANCE de C09 o provedor relacional e alcancado pela varredura	sim
+cmd	src	grep -rIlE 'using (Markdig|Ganss)' --include='*.cs' src | sort | paste -sd,	C11 os dois pacotes de texto rico entram por um arquivo so Application/RichText.cs	src/OrlandoUp.Web/Application/RichText.cs
+cmd	Resources	if [ -f src/OrlandoUp.Web/Resources/SharedResource.resx ] && [ -f src/OrlandoUp.Web/Resources/SharedResource.pt-BR.resx ]; then diff <(grep -o '<data name="[^"]*"' src/OrlandoUp.Web/Resources/SharedResource.resx | sed 's/.*name="//' | sort) <(grep -o '<data name="[^"]*"' src/OrlandoUp.Web/Resources/SharedResource.pt-BR.resx | sed 's/.*name="//' | sort) >/dev/null && echo equal || echo diferente; else echo ausente; fi	C12 os dois conjuntos de chaves de recurso sao iguais	equal
+cmd	Resources	n=$(grep -c '<data name=' src/OrlandoUp.Web/Resources/SharedResource.resx); test ${n:-0} -ge 20 && echo sim || echo nao	C13 ALCANCE de C12 o filtro de chaves nao zera o universo	sim
+cmd	OrlandoUp.sln	dotnet build OrlandoUp.sln --nologo -v q >/dev/null 2>&1; echo $?	C14 a solucao compila	0
+cmd	OrlandoUp.sln	dotnet test OrlandoUp.sln --nologo -v q >/dev/null 2>&1; echo $?	C15 a suite passa	0
+cmd	src/OrlandoUp.Web/appsettings.json	n=$(grep -cF 'TODO-' src/OrlandoUp.Web/appsettings.json); test ${n:-0} -ge 4 && echo sim || echo nao	C16 EXPIRA COM Q9 os dados de empresa continuam marcados como pendentes	sim
+cmd	src	grep -rIE '[?][?] *0|GetValueOrDefault[(]' --include='*.cs' --include='*.cshtml' src | wc -l	C17 D15 preco ausente nunca coalesce para zero	0
+cmd	src	test $(grep -rIlE 'decimal[?]' --include='*.cs' src | wc -l) -ge 1 && echo sim || echo nao	C18 ALCANCE de C17 ha tipo monetario anulavel alcancado pela varredura	sim

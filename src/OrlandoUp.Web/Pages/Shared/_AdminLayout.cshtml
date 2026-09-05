@@ -1,0 +1,59 @@
+@inject IOptions<CompanyOptions> CompanyOptionsAccessor
+@{
+    CompanyOptions company = CompanyOptionsAccessor.Value;
+    string uiCulture = CultureInfo.CurrentUICulture.Name;
+    bool isPortuguese = string.Equals(uiCulture, SiteCultures.Portuguese, StringComparison.OrdinalIgnoreCase);
+    string htmlLang = isPortuguese ? SiteCultures.Portuguese : "en";
+    string returnUrl = Context.Request.Path + Context.Request.QueryString;
+    string title = ViewData["Title"] as string ?? company.TradeName;
+}
+<!DOCTYPE html>
+<html lang="@htmlLang">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title</title>
+    @* The administration is never indexed, whatever the public setting says. *@
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <link rel="icon" href="~/favicon.ico" />
+</head>
+<body>
+    <a class="skip-link" href="#main">@L["Nav_SkipToContent"]</a>
+
+    <header class="site-header">
+        <div class="page site-header__inner">
+            <a class="wordmark" asp-page="/Admin/Index">Orlando <span>Up</span></a>
+
+            @* The administration keeps the address and switches the language on a cookie (D4/01):
+               the delivery team works at one address and reads in the language it prefers. *@
+            <div class="lang-switch">
+                <span class="visually-hidden" id="lang-label">@L["Lang_Label"]</span>
+                @if (isPortuguese)
+                {
+                    <a asp-page="/Admin/Language" asp-route-culture="en-US" asp-route-returnUrl="@returnUrl"
+                       aria-describedby="lang-label">@L["Lang_English"]</a>
+                    <span aria-current="true">@L["Lang_Portuguese"]</span>
+                }
+                else
+                {
+                    <span aria-current="true">@L["Lang_English"]</span>
+                    <a asp-page="/Admin/Language" asp-route-culture="pt-BR" asp-route-returnUrl="@returnUrl"
+                       aria-describedby="lang-label">@L["Lang_Portuguese"]</a>
+                }
+            </div>
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <form method="post" asp-page="/Admin/Logout">
+                    <button type="submit" class="button button--quiet">@L["Admin_SignOut"]</button>
+                </form>
+            }
+        </div>
+    </header>
+
+    <main id="main">
+        @RenderBody()
+    </main>
+</body>
+</html>

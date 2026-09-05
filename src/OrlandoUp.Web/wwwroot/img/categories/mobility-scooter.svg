@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" width="200" height="140">
+  <title>Mobility scooter</title>
+  <g fill="none" stroke="#1F2933" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="46" cy="110" r="18" />
+    <circle cx="158" cy="110" r="18" />
+    <path d="M46 110 H100 V64 H140 L158 110" />
+    <path d="M100 64 V40 H74" fill="none" />
+    <rect x="96" y="30" width="34" height="12" rx="6" fill="#F26B1D" stroke="#1F2933" />
+    <path d="M140 64 V44" />
+    <path d="M128 44 H156" />
+    <path d="M138 44 q12 -18 26 -6" />
+  </g>
+  <rect x="100" y="52" width="44" height="14" rx="4" fill="#0F4C81" />
+</svg>

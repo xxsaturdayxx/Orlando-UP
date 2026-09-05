@@ -1,0 +1,28 @@
+@page "/rentals"
+@model OrlandoUp.Pages.Rentals.IndexModel
+@{
+    ViewData["Title"] = L["Rentals_Title"].Value;
+    ViewData["MetaDescription"] = L["Rentals_MetaDescription"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Rentals_Title"]</h1>
+        <p class="section__lead">@L["Rentals_Intro"]</p>
+    </div>
+</section>
+
+@foreach (var group in Model.Groups)
+{
+    <section class="section section--tint" id="@group.Key.ToString().ToLowerInvariant()">
+        <div class="page">
+            <h2>@L[CategoryArt.NameKey(group.Key)]</h2>
+            <ul class="grid grid--3">
+                @foreach (var card in group)
+                {
+                    <partial name="_ProductCard" model="card" />
+                }
+            </ul>
+        </div>
+    </section>
+}

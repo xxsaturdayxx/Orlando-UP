@@ -1,0 +1,17 @@
+@page "/faq"
+@{
+    ViewData["Title"] = L["Faq_Title"].Value;
+    ViewData["MetaDescription"] = L["Faq_MetaDescription"].Value;
+}
+
+<section class="section">
+    <div class="page prose">
+        <h1>@L["Faq_Title"]</h1>
+
+        @for (int number = 1; number <= 8; number++)
+        {
+            <h2>@L["Faq_Q" + number]</h2>
+            <p>@L["Faq_A" + number]</p>
+        }
+    </div>
+</section>

@@ -1,0 +1,13 @@
+@page "/error/{code:int}"
+@model OrlandoUp.Pages.Error.StatusModel
+@{
+    ViewData["Title"] = Model.TitleKey is null ? L["Error_Generic_Title"].Value : L[Model.TitleKey].Value;
+}
+
+<section class="section">
+    <div class="page prose">
+        <h1>@(Model.TitleKey is null ? L["Error_Generic_Title"] : L[Model.TitleKey])</h1>
+        <p>@(Model.TextKey is null ? L["Error_Generic_Text"] : L[Model.TextKey])</p>
+        <p><a class="button button--quiet" asp-page="/Index" asp-route-culture="@CultureLink.Current">@L["Error_BackHome"]</a></p>
+    </div>
+</section>

@@ -1,0 +1,38 @@
+@page "/admin"
+@model OrlandoUp.Pages.Admin.IndexModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_DashboardTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_DashboardTitle"]</h1>
+
+        @if (Model.ShowsPlaceholderData)
+        {
+            <div class="notice" role="status">
+                <strong>@L["Admin_PlaceholderBanner"]</strong>
+            </div>
+        }
+
+        <div class="stat-row">
+            <div class="stat">
+                <span class="stat__value">@Model.ProductCount</span>
+                <span class="stat__label">@L["Admin_CountProducts"]</span>
+            </div>
+            <div class="stat">
+                <span class="stat__value">@Model.UnitCount</span>
+                <span class="stat__label">@L["Admin_CountUnits"]</span>
+            </div>
+            <div class="stat">
+                <span class="stat__value">@Model.LocationCount</span>
+                <span class="stat__label">@L["Admin_CountLocations"]</span>
+            </div>
+        </div>
+
+        <p style="margin-top: 2rem;">
+            <a class="button button--quiet" asp-page="/Admin/Products/Index">@L["Admin_ProductsTitle"]</a>
+        </p>
+    </div>
+</section>

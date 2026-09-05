@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" width="200" height="140">
+  <title>Wheelchair</title>
+  <g fill="none" stroke="#1F2933" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="104" cy="100" r="30" />
+    <circle cx="104" cy="100" r="10" />
+    <circle cx="52" cy="116" r="10" />
+    <path d="M104 70 V48 H72" />
+    <path d="M72 48 V96 H52" />
+    <path d="M72 70 H112" />
+    <path d="M134 100 H150 L158 78" />
+  </g>
+  <rect x="66" y="40" width="42" height="12" rx="5" fill="#F26B1D" stroke="#1F2933" stroke-width="4" />
+  <rect x="70" y="90" width="42" height="10" rx="4" fill="#0F4C81" />
+</svg>

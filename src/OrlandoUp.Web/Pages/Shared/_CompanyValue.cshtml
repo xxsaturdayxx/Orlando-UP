@@ -1,0 +1,13 @@
+@model string
+@*
+    A company field that is still a marked placeholder is shown as visibly unfinished instead of
+    being printed raw, so nobody reads a marker as a phone number. Open question Q9 closes them.
+*@
+@if (string.IsNullOrWhiteSpace(Model) || Model.StartsWith("TODO-", StringComparison.Ordinal))
+{
+    <em class="todo">@L["Common_MissingValue"]</em>
+}
+else
+{
+    @Model
+}

@@ -1,0 +1,46 @@
+@page "/contact"
+@inject IOptions<CompanyOptions> CompanyOptionsAccessor
+@{
+    CompanyOptions company = CompanyOptionsAccessor.Value;
+    ViewData["Title"] = L["Contact_Title"].Value;
+    ViewData["MetaDescription"] = L["Contact_MetaDescription"].Value;
+
+    bool hasWhatsApp = !string.IsNullOrWhiteSpace(company.WhatsApp)
+        && !company.WhatsApp.StartsWith("TODO-", StringComparison.Ordinal);
+    string whatsAppDigits = hasWhatsApp
+        ? new string(company.WhatsApp.Where(char.IsDigit).ToArray())
+        : string.Empty;
+}
+
+<section class="section">
+    <div class="page prose">
+        <h1>@L["Contact_Title"]</h1>
+        <p class="section__lead">@L["Contact_Intro"]</p>
+
+        <dl class="specs">
+            <dt>@L["Footer_Phone"]</dt>
+            <dd><partial name="_CompanyValue" model="company.Phone" /></dd>
+
+            <dt>@L["Footer_WhatsApp"]</dt>
+            <dd><partial name="_CompanyValue" model="company.WhatsApp" /></dd>
+
+            <dt>@L["Footer_Email"]</dt>
+            <dd><partial name="_CompanyValue" model="company.Email" /></dd>
+
+            <dt>@L["Footer_Hours"]</dt>
+            <dd><partial name="_CompanyValue" model="company.Hours" /></dd>
+
+            <dt>@L["Footer_Address"]</dt>
+            <dd><partial name="_CompanyValue" model="company.Address" /></dd>
+        </dl>
+
+        @if (hasWhatsApp)
+        {
+            <p>
+                <a class="button button--primary" href="https://wa.me/@whatsAppDigits" rel="noopener">
+                    @L["Contact_WhatsAppCta"]
+                </a>
+            </p>
+        }
+    </div>
+</section>

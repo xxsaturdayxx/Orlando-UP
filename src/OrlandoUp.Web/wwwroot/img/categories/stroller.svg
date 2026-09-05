@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img" width="200" height="140">
+  <title>Stroller</title>
+  <g fill="none" stroke="#1F2933" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="66" cy="112" r="14" />
+    <circle cx="146" cy="112" r="14" />
+    <path d="M56 44 H120 a44 44 0 0 1 -44 44 H70" />
+    <path d="M70 88 L66 112" />
+    <path d="M120 44 L146 112" />
+    <path d="M76 88 H140" />
+    <path d="M120 44 L156 30" />
+    <path d="M150 24 h14" />
+  </g>
+  <path d="M56 44 H120 a44 44 0 0 1 -44 44 H70 Z" fill="#F26B1D" fill-opacity="0.25" />
+  <rect x="78" y="82" width="52" height="10" rx="4" fill="#0F4C81" />
+</svg>

@@ -1,0 +1,61 @@
+@page "/admin/products"
+@model OrlandoUp.Pages.Admin.Products.IndexModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_ProductsTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <p><a asp-page="/Admin/Index">@L["Admin_BackToDashboard"]</a></p>
+
+        <h1>@L["Admin_ProductsTitle"]</h1>
+        <p class="section__lead">@L["Admin_ProductsReadOnly"]</p>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Admin_ColSlug"]</th>
+                        <th scope="col">@L["Admin_ColCategory"]</th>
+                        <th scope="col">@L["Admin_ColNameEnglish"]</th>
+                        <th scope="col">@L["Admin_ColNamePortuguese"]</th>
+                        <th scope="col">@L["Admin_ColActive"]</th>
+                        <th scope="col">@L["Admin_ColUnits"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>@row.Slug</td>
+                            <td>@L[CategoryArt.NameKey(row.Category)]</td>
+                            <td>
+                                @if (row.NameEnglish is null)
+                                {
+                                    <em class="todo">@L["Admin_MissingTranslation"]</em>
+                                }
+                                else
+                                {
+                                    @row.NameEnglish
+                                }
+                            </td>
+                            <td>
+                                @if (row.NamePortuguese is null)
+                                {
+                                    <em class="todo">@L["Admin_MissingTranslation"]</em>
+                                }
+                                else
+                                {
+                                    @row.NamePortuguese
+                                }
+                            </td>
+                            <td>@(row.IsActive ? L["Admin_Yes"] : L["Admin_No"])</td>
+                            <td>@row.UnitCount</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

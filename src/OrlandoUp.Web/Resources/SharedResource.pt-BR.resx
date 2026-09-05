@@ -1,0 +1,496 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="Nav_SkipToContent" xml:space="preserve">
+    <value>Ir para o conteúdo</value>
+  </data>
+  <data name="Nav_Rentals" xml:space="preserve">
+    <value>Equipamentos</value>
+  </data>
+  <data name="Nav_HowItWorks" xml:space="preserve">
+    <value>Como funciona</value>
+  </data>
+  <data name="Nav_Faq" xml:space="preserve">
+    <value>Perguntas frequentes</value>
+  </data>
+  <data name="Nav_Contact" xml:space="preserve">
+    <value>Contato</value>
+  </data>
+  <data name="Nav_Home" xml:space="preserve">
+    <value>Início</value>
+  </data>
+  <data name="Nav_MainMenu" xml:space="preserve">
+    <value>Menu principal</value>
+  </data>
+  <data name="Lang_Label" xml:space="preserve">
+    <value>Idioma</value>
+  </data>
+  <data name="Lang_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+  <data name="Lang_Portuguese" xml:space="preserve">
+    <value>Português</value>
+  </data>
+  <data name="Footer_Privacy" xml:space="preserve">
+    <value>Privacidade</value>
+  </data>
+  <data name="Footer_Terms" xml:space="preserve">
+    <value>Termos</value>
+  </data>
+  <data name="Footer_Rights" xml:space="preserve">
+    <value>{0} {1}. Todos os direitos reservados.</value>
+  </data>
+  <data name="Footer_ContactTitle" xml:space="preserve">
+    <value>Fale com a gente</value>
+  </data>
+  <data name="Footer_LinksTitle" xml:space="preserve">
+    <value>Páginas</value>
+  </data>
+  <data name="Footer_Hours" xml:space="preserve">
+    <value>Horário</value>
+  </data>
+  <data name="Footer_Phone" xml:space="preserve">
+    <value>Telefone</value>
+  </data>
+  <data name="Footer_Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Footer_Address" xml:space="preserve">
+    <value>Endereço</value>
+  </data>
+  <data name="Footer_WhatsApp" xml:space="preserve">
+    <value>WhatsApp</value>
+  </data>
+  <data name="Common_MissingValue" xml:space="preserve">
+    <value>ainda não preenchido</value>
+  </data>
+  <data name="Home_Title" xml:space="preserve">
+    <value>Scooters, cadeiras de rodas e carrinhos entregues no seu hotel em Orlando</value>
+  </data>
+  <data name="Home_MetaDescription" xml:space="preserve">
+    <value>Alugue scooter, cadeira de rodas ou carrinho de bebê para os parques de Orlando. Entregamos no seu hotel e buscamos quando você for embora.</value>
+  </data>
+  <data name="Home_HeroHeadline" xml:space="preserve">
+    <value>Acompanhe a família. Descanse quando quiser.</value>
+  </data>
+  <data name="Home_HeroSubheadline" xml:space="preserve">
+    <value>Scooters de mobilidade, cadeiras de rodas e carrinhos de bebê entregues no seu hotel perto dos parques de Orlando, e recolhidos quando você for embora.</value>
+  </data>
+  <data name="Home_HeroCta" xml:space="preserve">
+    <value>Ver os equipamentos</value>
+  </data>
+  <data name="Home_AudienceTitle" xml:space="preserve">
+    <value>Quem aluga com a gente</value>
+  </data>
+  <data name="Home_AudienceFamilyTitle" xml:space="preserve">
+    <value>Para acompanhar a família</value>
+  </data>
+  <data name="Home_AudienceFamilyText" xml:space="preserve">
+    <value>Um dia de parque dá de quinze a vinte quilômetros a pé. A scooter é o que permite à família inteira ficar junta até os fogos.</value>
+  </data>
+  <data name="Home_AudienceMedicalTitle" xml:space="preserve">
+    <value>Por um motivo médico</value>
+  </data>
+  <data name="Home_AudienceMedicalText" xml:space="preserve">
+    <value>Recuperação de cirurgia, artrite ou qualquer condição que limite a distância: o equipamento existe para a viagem não precisar ser cancelada.</value>
+  </data>
+  <data name="Home_AudienceSeniorsTitle" xml:space="preserve">
+    <value>Viajando com idosos</value>
+  </data>
+  <data name="Home_AudienceSeniorsText" xml:space="preserve">
+    <value>Avós que caminham bem em casa ainda enfrentam um dia muito longo nos parques. Alugar pela semana custa menos do que um dia perdido.</value>
+  </data>
+  <data name="Home_ProductsTitle" xml:space="preserve">
+    <value>O que entregamos</value>
+  </data>
+  <data name="Home_ProductsSubtitle" xml:space="preserve">
+    <value>O preço mostrado é a menor diária de cada modelo.</value>
+  </data>
+  <data name="Home_SeeAll" xml:space="preserve">
+    <value>Ver todos os modelos</value>
+  </data>
+  <data name="Home_HowTitle" xml:space="preserve">
+    <value>Como funciona</value>
+  </data>
+  <data name="Home_Step1Title" xml:space="preserve">
+    <value>Escolha as datas</value>
+  </data>
+  <data name="Home_Step1Text" xml:space="preserve">
+    <value>Diga o dia de chegada, o de partida e onde você vai ficar.</value>
+  </data>
+  <data name="Home_Step2Title" xml:space="preserve">
+    <value>A gente entrega</value>
+  </data>
+  <data name="Home_Step2Text" xml:space="preserve">
+    <value>Levamos o equipamento até o seu hotel, testado e carregado.</value>
+  </data>
+  <data name="Home_Step3Title" xml:space="preserve">
+    <value>Aproveite os parques</value>
+  </data>
+  <data name="Home_Step3Text" xml:space="preserve">
+    <value>O equipamento é seu durante toda a estadia, parques inclusos.</value>
+  </data>
+  <data name="Home_Step4Title" xml:space="preserve">
+    <value>A gente busca</value>
+  </data>
+  <data name="Home_Step4Text" xml:space="preserve">
+    <value>Deixe na recepção, ou entregue para a gente no último dia.</value>
+  </data>
+  <data name="Rentals_Title" xml:space="preserve">
+    <value>Equipamentos</value>
+  </data>
+  <data name="Rentals_MetaDescription" xml:space="preserve">
+    <value>Todos os scooters, cadeiras de rodas e carrinhos que entregamos perto dos parques de Orlando, com medidas, capacidade e diárias.</value>
+  </data>
+  <data name="Rentals_Intro" xml:space="preserve">
+    <value>Entrega e retirada estão inclusas nos hotéis que atendemos. As medidas estão na lista para você conferir o transporte dos parques antes de reservar.</value>
+  </data>
+  <data name="Category_MobilityScooter" xml:space="preserve">
+    <value>Scooters de mobilidade</value>
+  </data>
+  <data name="Category_Wheelchair" xml:space="preserve">
+    <value>Cadeiras de rodas</value>
+  </data>
+  <data name="Category_Stroller" xml:space="preserve">
+    <value>Carrinhos de bebê</value>
+  </data>
+  <data name="Product_FromPerDay" xml:space="preserve">
+    <value>a partir de {0}/dia</value>
+  </data>
+  <data name="Product_PriceOnRequest" xml:space="preserve">
+    <value>preço sob consulta</value>
+  </data>
+  <data name="Product_FitsDisneyBuses" xml:space="preserve">
+    <value>Cabe nos ônibus da Disney</value>
+  </data>
+  <data name="Product_Details" xml:space="preserve">
+    <value>Ver detalhes</value>
+  </data>
+  <data name="Product_BackToRentals" xml:space="preserve">
+    <value>Voltar para todos os equipamentos</value>
+  </data>
+  <data name="Product_SpecsTitle" xml:space="preserve">
+    <value>Especificações</value>
+  </data>
+  <data name="Product_SpecWidth" xml:space="preserve">
+    <value>Largura</value>
+  </data>
+  <data name="Product_SpecLength" xml:space="preserve">
+    <value>Comprimento</value>
+  </data>
+  <data name="Product_SpecSeatWidth" xml:space="preserve">
+    <value>Largura do assento</value>
+  </data>
+  <data name="Product_SpecRange" xml:space="preserve">
+    <value>Autonomia por carga</value>
+  </data>
+  <data name="Product_SpecMaxWeight" xml:space="preserve">
+    <value>Peso máximo do usuário</value>
+  </data>
+  <data name="Product_SpecConfiguration" xml:space="preserve">
+    <value>Lugares</value>
+  </data>
+  <data name="Product_HighlightsTitle" xml:space="preserve">
+    <value>Bom saber</value>
+  </data>
+  <data name="Product_PricingTitle" xml:space="preserve">
+    <value>Diárias</value>
+  </data>
+  <data name="Product_PricingDays" xml:space="preserve">
+    <value>Duração do aluguel</value>
+  </data>
+  <data name="Product_PricingAmount" xml:space="preserve">
+    <value>Preço</value>
+  </data>
+  <data name="Product_TierRange" xml:space="preserve">
+    <value>{0} a {1} dias</value>
+  </data>
+  <data name="Product_TierOpen" xml:space="preserve">
+    <value>{0} dias ou mais</value>
+  </data>
+  <data name="Product_TierFlat" xml:space="preserve">
+    <value>{0} pelo aluguel</value>
+  </data>
+  <data name="Product_TierPerDay" xml:space="preserve">
+    <value>{0} por dia</value>
+  </data>
+  <data name="Product_AddOnsTitle" xml:space="preserve">
+    <value>Adicionais disponíveis</value>
+  </data>
+  <data name="Product_AddOnPerRental" xml:space="preserve">
+    <value>{0} por aluguel</value>
+  </data>
+  <data name="Product_AddOnPerDay" xml:space="preserve">
+    <value>{0} por dia</value>
+  </data>
+  <data name="Product_BookingSoon" xml:space="preserve">
+    <value>Reservas em breve</value>
+  </data>
+  <data name="Product_BookingSoonNote" xml:space="preserve">
+    <value>A reserva online ainda não está aberta. O seletor de datas chega na próxima entrega.</value>
+  </data>
+  <data name="Config_Single" xml:space="preserve">
+    <value>Uma criança</value>
+  </data>
+  <data name="Config_Double" xml:space="preserve">
+    <value>Duas crianças</value>
+  </data>
+  <data name="Config_Triple" xml:space="preserve">
+    <value>Três crianças</value>
+  </data>
+  <data name="Config_Infant" xml:space="preserve">
+    <value>Bebê</value>
+  </data>
+  <data name="Unit_Inches" xml:space="preserve">
+    <value>{0} pol</value>
+  </data>
+  <data name="Unit_Miles" xml:space="preserve">
+    <value>{0} mi</value>
+  </data>
+  <data name="Unit_Pounds" xml:space="preserve">
+    <value>{0} lb</value>
+  </data>
+  <data name="HowItWorks_Title" xml:space="preserve">
+    <value>Como funciona</value>
+  </data>
+  <data name="HowItWorks_MetaDescription" xml:space="preserve">
+    <value>Quatro passos da reserva à retirada, e como funciona a entrega nos resorts da Disney e da Universal.</value>
+  </data>
+  <data name="HowItWorks_Intro" xml:space="preserve">
+    <value>Entrega e retirada fazem parte do aluguel. Veja o que acontece em cada dia da sua estadia.</value>
+  </data>
+  <data name="HowItWorks_MeetTitle" xml:space="preserve">
+    <value>Por que encontramos você em pessoa nos resorts da Disney</value>
+  </data>
+  <data name="Faq_Title" xml:space="preserve">
+    <value>Perguntas frequentes</value>
+  </data>
+  <data name="Faq_MetaDescription" xml:space="preserve">
+    <value>Idade para dirigir uma scooter, carregamento, transporte nos parques, chuva, cancelamento, carrinhos e wagons, e o que levar.</value>
+  </data>
+  <data name="Faq_Q1" xml:space="preserve">
+    <value>Qual é a idade mínima para dirigir uma scooter de mobilidade?</value>
+  </data>
+  <data name="Faq_A1" xml:space="preserve">
+    <value>O condutor precisa ter 18 anos ou mais. Um passageiro mais novo só pode ir junto nos modelos que permitem uma segunda pessoa.</value>
+  </data>
+  <data name="Faq_Q2" xml:space="preserve">
+    <value>Como carrego a scooter?</value>
+  </data>
+  <data name="Faq_A2" xml:space="preserve">
+    <value>Carregue durante a noite no quarto, com o carregador que deixamos com você. Uma noite inteira cobre um dia inteiro de parque. Tire a chave sempre que estacionar.</value>
+  </data>
+  <data name="Faq_Q3" xml:space="preserve">
+    <value>O equipamento cabe no transporte dos parques?</value>
+  </data>
+  <data name="Faq_A3" xml:space="preserve">
+    <value>Os ônibus da Disney e o Skyliner aceitam equipamento de até 30 por 48 polegadas, e todo modelo dentro dessa medida leva o selo na página dele. Carrinhos precisam ficar abaixo de 31 por 52 polegadas dentro dos parques da Disney.</value>
+  </data>
+  <data name="Faq_Q4" xml:space="preserve">
+    <value>E se chover?</value>
+  </data>
+  <data name="Faq_A4" xml:space="preserve">
+    <value>Chuva não interrompe o aluguel. Estacione o equipamento coberto durante a tempestade e seque o assento antes de usar de novo. Há capa de chuva para os carrinhos.</value>
+  </data>
+  <data name="Faq_Q5" xml:space="preserve">
+    <value>Posso cancelar?</value>
+  </data>
+  <data name="Faq_A5" xml:space="preserve">
+    <value>Pode. A página de termos traz o prazo de cancelamento em vigor.</value>
+  </data>
+  <data name="Faq_Q6" xml:space="preserve">
+    <value>Posso levar um wagon para os parques?</value>
+  </data>
+  <data name="Faq_A6" xml:space="preserve">
+    <value>Não. Wagons não são permitidos dentro dos parques da Disney, e é por isso que alugamos carrinhos e não wagons.</value>
+  </data>
+  <data name="Faq_Q7" xml:space="preserve">
+    <value>O que preciso levar?</value>
+  </data>
+  <data name="Faq_A7" xml:space="preserve">
+    <value>Nada. O equipamento chega limpo, testado e carregado, com tudo o que precisa.</value>
+  </data>
+  <data name="Faq_Q8" xml:space="preserve">
+    <value>Como falo com vocês durante a viagem?</value>
+  </data>
+  <data name="Faq_A8" xml:space="preserve">
+    <value>Por telefone ou WhatsApp, no número da página de contato, no horário indicado lá.</value>
+  </data>
+  <data name="Contact_Title" xml:space="preserve">
+    <value>Contato</value>
+  </data>
+  <data name="Contact_MetaDescription" xml:space="preserve">
+    <value>Telefone, WhatsApp, e-mail e horário da Orlando Up.</value>
+  </data>
+  <data name="Contact_Intro" xml:space="preserve">
+    <value>Ligue ou mande mensagem e uma pessoa responde.</value>
+  </data>
+  <data name="Contact_WhatsAppCta" xml:space="preserve">
+    <value>Abrir conversa no WhatsApp</value>
+  </data>
+  <data name="Privacy_Title" xml:space="preserve">
+    <value>Privacidade</value>
+  </data>
+  <data name="Terms_Title" xml:space="preserve">
+    <value>Termos</value>
+  </data>
+  <data name="Draft_Banner" xml:space="preserve">
+    <value>Rascunho, ainda não revisado. Esta página ainda não obriga ninguém.</value>
+  </data>
+  <data name="Privacy_Body" xml:space="preserve">
+    <value>Esta página vai descrever o que guardamos, por que guardamos e como pedir a exclusão. Está sendo escrita.</value>
+  </data>
+  <data name="Terms_Body" xml:space="preserve">
+    <value>Esta página vai trazer o contrato de aluguel, o prazo de cancelamento e as regras de dano. Está sendo escrita.</value>
+  </data>
+  <data name="Error_404_Title" xml:space="preserve">
+    <value>Não encontramos essa página</value>
+  </data>
+  <data name="Error_404_Text" xml:space="preserve">
+    <value>O endereço pode estar errado, ou a página pode ter mudado de lugar.</value>
+  </data>
+  <data name="Error_500_Title" xml:space="preserve">
+    <value>Alguma coisa deu errado do nosso lado</value>
+  </data>
+  <data name="Error_500_Text" xml:space="preserve">
+    <value>O problema foi registrado. Tente de novo daqui a pouco.</value>
+  </data>
+  <data name="Error_Generic_Title" xml:space="preserve">
+    <value>Alguma coisa deu errado</value>
+  </data>
+  <data name="Error_Generic_Text" xml:space="preserve">
+    <value>Tente de novo, ou volte para a página inicial.</value>
+  </data>
+  <data name="Error_BackHome" xml:space="preserve">
+    <value>Voltar para a página inicial</value>
+  </data>
+  <data name="Admin_SignInTitle" xml:space="preserve">
+    <value>Entrar</value>
+  </data>
+  <data name="Admin_Email" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Admin_Password" xml:space="preserve">
+    <value>Senha</value>
+  </data>
+  <data name="Admin_SignIn" xml:space="preserve">
+    <value>Entrar</value>
+  </data>
+  <data name="Admin_SignOut" xml:space="preserve">
+    <value>Sair</value>
+  </data>
+  <data name="Admin_InvalidLogin" xml:space="preserve">
+    <value>Esse e-mail e essa senha não conferem.</value>
+  </data>
+  <data name="Admin_LockedOut" xml:space="preserve">
+    <value>Tentativas demais. Tente de novo mais tarde.</value>
+  </data>
+  <data name="Admin_DashboardTitle" xml:space="preserve">
+    <value>Painel</value>
+  </data>
+  <data name="Admin_CountProducts" xml:space="preserve">
+    <value>Produtos</value>
+  </data>
+  <data name="Admin_CountUnits" xml:space="preserve">
+    <value>Unidades</value>
+  </data>
+  <data name="Admin_CountLocations" xml:space="preserve">
+    <value>Locais de entrega</value>
+  </data>
+  <data name="Admin_PlaceholderBanner" xml:space="preserve">
+    <value>O catálogo ainda está com dados de exemplo. Veja Docs/open-questions.md, Q1 e Q2.</value>
+  </data>
+  <data name="Admin_ProductsTitle" xml:space="preserve">
+    <value>Produtos</value>
+  </data>
+  <data name="Admin_ProductsReadOnly" xml:space="preserve">
+    <value>Somente leitura nesta entrega; a edição chega na entrega de administração.</value>
+  </data>
+  <data name="Admin_ColSlug" xml:space="preserve">
+    <value>Slug</value>
+  </data>
+  <data name="Admin_ColCategory" xml:space="preserve">
+    <value>Categoria</value>
+  </data>
+  <data name="Admin_ColNameEnglish" xml:space="preserve">
+    <value>Nome (inglês)</value>
+  </data>
+  <data name="Admin_ColNamePortuguese" xml:space="preserve">
+    <value>Nome (português)</value>
+  </data>
+  <data name="Admin_ColActive" xml:space="preserve">
+    <value>Ativo</value>
+  </data>
+  <data name="Admin_ColUnits" xml:space="preserve">
+    <value>Unidades</value>
+  </data>
+  <data name="Admin_Yes" xml:space="preserve">
+    <value>sim</value>
+  </data>
+  <data name="Admin_No" xml:space="preserve">
+    <value>não</value>
+  </data>
+  <data name="Admin_MissingTranslation" xml:space="preserve">
+    <value>faltando</value>
+  </data>
+  <data name="Admin_BackToDashboard" xml:space="preserve">
+    <value>Voltar ao painel</value>
+  </data>
+</root>

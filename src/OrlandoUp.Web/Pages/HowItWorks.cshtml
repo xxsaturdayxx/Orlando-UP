@@ -1,0 +1,42 @@
+@page "/how-it-works"
+@model HowItWorksModel
+@{
+    ViewData["Title"] = L["HowItWorks_Title"].Value;
+    ViewData["MetaDescription"] = L["HowItWorks_MetaDescription"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["HowItWorks_Title"]</h1>
+        <p class="section__lead">@L["HowItWorks_Intro"]</p>
+
+        <ul class="grid grid--4 steps">
+            <li class="card">
+                <h2>@L["Home_Step1Title"]</h2>
+                <p>@L["Home_Step1Text"]</p>
+            </li>
+            <li class="card">
+                <h2>@L["Home_Step2Title"]</h2>
+                <p>@L["Home_Step2Text"]</p>
+            </li>
+            <li class="card">
+                <h2>@L["Home_Step3Title"]</h2>
+                <p>@L["Home_Step3Text"]</p>
+            </li>
+            <li class="card">
+                <h2>@L["Home_Step4Title"]</h2>
+                <p>@L["Home_Step4Text"]</p>
+            </li>
+        </ul>
+    </div>
+</section>
+
+@if (Model.DisneyZone is not null)
+{
+    <section class="section section--tint">
+        <div class="page prose">
+            <h2>@L["HowItWorks_MeetTitle"]</h2>
+            @Html.Raw(Model.DisneyZone.InstructionsHtml)
+        </div>
+    </section>
+}

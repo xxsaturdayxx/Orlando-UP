@@ -1,0 +1,150 @@
+@page "/rentals/{slug}"
+@model OrlandoUp.Pages.Rentals.DetailsModel
+@{
+    var product = Model.Product;
+    ViewData["Title"] = product.Name;
+    ViewData["MetaDescription"] = product.Tagline;
+}
+
+<section class="section">
+    <div class="page">
+        <p><a asp-page="/Rentals/Index" asp-route-culture="@CultureLink.Current">@L["Product_BackToRentals"]</a></p>
+
+        <h1>@product.Name</h1>
+        @if (!string.IsNullOrWhiteSpace(product.Tagline))
+        {
+            <p class="section__lead">@product.Tagline</p>
+        }
+
+        @if (product.FitsDisneyTransport)
+        {
+            <ul class="badges">
+                <li class="badge badge--transport">@L["Product_FitsDisneyBuses"]</li>
+            </ul>
+        }
+
+        <p>
+            <img src="@(product.ImagePath is null ? CategoryArt.PathFor(product.Category) : "/" + product.ImagePath)"
+                 alt="@product.Name" width="300" height="210" />
+        </p>
+
+        <h2>@L["Product_SpecsTitle"]</h2>
+        <dl class="specs">
+            <dt>@L["Product_SpecWidth"]</dt>
+            <dd>@L["Unit_Inches", MoneyFormat.Number(product.WidthIn)]</dd>
+
+            <dt>@L["Product_SpecLength"]</dt>
+            <dd>@L["Unit_Inches", MoneyFormat.Number(product.LengthIn)]</dd>
+
+            @if (product.SeatWidthIn is decimal seat)
+            {
+                <dt>@L["Product_SpecSeatWidth"]</dt>
+                <dd>@L["Unit_Inches", MoneyFormat.Number(seat)]</dd>
+            }
+
+            @if (product.RangeMiles is decimal range)
+            {
+                <dt>@L["Product_SpecRange"]</dt>
+                <dd>@L["Unit_Miles", MoneyFormat.Number(range)]</dd>
+            }
+
+            @if (product.MaxRiderWeightLb is int weight)
+            {
+                <dt>@L["Product_SpecMaxWeight"]</dt>
+                <dd>@L["Unit_Pounds", weight]</dd>
+            }
+
+            @if (product.Configuration is SeatConfiguration configuration)
+            {
+                <dt>@L["Product_SpecConfiguration"]</dt>
+                <dd>@L["Config_" + configuration]</dd>
+            }
+        </dl>
+
+        @if (product.Highlights.Count > 0)
+        {
+            <h2>@L["Product_HighlightsTitle"]</h2>
+            <ul>
+                @foreach (string highlight in product.Highlights)
+                {
+                    <li>@highlight</li>
+                }
+            </ul>
+        }
+
+        @* The description is Markdown from a column an administrator can edit, so it goes through
+           the one gate that renders and sanitises it before it reaches this page. *@
+        <div class="prose">@Html.Raw(product.DescriptionHtml)</div>
+
+        <h2>@L["Product_PricingTitle"]</h2>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Product_PricingDays"]</th>
+                        <th scope="col">@L["Product_PricingAmount"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in product.PricingRows)
+                    {
+                        <tr>
+                            <td>
+                                @if (row.MaxDays is int max)
+                                {
+                                    @L["Product_TierRange", row.MinDays, max]
+                                }
+                                else
+                                {
+                                    @L["Product_TierOpen", row.MinDays]
+                                }
+                            </td>
+                            <td>
+                                @if (row.Mode == TierMode.PerDay)
+                                {
+                                    @L["Product_TierPerDay", MoneyFormat.Usd(row.Amount)]
+                                }
+                                else
+                                {
+                                    @L["Product_TierFlat", MoneyFormat.Usd(row.Amount)]
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (product.AddOns.Count > 0)
+        {
+            <h2>@L["Product_AddOnsTitle"]</h2>
+            <ul>
+                @foreach (var addOn in product.AddOns)
+                {
+                    <li>
+                        <strong>@addOn.Name</strong>
+                        &mdash;
+                        @if (addOn.PricingMode == AddOnPricingMode.PerDay)
+                        {
+                            @L["Product_AddOnPerDay", MoneyFormat.Usd(addOn.Amount)]
+                        }
+                        else
+                        {
+                            @L["Product_AddOnPerRental", MoneyFormat.Usd(addOn.Amount)]
+                        }
+                        @if (!string.IsNullOrWhiteSpace(addOn.Description))
+                        {
+                            <br />
+                            @addOn.Description
+                        }
+                    </li>
+                }
+            </ul>
+        }
+
+        <p>
+            <button type="button" class="button button--disabled" disabled>@L["Product_BookingSoon"]</button>
+        </p>
+        <p class="section__lead">@L["Product_BookingSoonNote"]</p>
+    </div>
+</section>
