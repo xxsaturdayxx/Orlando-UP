@@ -145,6 +145,76 @@ are named at every point where they touch the work.
 
 ---
 
+> **AMENDMENT EMENDA-02-02 — 2026-09-06, review of the SECOND plan (Claude Web).**
+> The revised `scratchpad/leva02/plano.md` and `scratchpad/leva02/public-site.tsv` were re-measured
+> from the saved files at `7e7a0f8`. Thirteen of the fifteen items of `EMENDA-02-01` are applied and
+> confirmed. **Two items of that amendment are superseded here by the agent's own measurement**, and
+> five things are settled that the second plan asks about or gets wrong. Where this note and
+> `EMENDA-02-01` disagree, **this note wins**.
+>
+> **B1 supersedes A5 (partly).** The ordering advice in A5 was cosmetic and is withdrawn:
+> re-measured, `--color-(action-text|action|trust|surface)` and `--color-(action|action-text|trust|surface)`
+> both count **22** over `src/`, because GNU grep in ERE is leftmost-longest. What A5 was actually
+> protecting against stands and is the requirement: a control naming only `--color-action` counts
+> **12** and cannot tell the two tokens apart (measured: `action` 12, `action-text` 7, `trust` 6,
+> `surface` 4; the four-name alternation, 22). Keep the four-name alternation; the order is
+> documentation. The agent's related finding is adopted: **a pattern beginning with a hyphen must
+> follow `-e`**, or grep reads it as an option and the control measures nothing while reporting `0`.
+>
+> **B2 supersedes A8.** A8 called `--exclude-dir=bin --exclude-dir=obj` a precaution against a
+> future `dotnet publish`. Re-measured, it is **mandatory today**: `grep -rIio -e nunito src` counts
+> **58** without the cut and **8** with it, the difference living in six static-web-asset manifests
+> under `bin/` and `obj/` (`*staticwebassets*.json`, `rpswa.dswa.cache.json`) that already name the
+> font files after an ordinary `dotnet build`. **Without the cut, C07 could never reach 0** and the
+> leva would close with a permanent red that is not a defect. The hex is unaffected (7 occurrences
+> with or without the cut) — SVG content does not enter a manifest.
+>
+> **B3 — the empty specification list is a real defect and the correction is accepted, wider than
+> the plan states.** Measured at `Pages/Rentals/Details.cshtml`: the `<h2>` of §Product_SpecsTitle
+> and its `<dl>` are unconditional, and the width and length rows (lines 34 and 37) are
+> unconditional too — only seat width, range, max weight and configuration are guarded. With K2 (b)
+> the wheelchair carries no dimension at all, so the page would render a heading over an empty list.
+> **Rule:** width and length become conditional rows like the others, and any heading whose entire
+> list is conditional renders only when at least one row has a value — the specs list, and equally
+> the price table, the add-ons block and the highlights block on a coming-soon product. This is the
+> same principle as D15 for a missing price.
+>
+> **B4 — correction to the second plan: `triple-stroller` does NOT cease to exist.** §5.1 keeps all
+> four stroller slugs; only the three slugs of the leva-01 placeholder catalog die. So
+> `SiteBehaviourTests.cs:91` (`Assert.DoesNotContain("Fits Disney buses", … /rentals/triple-stroller)`)
+> needs no slug change and keeps passing for the right reason — a stroller with null dimensions
+> reads `FitsDisneyTransport == null`, which is not `true`. What must change is line 90 and line 97
+> (`standard-scooter`) and `RenderedTextTests.cs:32-33`.
+>
+> **B5 — A11's page set is derived from the Razor page collection, not from the filesystem.** The
+> set the plan lists is right (measured: `Contact`, `Faq`, `HowItWorks`, `Index`, `Privacy`,
+> `Terms`, `Rentals/Index`, `Rentals/Details`, plus the new `DeliveryAreas`; `Error/Status` and
+> everything under `Admin/` and `Shared/` out). Read it at test time from dependency injection —
+> the endpoint or page-route collection — never by walking `Pages/` on disk: the two test classes
+> that already climb from `AppContext.BaseDirectory` are the backlog item the agent itself measured,
+> and a third one deepens a coupling this leva is not fixing.
+>
+> **B6 — the §4 ambiguity is resolved the way the plan proposes, with one ordering rule.** P1 is
+> committed and submitted with the migration **written and not applied**. After approval, E2 applies
+> it and appends to the same `Docs/relatorio-leva-02-etapa-1.md` a dated section carrying
+> `IS_NULLABLE` of `WidthIn` and `LengthIn` and the presence and default of `IsBookable`, read from
+> `INFORMATION_SCHEMA`, committed before E3 starts. That section is appended **above** the
+> `## Revisão (Claude Web, …)` section, which is always the last section of the file
+> (`Docs/protocolo-conversa.md` item 7). Nothing is applied before review, and A10 keeps the proof
+> it exists to demand.
+>
+> **B7 — a note for whoever reviews the next stop: `dotnet` is not reachable from the review shell.**
+> Running `medir-controles.sh verificar Docs/controles/foundation.tsv` from the reviewer's side
+> reports C14 and C15 as `hoje=127` — `command not found`, the reviewer's instrument, not the tree.
+> The agent's report of 18 green stands; it is corroborated here only indirectly (the built
+> `OrlandoUp.Web.exe` carries a fresh timestamp). **P3 re-reports both gates and they are read from
+> the agent's run**, never from the reviewer's.
+>
+> **Proof that this amendment was read:** every `Docs/relatorio-leva-02-etapa-N.md` and the next
+> revision of `scratchpad/leva02/plano.md`, if there is one, contain the string `EMENDA-02-02`;
+> expected `grep -c EMENDA-02-02 <artefato>` >= 1.
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-05`
