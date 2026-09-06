@@ -254,3 +254,18 @@ only matters to Brazilians: Brazilian team, service in Portuguese, WhatsApp in P
 `.resx` per culture already permits different content under the same key, so no page is
 duplicated; the parity test (same key set, no empty value) still holds. Rule for copy: a claim
 that is not a differentiator for the reader of that culture does not appear in that culture.
+
+**D32 — 2026-09-05 (conversation 3, writing the leva 02 spec) — A product can be visible without
+being bookable, and a dimension nobody has measured is absent, not zero.** **[assistant]**,
+amending the mechanism of D26 without changing its intent. D26 asked for the four stroller
+products to be seeded with `IsActive = false` and still shown as "coming soon"; that contradicts
+the rule closed in conversation 2 — public pages filter `IsActive`, and a hidden product must 404
+exactly like one that never existed. So the mechanism becomes a second column: `Products.IsBookable`
+(`bit NOT NULL DEFAULT 1`). `IsActive` keeps meaning *visible on the site*; `IsBookable` means
+*units and a price list exist and leva 03 may offer it*. A coming-soon product is
+`IsActive = true, IsBookable = false`, carries no pricing tier and no add-on link, and shows no
+price and no booking button. In the same migration `Products.WidthIn` and `Products.LengthIn`
+become nullable, and `FitsDisneyTransport` becomes `bool?`: a product we own but have not measured,
+and one we have not bought, must not publish an invented dimension or a badge that claims a fit —
+the same reason D15 gives for a missing price. Consequence for later phases: availability and
+checkout read `IsBookable`, never `IsActive` alone. Spec: `Docs/spec-02-public-site.md` §4.
