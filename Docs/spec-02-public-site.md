@@ -21,6 +21,130 @@ are named at every point where they touch the work.
 
 ---
 
+> **AMENDMENT EMENDA-02-01 — 2026-09-06, review of `scratchpad/leva02/plano.md` (Claude Web).**
+> The plan of leva 02 was reviewed against this spec and against the tree at `e56b221`. The body
+> of this spec is **not** rewritten — the corrections below amend it, and where a correction and
+> the body disagree, **the correction wins**. Everything here was measured, not recalled; the
+> command that produced each number is in the item. The agent applies these to the revised plan
+> and to `Docs/controles/public-site.tsv` before writing the first line of code.
+>
+> **A1 — §3 is wrong about the marker count: `appsettings.json` carries 6 `TODO-`, not 7.**
+> Measured: `grep -cF 'TODO-'` = 6, `grep -oF 'TODO-' | wc -l` = 6, keys `LegalName`, `Address`,
+> `Phone`, `WhatsApp`, `Email`, `Hours`. §7.2 fills two, so **exactly 4 remain** and
+> `foundation.tsv` C16 (`test ${n:-0} -ge 4`) goes green **with zero margin**. The threshold is
+> never lowered; the control retires together with Q12.
+>
+> **A2 — §12.2 item 5 (control C08 there, C09 in the proposal) is wrong about the singular.** The
+> culture flag is read in markup by **two** files, not one: `Pages/Shared/_Layout.cshtml` and
+> `Pages/Shared/_AdminLayout.cshtml`. The expected value is both paths. Consequence for §8:
+> `_StructuredData.cshtml` must name none of `CurrentUICulture`, `SiteCultures`, `isPortuguese` —
+> `inLanguage` arrives from the typed model, never from a branch in the partial.
+>
+> **A3 — the relation control of D10/02 excludes by CONTENT, not by path, and is green today by
+> coincidence. This is the one correction that inverts a result.** The proposed form pipes
+> `grep -rIE "asp-page=" … Pages` into `grep -v /Admin/`, which filters the string `path:line` —
+> so the two links of `Pages/Shared/_AdminLayout.cshtml` that carry **no** culture are dropped
+> because their *content* reads `asp-page="/Admin/Index"` and `asp-page="/Admin/Logout"`, not
+> because of where they live. Measured three ways: content filter → 18 − 18 = **0**; by path
+> (`--exclude-dir=Admin`) → 22 − 20 = **2**; by path **plus** `grep -v '_AdminLayout\.cshtml:'` →
+> 18 − 18 = **0**. Adopt the third: it gives the same number for the honest reason, so the fix
+> costs nothing today and stops a future public link whose href merely contains `/Admin/` from
+> escaping the guard. Both C10 and its reach sibling C11 share the operand and must both be
+> rewritten. Relabel C11 to what it actually tests (`the larger operand is >= 8`), not
+> "did not go to zero".
+>
+> **A4 — the correction §4.1 of the plan describes is NOT in the file it describes.**
+> `scratchpad/leva02/public-site.tsv` still carries the bare
+> `grep -rIlF "application/ld+json" src | sort | paste -sd,` for C14 and the bare
+> `grep -rIlF sitemap.xml src | …` for C15; run through `medir-controles.sh medir` both measure
+> **`ERRO`** today. Write into the file the form the plan states —
+> `{ grep -rIlF … src || true; } | sort | paste -sd, | grep . || echo nenhum` — and re-run `medir`
+> from the saved file before proposing it again.
+>
+> **A5 — §6 retires four token NAMES and no control watches them.** Measured over `src/`:
+> `--color-action` 12, `--color-action-text` 7, `--color-trust` 6, `--color-surface` 4 occurrences.
+> C05 counts only the hex. Add one control: those four names occur **0** times over `src/`, with a
+> reach sibling asserting a v1 token name (`--color-sun`, `--color-navy`) occurs >= 1. Mind the
+> substring: `--color-action` matches inside `--color-action-text`, so a control that names only
+> the shorter one cannot tell the two apart.
+>
+> **A6 — §12.2 item 2 controls only the accented subset; the base subset is unguarded.** Four
+> woff2 files ship (two families x `latin`, `latin-ext`). The proposal asserts
+> `bricolage-grotesque-latin-ext.woff2` and `manrope-latin-ext.woff2` only, so a missing
+> `-latin.woff2` — which is what renders almost every character on the site — passes every control.
+> Either add the two base files as `nome-exato`, or replace C02/C03 with one `cmd` printing
+> `ls -1 …/wwwroot/fonts | grep -i woff2 | sort | paste -sd,` and expect the four names.
+>
+> **A7 — two controls are case-sensitive where the artefact is not.** C05 (`-F "#F26B1D"`) and C07
+> (`Nunito`) miss `#f26b1d` and a lowercase `nunito-…` reference. Use `-i`.
+>
+> **A8 — every `grep -r … src` of this leva also walks `bin/` and `obj/`.** Measured clean today
+> (`dotnet build` does not copy `wwwroot` into `bin`), but `dotnet publish` does, and C05/C07 would
+> then go red with no defect in the source. Add `--exclude-dir=bin --exclude-dir=obj` to the new
+> controls. `foundation.tsv` is not touched.
+>
+> **A9 — §4 must say which default `IsBookable` gets in the DOMAIN.** `bit NOT NULL DEFAULT 1` is
+> right for backfilling the seven existing rows and wrong as a standing rule: a product created
+> later without an explicit decision must not be offered. `Product.IsBookable` therefore keeps the
+> C# default `false` (fail-closed) and every bookable product sets it explicitly — which §5.1
+> already does. Add it to the §9 domain tests.
+>
+> **A10 — a green suite is NOT evidence that the migration is right.** `tests/OrlandoUp.Tests/SiteFactory.cs`
+> builds the schema with `EnsureCreatedAsync()` against SQLite in memory: no test ever executes a
+> migration. So P1 carries, besides the classified script, a read of the real column metadata from
+> `OrlandoUpDb` **after** `database update` — `IS_NULLABLE` of `WidthIn` and `LengthIn`, and the
+> presence and default of `IsBookable` — recorded in the report. Without it nothing in this leva
+> proves the migration did what §4 says.
+>
+> **A11 — §9 tests 11 and 12 must not pass for the wrong reason.** Test 11 is vacuous if the
+> sitemap's page list and the test's expected list are both hand-typed literals: the set of public
+> pages must be derived on one side (the Razor page collection, or the files under `Pages/` minus
+> `Admin/`, `Shared/` and `error/`) and the sitemap asserted to cover it. Test 12 is an absence
+> assertion and needs a presence first — assert 200 and a non-empty body before asserting the page
+> contains no `TODO-`, or it passes on the day the page errors.
+>
+> **A12 — files this leva must touch that the plan's ordering does not name.** Measured readers and
+> wiring: `Program.cs` (map the sitemap endpoint beside `MapRobotsTxt()`);
+> `Pages/Shared/_Layout.cshtml` (render `_StructuredData`); `Infrastructure/Data/CatalogQueries.cs`
+> (lines 53 and 120-124 project `FitsDisneyTransport`, `WidthIn`, `LengthIn`);
+> `Application/Catalog/CatalogViews.cs`; `Infrastructure/Seeding/CatalogSeedData.cs` (the record
+> fields become `decimal?` so a stroller can carry none); `appsettings.json` (D28);
+> `tests/OrlandoUp.Tests/DomainTests.cs`; `tests/OrlandoUp.Tests/SiteBehaviourTests.cs`
+> (`A_product_page_shows_the_transport_badge_only_when_the_dimensions_allow_it` changes with
+> `bool?`); `tests/OrlandoUp.Tests/RenderedTextTests.cs` (its `InlineData` list still names
+> `standard-scooter`, a slug §5.4 deletes). The revised plan lists files nominally, per stage.
+>
+> **A13 — two more negatives of `foundation.tsv` bite this leva, beyond the three the plan lists.**
+> `C06/01`: `DateTime.UtcNow` is expected in exactly `Infrastructure/SystemClock.cs`, so a
+> `lastmod` in the sitemap or a `dateModified` in the structured data turns it red — which is the
+> mechanical reason §8 omits `lastmod`. `C11/01`: `using Markdig` is expected in exactly
+> `Application/RichText.cs`, so the delivery-areas page renders zone instructions through the
+> injected `RichText` and never by importing Markdig itself.
+>
+> **A14 — name the report file of each stop.** P1 -> `Docs/relatorio-leva-02-etapa-1.md`,
+> P2 -> `Docs/relatorio-leva-02-etapa-2.md`, P3 -> `Docs/relatorio-leva-02-etapa-3.md`, each
+> committed before approval is asked (`Docs/fila-cc.md`). P0's record is the plan, which is not
+> committed. Each of these reports ends with the section `## Revisão (Claude Web, <data>)`, left
+> empty by the agent (`Docs/protocolo-conversa.md` item 7).
+>
+> **A15 — §10 never checks that an illustration renders.** Items 4 and 5 also record that the
+> category tile appears and that `ImagePath` resolves; a broken image is the cheapest defect in
+> this leva to see and the easiest to ship.
+>
+> **What the plan got right and is kept:** the refusal to use `-p:OutDir` as a gate after proving
+> it lies; the refusal to kill the operator's process; the two-sided proofs of C09/C10 and
+> C12/C13 run from the saved file; the six contradictions of its §6, all of which this review
+> re-measured and confirmed — in particular that the three category SVG carry `#F26B1D` and are
+> **rewritten**, not new (measured: 4 files, 7 occurrences), and that `wwwroot/fonts/OFL.txt`
+> names Nunito and is rewritten. The `-p:OutDir` finding about `LocalizationParityTests` and
+> `RenderedTextTests` climbing from `AppContext.BaseDirectory` is backlog, not this leva.
+>
+> **Proof that this amendment was read:** the revised `scratchpad/leva02/plano.md` and every
+> `Docs/relatorio-leva-02-etapa-N.md` contain the string `EMENDA-02-01`; expected
+> `grep -c EMENDA-02-01 <artefato>` >= 1.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-05`

@@ -30,3 +30,17 @@ O que muda aqui:
    `index.lock` e `tmp_obj_*`; sem ela o primeiro commit trava — medido na conversa 1). O push
    continua sendo do operador. Mensagem do commit de fechamento: exatamente
    `docs: resumo da conversa N` (é o que a abertura procura).
+
+7. **A revisão de cada parada é uma seção do próprio relatório da etapa, não uma mensagem.** O
+   Claude Web abre `Docs/relatorio-<leva>-etapa-N.md`, escreve no fim a seção
+   `## Revisão (Claude Web, AAAA-MM-DD)` com as correções **numeradas** e o veredito
+   (`executar` / `executar após as correções` / `replanejar porque …`), e commita. Rod cola no
+   Claude Code a frase constante: *"leia `Docs/relatorio-<leva>-etapa-N.md` e execute a seção
+   Revisão"*. **Motivo:** 3 das 8 rodadas da conversa 2 foram transporte de texto entre as duas
+   pontas (`Docs/atrito-conversa-2.md`); a sessão do agente pode cair antes de receber a mensagem
+   — o arquivo commitado sobrevive, a mensagem não. **Duas regras que vêm junto:** a revisão do
+   plano (`scratchpad/<leva>/plano.md`, não commitado) não tem relatório onde morar, então ela
+   nasce como **nota de emenda datada no topo da spec**, nunca por reescrita do corpo, e a nota
+   termina com o comando que prova que o agente a leu (busca pelo identificador da emenda no
+   próximo artefato dele, esperada `>= 1`); e o relatório se confere **abrindo o código**, nunca
+   pelo relato (skill `revisao-plano-agente`, Etapa 5).
