@@ -245,6 +245,60 @@ Recomendação:   aplicar, após aprovação explícita do desvio da §5.1 e da 
 
 ---
 
+## 10. Metadados depois de aplicar (acrescentado pela E2 em 2026-09-06)
+
+Seção pedida pela `EMENDA-02-01` A10, posicionada pela `EMENDA-02-02` B6 e ampliada pela
+`EMENDA-02-03` C3. A migration foi aplicada **depois** do veredito "aplicar" da Revisão abaixo.
+
+```
+dotnet ef database update --project src/OrlandoUp.Web
+  Applying migration '20260906162133_AddIsBookableAndOptionalDimensions'.
+  Done.
+```
+
+`SELECT DB_NAME()` = `OrlandoUpDb`, impresso antes de cada consulta.
+
+**`INFORMATION_SCHEMA.COLUMNS`, tabela `Products`:**
+
+| Coluna | Tipo | Precisão | Escala | `IS_NULLABLE` | `COLUMN_DEFAULT` |
+|---|---|---|---|---|---|
+| `WidthIn` | `decimal` | 5 | 1 | **YES** | (nenhum) |
+| `LengthIn` | `decimal` | 5 | 1 | **YES** | (nenhum) |
+| `IsBookable` | `bit` | — | — | **NO** | `(CONVERT([bit],(0)))` |
+| `IsActive` | `bit` | — | — | NO | `(CONVERT([bit],(1)))` |
+
+As duas dimensões aceitam nulo e **não** ganharam valor padrão: o alargamento fez o que a §4 da
+spec diz, e nenhuma delas passou a ter um zero à espreita.
+
+**`sys.default_constraints` sobre `Products` (C3):**
+
+| Coluna | Restrição | Definição | Nomeada pelo sistema |
+|---|---|---|---|
+| `IsActive` | `DF__Products__IsActi__440B1D61` | `(CONVERT([bit],(1)))` | sim |
+| `IsBookable` | `DF__Products__IsBook__6E01572D` | `(CONVERT([bit],(0)))` | **sim** |
+| `TurnaroundDays` | `DF__Products__Turnar__4316F928` | `((0))` | sim |
+
+**O modelo não declara padrão para `IsBookable` e o banco carrega um: isso é intencional, não
+divergência** (`EMENDA-02-03` C1). O nome é gerado pelo SQL Server — `is_system_named = 1` — e
+portanto **vai ser outro em cada banco** onde a migration for aplicada; é o sufixo do object id,
+não um nome que alguém escolheu. Uma sessão futura que comparar nomes de restrição entre o LocalDB
+e o Azure SQL vai encontrar nomes diferentes para a mesma coisa, e isso também é esperado.
+
+**Histórico:** `20260904233355_InitialCreate`, `20260906162133_AddIsBookableAndOptionalDimensions`.
+
+**Efeito do `UPDATE` de preenchimento:** as sete linhas ficaram `IsBookable = 1`, `IsActive = 1` —
+`standard-scooter`, `heavy-duty-scooter`, `standard-wheelchair`, `single-stroller`,
+`double-stroller`, `triple-stroller`, `infant-stroller`. Nenhuma linha do Identity foi tocada.
+
+**Uma correção de ordem, feita aqui e detalhada no relatório da etapa 2:** o bloco da §5.4 da spec
+— apagar o catálogo e rodar `seed-catalog` — **não** rodou nesta etapa e não podia rodar. O
+`CatalogSeedData.cs` ainda carrega a frota placeholder da leva 01; apagar e semear agora
+reinseriria exatamente o que acabou de ser apagado, e as contagens que a §5.4 promete (7 produtos,
+**10** unidades) só existem depois de a E5 escrever a frota real. O bloco passa a rodar logo depois
+da E5, sobre o mesmo banco e com o mesmo `SELECT DB_NAME()` antes.
+
+---
+
 ## Revisão (Claude Web, 2026-09-06)
 
 **Veredito: aplicar.** Conferido abrindo o código, o SQL gerado e o diff — não o relato. As duas
