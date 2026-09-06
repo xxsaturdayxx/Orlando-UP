@@ -215,6 +215,52 @@ are named at every point where they touch the work.
 > expected `grep -c EMENDA-02-02 <artefato>` >= 1.
 ---
 
+> **AMENDMENT EMENDA-02-03 — 2026-09-06, review of P1 (Claude Web).**
+> `Docs/relatorio-leva-02-etapa-1.md` (commit `ebdb3b5`) was reviewed against the code and against
+> the generated SQL, not against the report's prose. **P1 is approved and the migration may be
+> applied.** Three things go back into the spec, because §4 is what a later session re-reads.
+>
+> **C1 — §4 is wrong about the default, and the report is right. `Products.IsBookable` is
+> `bit NOT NULL DEFAULT CAST(0 AS bit)`, not `DEFAULT 1`.** §4's `DEFAULT 1` and A9's letter asked
+> for a store default of 1 together with a C# default of `false`; that combination is not
+> expressible for a non-nullable `bool` in EF, and its letter would have produced the very defect
+> D32 exists to prevent — with a store default in the model, the provider cannot tell an explicit
+> `false` from an omission, so the four coming-soon strollers of §5.1 would have been inserted
+> **bookable**, silently, with every test and count still green. The approved shape is: no store
+> default in the model (`builder.Property(p => p.IsBookable).IsRequired()`), the `DEFAULT 0`
+> constraint that SQL Server requires to add a NOT NULL column left in place as the fail-closed
+> answer for any write that bypasses EF, and the seven pre-existing rows filled by an explicit
+> hand-written `UPDATE [Products] SET [IsBookable] = 1;` inside the same transaction, where a
+> reviewer reads it. Verified independently: `WidthIn` and `LengthIn` carry no default constraint
+> in `InitialCreate`, so the two `DROP CONSTRAINT` preambles of the script are genuinely empty
+> operations; `HasData(` occurs 0 times in `src/` (the 9 matches of `HasData` are
+> `HasDatabaseName`); no rename, no drop, no index, no new enum value, no date column.
+>
+> **C2 — the hand-written guard in `Down` is approved and is now part of the spec.** The generated
+> `Down` refills the two dimensions with `0`, and a product 0 in × 0 in reads as **inside** the
+> 30 × 48 limit, so a rollback would publish "fits the Disney buses" about a machine nobody
+> measured. The `THROW` that refuses to roll back while any dimension is null stays. One
+> consequence to record rather than fix: after a `Down`, `WidthIn` and `LengthIn` would carry a
+> `DEFAULT 0` constraint that `InitialCreate` never created — `Up` drops it again, so the pair
+> round-trips, but `Down` is not byte-for-byte the inverse of the schema it returns to.
+>
+> **C3 — the E2 metadata section (B6) also records the default constraint.** Besides `IS_NULLABLE`
+> of `WidthIn` and `LengthIn` and the presence of `IsBookable`, read and record the **name and
+> definition of the `DEFAULT` constraint on `IsBookable`** from `sys.default_constraints`. The
+> model declares no default and the database will carry one; writing it down now is what stops a
+> later session from finding it and treating it as drift.
+>
+> **Not corrected here, on purpose:** the same sentinel trap exists in `IsActive`
+> (`HasDefaultValue(true)`, leva 01), which makes it impossible today to INSERT a product hidden.
+> It does not affect this leva and it is leva-01 code; it is recorded in
+> `Docs/backlog-conhecido.md` and must be settled before leva 04 gives the administration
+> "create product".
+>
+> **Proof that this amendment was read:** `Docs/relatorio-leva-02-etapa-2.md` and
+> `Docs/relatorio-leva-02-etapa-3.md` contain the string `EMENDA-02-03`; expected
+> `grep -c EMENDA-02-03 <artefato>` >= 1.
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-05`

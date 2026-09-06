@@ -245,4 +245,53 @@ Recomendação:   aplicar, após aprovação explícita do desvio da §5.1 e da 
 
 ---
 
-## Revisão (Claude Web, )
+## Revisão (Claude Web, 2026-09-06)
+
+**Veredito: aplicar.** Conferido abrindo o código, o SQL gerado e o diff — não o relato. As duas
+edições manuais da §5 estão **aprovadas explicitamente**, e o desvio da letra da A9 está corrigido
+na spec pela nota `EMENDA-02-03`.
+
+**O que remedi por conta própria, e bateu:**
+
+| Afirmação do relatório | Como conferi | Resultado |
+|---|---|---|
+| `WidthIn`/`LengthIn` não têm default, então os dois `DROP CONSTRAINT` são vazios | `20260904233355_InitialCreate.cs`, colunas de `Products` | confirmado — só `TurnaroundDays` e `IsActive` declaram `defaultValue` |
+| `HasData(` = 0 em `src/` | `grep -rIoF` das duas formas | confirmado — 0 reais, 9 são `HasDatabaseName` |
+| nenhum enum novo, nenhum índice, nenhum rename, nenhuma coluna de data | leitura do script | confirmado — `CREATE UNIQUE INDEX`, `sp_rename` e `DROP COLUMN` ausentes do `Up` |
+| BOM removido dos três gerados | primeiros 3 bytes de cada arquivo da faixa | confirmado — nenhum `EF BB BF` |
+| nenhum arquivo negativo tocado | `git diff --name-only c886f97 ebdb3b5` | confirmado — 11 arquivos, todos da superfície declarada; `Docs/fila-cc.md` intacta |
+| `?? 0` e `GetValueOrDefault(` seguem em 0 | C17/01 rodado por mim | confirmado — 0; e C05/01, C06/01, C09/01, C11/01, C16/01 e C18/01 seguem no esperado |
+| a leitura nova vai por `is decimal width` | `Details.cshtml`, linhas condicionais | confirmado |
+
+**O que NÃO pude conferir e é lido do seu relato:** `dotnet build` limpo e `dotnet test` 69/0.
+`dotnet` não é alcançável pelo shell da ponte de arquivos — daqui os controles C14/C15 do
+`foundation.tsv` devolvem `127`, que é `command not found` e não vermelho. A P3 relê os dois
+portões da sua execução (`EMENDA-02-02` B7).
+
+**Sobre a §5.1 — aprovada, e é a razão de existir esta parada.** A A9 pediu uma combinação que o EF
+não sabe expressar para `bool` não anulável, e a letra dela teria gravado os quatro carrinhos "em
+breve" como reserváveis, em silêncio, com contagem e teste verdes. O mecanismo que você pôs no
+lugar entrega o que a A9 queria: modelo sem padrão, `DEFAULT 0` no banco como resposta de falha
+fechada para escrita que não passa pelo EF, e as sete linhas preenchidas por um `UPDATE` legível.
+A `EMENDA-02-03` C1 corrige a §4 da spec, que ainda dizia `DEFAULT 1`.
+
+**Sobre a §5.2 — aprovada.** Uma nota, não uma correção: depois de um `Down`, `WidthIn` e
+`LengthIn` ficariam com um `DEFAULT 0` que o `InitialCreate` nunca criou. O `Up` derruba esse
+default de novo, então o par vai e volta; mas o `Down` não é o inverso exato do schema a que
+retorna. Registrado na `EMENDA-02-03` C2, não é motivo de mexer.
+
+**Sobre a §5.3 — não conserte agora.** É código da leva 01, fora desta etapa, e a D32 tirou o peso
+do `IsActive`. Foi para `Docs/backlog-conhecido.md` com a data de hoje e o prazo: resolver **antes
+da leva 04**, que é quando a administração ganha "criar produto" e a armadilha passa a morder.
+Achado bom, e o lugar dele é o backlog, não esta frente.
+
+**Uma correção pequena, sem retrabalho.** A §4 do relatório chama o item 6 de "atenção" — o
+`INSERT INTO __EFMigrationsHistory` é o registro da própria migration e não é operação de atenção
+nenhuma; você já diz isso na coluna ao lado. Fica como está; é rótulo do classificador, não defeito.
+
+**Acrescente à E2 (`EMENDA-02-03` C3):** além do `IS_NULLABLE` das duas colunas e da presença de
+`IsBookable`, leia de `sys.default_constraints` o **nome e a definição** do default de
+`IsBookable` e registre na seção de metadados. O modelo não declara padrão e o banco vai carregar
+um; escrever isso agora é o que impede uma sessão futura de achar que é divergência.
+
+**Pode seguir para a E2.** Nada mais desta parada volta.
