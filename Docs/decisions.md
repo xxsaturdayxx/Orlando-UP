@@ -193,3 +193,47 @@ subscription** (the LLC scenario). Gate for phase 5, before creating the two app
 *Memory Percentage* and *CPU Percentage* for the last 30 days; above ~60 % memory, scale up to B2
 (2 cores, 3.5 GB) first — B1 is 1 core and 1.75 GB shared by everything on the plan. Decide the
 tier by metrics at that moment, never in advance; scaling down is the same click.
+
+**D26 — 2026-09-05 (conversation 2, after the closing of leva 01) — The real fleet replaces the
+generic catalog: two scooter models, one wheelchair, strollers "coming soon".** **[operator]**.
+Ronatrip owns ≈ 4 Drive Medical scooters of one model and ≈ 4 Drive Medical **Spitfire** scooters,
+2 Drive Medical wheelchairs, and two strollers in no condition to rent; the stroller fleet is to be
+bought in the coming weeks (Thanksgiving sales). Consequences: the seed of leva 02 carries
+`drive-scout-4` and `drive-spitfire-ex` (exact model names and counts to be read from the labels —
+Rod confirms before the seed), one wheelchair product, and the four stroller products as
+`IsActive = false` until units exist, shown on the public site as "coming soon" without price.
+Published specs `[V, web 2026-09-05]`: Scout 4 — 300 lb, 42.3 × 20.5 in, 9 mi (14 mi extended);
+Spitfire EX — 300 lb, 39 × 19.5 in, seat 17 in, 9 mi (15 mi with 21 Ah). Both fit the Disney
+30 × 48 in limit. Closes Q1 (counts remain to confirm).
+
+**D27 — 2026-09-05 — Pricing starts on the market-median tiers of the leva 01 seed; Ronatrip's
+current practice is recorded, not adopted.** **[operator]**. Today Ronatrip charges US$ 175 for the
+first week, US$ 20 per additional day and a US$ 30 delivery-and-pickup fee. The tiers of
+`Docs/spec-01-foundation.md` §5 (standard scooter: 1–2 d flat 75; 3–6 d 32/d; 7+ d 27/d, i.e.
+US$ 189 for 7 days) are close to that and match the competitors, so they go live as the list
+price; occasional promotions become **coupons** (phase 4, roadmap) rather than lower list prices.
+The **delivery fee** stays an open point of Q3: the seed has US$ 0 for resort zones and US$ 25
+for vacation homes, Ronatrip charges a flat US$ 30 today — decided with the delivery areas.
+Closes Q2.
+
+**D28 — 2026-09-05 — Company data is Ronatrip's, as on ronatrip.com.** **[operator]**. Trade name
+on the site stays "Orlando Up"; legal name shown: **Ronatrip Tours & Travel**; address: 7362
+Futures Dr, Ste 2, Orlando, FL 32819; phone and WhatsApp: **a dedicated WhatsApp line is being
+set up — number to confirm** (the `TODO-phone` / `TODO-whatsapp` placeholders stay until then,
+so control C16 keeps at least those two markers); support e-mail and hours: to confirm with the
+number. Closes Q9 except the number, which is Q12's.
+
+**D29 — 2026-09-05 — Design direction: C "park energy" as the starting point, reworked into a
+modern direction with the design skill before leva 02.** **[operator]** ("modern, beautiful,
+functional; if I had to choose now, C"). The tokens of direction A implemented in leva 01
+(`Docs/architecture.md` §12) stay until the new canvas is approved; leva 02 then replaces
+`site.css` tokens in one place. Rule kept from D9: every text/background pair ≥ 4.5:1, measured
+in the plan. Closes Q10.
+
+**D30 — 2026-09-05 — Images are AI-generated (Google), as on ronatrip.com, and pass through
+the `preparo-imagem-site` skill before entering the repository.** **[operator]**. Consequence:
+generated images are **illustrative** — hero, lifestyle, category art — and must not depict a
+branded model as if it were the unit delivered; product pages name the real model in text and use
+a generated image of a generic scooter of the same class, or a real photo when Rod takes one.
+No park logos, characters or trade dress in any generated image (`Docs/market-notes.md`). Closes
+Q11.

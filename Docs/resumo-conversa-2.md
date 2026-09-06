@@ -128,6 +128,20 @@ os relatórios commitados são exatamente o que permite isso. O que custou está
    `Docs/backlog-conhecido.md` ganhando o item acima.
 3. **Leva 03 — reserva e pagamento** só depois da 02 e das respostas Q3–Q6 (roadmap).
 
+## 9a. Emenda pós-fechamento (2026-09-05) — as respostas do Rod
+
+Depois do resumo, o Rod respondeu na própria conversa às cinco perguntas que destravam a leva 02.
+Viraram **D26–D30** em `Docs/decisions.md` e fecharam Q1, Q2, Q9, Q10 e Q11 em
+`Docs/open-questions.md`. Em uma linha cada: frota real = ≈4 scooters Drive Medical + ≈4 Drive
+Spitfire + 2 cadeiras Drive, carrinhos ainda por comprar (D26); preços = as faixas do seed da leva
+01 vão ao ar, a prática atual (US$ 175/semana + 20/dia + 30 de entrega) fica registrada e a taxa de
+entrega se decide com Q3 (D27); empresa = Ronatrip Tours & Travel, 7362 Futures Dr Ste 2, Orlando
+FL 32819, WhatsApp a confirmar (D28); design = direção C retrabalhada em canvas moderno com a skill
+de design antes da leva 02 (D29); imagens = geradas por IA como na Ronatrip, passando pela skill
+`preparo-imagem-site` (D30). **O que ainda falta para a leva 02:** nomes exatos dos modelos e
+contagem por modelo (etiqueta das unidades), o número do WhatsApp, e a aprovação do canvas novo.
+O item 2 da abertura abaixo fica **substituído** por esses três.
+
 ## 10. Abertura da próxima conversa
 
 Na ordem. Cada item nomeia quem executa.
