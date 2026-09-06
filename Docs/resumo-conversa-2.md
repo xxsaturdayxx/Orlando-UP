@@ -138,9 +138,13 @@ Spitfire + 2 cadeiras Drive, carrinhos ainda por comprar (D26); preços = as fai
 entrega se decide com Q3 (D27); empresa = Ronatrip Tours & Travel, 7362 Futures Dr Ste 2, Orlando
 FL 32819, WhatsApp a confirmar (D28); design = direção C retrabalhada em canvas moderno com a skill
 de design antes da leva 02 (D29); imagens = geradas por IA como na Ronatrip, passando pela skill
-`preparo-imagem-site` (D30). **O que ainda falta para a leva 02:** nomes exatos dos modelos e
-contagem por modelo (etiqueta das unidades), o número do WhatsApp, e a aprovação do canvas novo.
-O item 2 da abertura abaixo fica **substituído** por esses três.
+`preparo-imagem-site` (D30). **Canvas aprovado na mesma sessão:** "Orlando Up — Direção C moderna"
+(https://claude.ai/code/artifact/39c6540f-80b0-4248-9f44-e90fe32fe43f), **Opção A Navy + Sol** —
+D29 fechada, tokens v1 em `Docs/architecture.md` §12; a Opção B (grafite + vermelho) fica no canvas
+como alternativa rejeitada. **D31:** o site em inglês fala com o turista americano/internacional; o
+conteúdo pode diferir por cultura ("equipe brasileira" só no PT). **O que ainda falta para a leva
+02:** nomes exatos dos modelos e contagem por modelo (etiqueta das unidades) e o número do WhatsApp.
+O item 2 da abertura abaixo fica **substituído** por esses dois.
 
 ## 10. Abertura da próxima conversa
 

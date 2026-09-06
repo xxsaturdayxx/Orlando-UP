@@ -237,3 +237,20 @@ branded model as if it were the unit delivered; product pages name the real mode
 a generated image of a generic scooter of the same class, or a real photo when Rod takes one.
 No park logos, characters or trade dress in any generated image (`Docs/market-notes.md`). Closes
 Q11.
+
+**D29 — closed 2026-09-05 (later the same day).** Rod approved **Option A "Navy + Sun"** of the
+canvas "Orlando Up — Direção C moderna" (https://claude.ai/code/artifact/39c6540f-80b0-4248-9f44-e90fe32fe43f,
+page "Opção A"); Option B "grafite + vermelho" stays on the canvas as the rejected alternative
+(reason to reject, recorded: red is also the web's error colour, so checkout error states would
+need a second signal). **[operator]** ("ficou bom"). The approved tokens are in
+`Docs/architecture.md` §12 (v1) and replace the direction-A tokens of leva 01 in `site.css` in
+leva 02. Typography: Bricolage Grotesque (headings, weights 500–800) + Manrope (body), both
+self-hosted as woff2 like Nunito was (D7/01), Nunito retired.
+
+**D31 — 2026-09-05 — The two language versions sell to different audiences, and the copy is
+allowed to differ.** **[operator]**. The English site speaks to the American and international
+tourist: hotel delivery, the Disney bus/Skyliner fit, clear prices. The Portuguese site adds what
+only matters to Brazilians: Brazilian team, service in Portuguese, WhatsApp in Portuguese. The
+`.resx` per culture already permits different content under the same key, so no page is
+duplicated; the parity test (same key set, no empty value) still holds. Rule for copy: a claim
+that is not a differentiator for the reader of that culture does not appear in that culture.

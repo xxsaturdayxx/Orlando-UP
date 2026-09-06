@@ -203,6 +203,32 @@ price summary in checkout, large tap targets.
 
 **Note 2026-09-04 (conversation 2, leva 01 plan review).** Orange `#F26B1D` reaches only 2.91:1 on the off-white and 3.05:1 under white text, so it is a *surface* token (ink text on it, 4.85:1), never a text colour. Orange as text or icon uses the derived token **`--color-action-text: #B84A0C`** (4.99:1 on off-white, 5.22:1 under white). Same hue, darker; the brand colour is unchanged.
 
+**v1 — approved 2026-09-05 (D29, Option A "Navy + Sun" of the canvas "Orlando Up — Direção C
+moderna"). Supersedes the v0 palette above for leva 02 onwards.** Tokens (`site.css` custom
+properties, all text/background pairs measured ≥ 4.5:1):
+
+| Token | Value | Role | Measured pairs |
+|---|---|---|---|
+| `--color-navy` | `#0B1F3F` | dark sections (header, hero, "how it works"), primary text on sun | white on navy 16.4; sun on navy 10.5 |
+| `--color-ink` | `#111C33` | body text, footer background | ink on paper 15.7 |
+| `--color-paper` | `#FAF6EE` | page background (warm off-white) | — |
+| `--color-sun` | `#FFC72C` | **action surface** (primary button, icon tiles, active language pill) — always with navy text/icon; never as text | navy on sun 10.5 |
+| `--color-sun-text` | `#FFC72C` on navy only | accent word in headlines over navy | 10.5 |
+| `--color-link` | `#175A96` | links and eyebrows on paper/white | 6.6 (the lighter `#1E6FB8` gives 4.84 — use only ≥ 18 px) |
+| `--color-muted` | `#4B5568` | secondary text | 7.0 on paper, 7.5 on white |
+| `--color-on-navy-muted` | `#C9D3E6` | secondary text over navy | 10.9 |
+| `--color-fit-bg` / `--color-fit-text` | `#E1F1EC` / `#0B5E51` | "fits Disney buses" pill | ≥ 7 |
+| `--color-card-border` | `#EAE3D6` | card borders on paper | — |
+| `--color-tint` / `--color-tint-border` / `--color-tint-text` | `#FFF3CF` / `#F5DFA0` / `#7A5200` | highlighted card (audience card, price row) | 6.4 |
+
+Type: **Bricolage Grotesque** 500–800 for headings (display 84/48/40/32/26/24 px on desktop,
+letter-spacing −0.02em, line-height 1.05) + **Manrope** 400–700 for body (18 px, line-height
+1.55); both self-hosted woff2 (OFL), fallback `"Segoe UI", system-ui, sans-serif`. Shape: pills
+(`border-radius: 999px`) for buttons and tags, 22 px radius cards, 28–32 px radius dark panels,
+hit targets ≥ 44 px, primary button 52–58 px. Illustration: geometric line art on sun/navy/light
+blue tiles until generated images arrive (D30). The v0 tokens of leva 01 (orange `#F26B1D`,
+`--color-action-text`, Nunito) are retired in leva 02.
+
 ## 13. Testing and quality gates
 
 Unit tests for pricing tiers, availability with turnaround, status machine, coupon rules;
