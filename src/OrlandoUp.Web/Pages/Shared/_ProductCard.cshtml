@@ -24,7 +24,8 @@
             }
         </p>
 
-        @if (Model.FitsDisneyTransport)
+        @* Three answers, one badge: it is shown on a measured fit and on nothing else. *@
+        @if (Model.FitsDisneyTransport == true)
         {
             <ul class="badges">
                 <li class="badge badge--transport">@L["Product_FitsDisneyBuses"]</li>

@@ -17,13 +17,22 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.Property(p => p.Category).IsRequired();
 
-        builder.Property(p => p.WidthIn).HasPrecision(5, 1).IsRequired();
-        builder.Property(p => p.LengthIn).HasPrecision(5, 1).IsRequired();
+        builder.Property(p => p.WidthIn).HasPrecision(5, 1);
+        builder.Property(p => p.LengthIn).HasPrecision(5, 1);
         builder.Property(p => p.SeatWidthIn).HasPrecision(5, 1);
         builder.Property(p => p.RangeMiles).HasPrecision(5, 1);
 
         builder.Property(p => p.TurnaroundDays).HasDefaultValue(0).IsRequired();
         builder.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
+
+        // No store default on this one, on purpose, and the reason is a trap rather than a taste.
+        // A store default on a non-nullable bool makes the provider unable to tell "the caller said
+        // false" from "the caller said nothing": the false is dropped and the row is written with
+        // the default. For this column that would insert a product as purchasable precisely when
+        // the code asked for the opposite, which is the whole defect D32 exists to prevent. The
+        // rows that already exist are filled by an explicit statement in the migration instead,
+        // where a reviewer can read it.
+        builder.Property(p => p.IsBookable).IsRequired();
         builder.Property(p => p.SortOrder).IsRequired();
 
         builder.Property(p => p.ImagePath).HasMaxLength(260);

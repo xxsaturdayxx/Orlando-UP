@@ -51,6 +51,7 @@ public sealed class CatalogQueries
                 text.Name,
                 text.Tagline,
                 product.FitsDisneyTransport,
+                product.IsBookable,
                 product.FromPricePerDay(),
                 product.ImagePath));
         }
@@ -122,6 +123,7 @@ public sealed class CatalogQueries
             product.SeatWidthIn,
             product.RangeMiles,
             product.FitsDisneyTransport,
+            product.IsBookable,
             product.ImagePath,
             rows,
             addOns);

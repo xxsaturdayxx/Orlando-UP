@@ -18,6 +18,38 @@ public class ProductTests
         Assert.Equal(expected, product.FitsDisneyTransport);
     }
 
+    // The suffixes are load-bearing: a bare 21 boxes as Int32 and reflection refuses to hand an
+    // Int32 to a double? parameter, so the case fails before it asserts anything.
+    [Theory]
+    [InlineData(null, null)]
+    [InlineData(21d, null)]
+    [InlineData(null, 41d)]
+    public void An_unmeasured_unit_answers_neither_yes_nor_no_about_the_buses(double? width, double? length)
+    {
+        // Half a measurement is not a measurement: 21 inches wide tells nobody whether the thing is
+        // shorter than 48 inches. The badge is shown on true and on nothing else, so the absence
+        // has to survive as an absence all the way to the page.
+        Product product = new()
+        {
+            WidthIn = (decimal?)width,
+            LengthIn = (decimal?)length,
+        };
+
+        Assert.Null(product.FitsDisneyTransport);
+    }
+
+    [Fact]
+    public void A_product_nobody_decided_about_is_not_on_sale()
+    {
+        // Fail closed (D32). The store default fills the rows that existed when the column was
+        // added; this is the rule for every row born after it, and it is the opposite of IsActive,
+        // whose default is true because a product is written to be shown.
+        Product product = new();
+
+        Assert.False(product.IsBookable);
+        Assert.True(product.IsActive);
+    }
+
     [Fact]
     public void The_advertised_daily_price_is_the_lowest_daily_band()
     {

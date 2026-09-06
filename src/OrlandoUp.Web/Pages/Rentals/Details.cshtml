@@ -4,6 +4,17 @@
     var product = Model.Product;
     ViewData["Title"] = product.Name;
     ViewData["MetaDescription"] = product.Tagline;
+
+    // Every row of the list below is conditional, so the heading has to be too: a product whose
+    // measurements nobody has taken would otherwise print a title over an empty list, which reads
+    // as a broken page rather than as the absence it is (D15 applied to something that is not a
+    // price). The same guard is on the price table further down.
+    bool hasSpecs = product.WidthIn is not null
+        || product.LengthIn is not null
+        || product.SeatWidthIn is not null
+        || product.RangeMiles is not null
+        || product.MaxRiderWeightLb is not null
+        || product.Configuration is not null;
 }
 
 <section class="section">
@@ -16,7 +27,8 @@
             <p class="section__lead">@product.Tagline</p>
         }
 
-        @if (product.FitsDisneyTransport)
+        @* Three answers, one badge: it is shown on a measured fit and on nothing else. *@
+        @if (product.FitsDisneyTransport == true)
         {
             <ul class="badges">
                 <li class="badge badge--transport">@L["Product_FitsDisneyBuses"]</li>
@@ -28,13 +40,21 @@
                  alt="@product.Name" width="300" height="210" />
         </p>
 
+        @if (hasSpecs)
+        {
         <h2>@L["Product_SpecsTitle"]</h2>
         <dl class="specs">
-            <dt>@L["Product_SpecWidth"]</dt>
-            <dd>@L["Unit_Inches", MoneyFormat.Number(product.WidthIn)]</dd>
+            @if (product.WidthIn is decimal width)
+            {
+                <dt>@L["Product_SpecWidth"]</dt>
+                <dd>@L["Unit_Inches", MoneyFormat.Number(width)]</dd>
+            }
 
-            <dt>@L["Product_SpecLength"]</dt>
-            <dd>@L["Unit_Inches", MoneyFormat.Number(product.LengthIn)]</dd>
+            @if (product.LengthIn is decimal length)
+            {
+                <dt>@L["Product_SpecLength"]</dt>
+                <dd>@L["Unit_Inches", MoneyFormat.Number(length)]</dd>
+            }
 
             @if (product.SeatWidthIn is decimal seat)
             {
@@ -60,6 +80,7 @@
                 <dd>@L["Config_" + configuration]</dd>
             }
         </dl>
+        }
 
         @if (product.Highlights.Count > 0)
         {
@@ -76,6 +97,8 @@
            the one gate that renders and sanitises it before it reaches this page. *@
         <div class="prose">@Html.Raw(product.DescriptionHtml)</div>
 
+        @if (product.PricingRows.Count > 0)
+        {
         <h2>@L["Product_PricingTitle"]</h2>
         <div class="table-scroll">
             <table>
@@ -114,6 +137,7 @@
                 </tbody>
             </table>
         </div>
+        }
 
         @if (product.AddOns.Count > 0)
         {

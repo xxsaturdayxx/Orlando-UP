@@ -3,12 +3,17 @@ using OrlandoUp.Domain;
 namespace OrlandoUp.Application.Catalog;
 
 /// <summary>What a product card shows. The price is nullable and stays nullable (D15).</summary>
+/// <remarks>
+/// <paramref name="FitsDisneyTransport"/> carries three answers and the badge shows only on
+/// <c>true</c>; <paramref name="IsBookable"/> is what separates a price from a "coming soon" (D32).
+/// </remarks>
 public sealed record ProductCard(
     string Slug,
     ProductCategory Category,
     string Name,
     string? Tagline,
-    bool FitsDisneyTransport,
+    bool? FitsDisneyTransport,
+    bool IsBookable,
     decimal? FromPricePerDay,
     string? ImagePath);
 
@@ -28,11 +33,12 @@ public sealed record ProductDetail(
     string DescriptionHtml,
     IReadOnlyList<string> Highlights,
     int? MaxRiderWeightLb,
-    decimal WidthIn,
-    decimal LengthIn,
+    decimal? WidthIn,
+    decimal? LengthIn,
     decimal? SeatWidthIn,
     decimal? RangeMiles,
-    bool FitsDisneyTransport,
+    bool? FitsDisneyTransport,
+    bool IsBookable,
     string? ImagePath,
     IReadOnlyList<PricingRow> PricingRows,
     IReadOnlyList<AddOnRow> AddOns);

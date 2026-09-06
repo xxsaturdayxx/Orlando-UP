@@ -16,9 +16,11 @@ public class Product
     /// <summary>Strollers carry the per-child limit in the highlights instead.</summary>
     public int? MaxRiderWeightLb { get; set; }
 
-    public decimal WidthIn { get; set; }
+    /// <summary>Absent until somebody measures the real unit; never a typical value.</summary>
+    public decimal? WidthIn { get; set; }
 
-    public decimal LengthIn { get; set; }
+    /// <summary>Absent until somebody measures the real unit; never a typical value.</summary>
+    public decimal? LengthIn { get; set; }
 
     /// <summary>Scooters and wheelchairs.</summary>
     public decimal? SeatWidthIn { get; set; }
@@ -31,6 +33,14 @@ public class Product
 
     /// <summary>Soft hide. A product with history is never deleted.</summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Whether units and a price list exist and the booking flow may offer it (D32). Deliberately
+    /// left at the type's own default instead of being initialised the way <see cref="IsActive"/>
+    /// is: a product that nobody decided about must not be on sale, so the fail-closed answer is
+    /// the silent one. Every bookable product says so explicitly, in the seed and in the admin.
+    /// </summary>
+    public bool IsBookable { get; set; }
 
     public int SortOrder { get; set; }
 
@@ -53,7 +63,16 @@ public class Product
     /// The Disney bus and Skyliner limit is 30 in by 48 in. Computed here and never stored:
     /// a stored copy would drift the day someone edits the dimensions and forgets the flag.
     /// </summary>
-    public bool FitsDisneyTransport => WidthIn <= 30m && LengthIn <= 48m;
+    /// <remarks>
+    /// Three answers, not two. A unit nobody has measured returns <c>null</c>, and the badge is
+    /// shown only on <c>true</c>: "we do not know" must not be published as "it does not fit", and
+    /// far less as "it fits" — both are claims about a machine somebody will try to board a bus
+    /// with. Same reasoning as D15 for a missing price.
+    /// </remarks>
+    public bool? FitsDisneyTransport =>
+        WidthIn is decimal width && LengthIn is decimal length
+            ? width <= 30m && length <= 48m
+            : null;
 
     /// <summary>
     /// The lowest daily amount to advertise as "from US$ X/day", or <c>null</c> when the tiers
