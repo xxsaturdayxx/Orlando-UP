@@ -1,4 +1,13 @@
-Copyright 2014 The Nunito Project Authors (https://github.com/googlefonts/nunito)
+Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)
+Copyright 2018 The Manrope Project Authors (https://github.com/sharanda/manrope)
+
+Two families are served from this folder, and both are under the same licence, whose text is
+reproduced once below:
+
+  bricolage-grotesque-latin.woff2      headings, weight axis 500-800, latin
+  bricolage-grotesque-latin-ext.woff2  the same, latin-ext (the Portuguese accents)
+  manrope-latin.woff2                  body, weight axis 400-700, latin
+  manrope-latin-ext.woff2              the same, latin-ext
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:
