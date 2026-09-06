@@ -81,13 +81,13 @@ corpo da spec não é reescrito; a nota datada vence.
 
 ## 6. Pendências
 
-**Validação humana (Rod):**
-- **Item 7 da conferência:** entrar em `https://localhost:7420/admin/login` com o e-mail e a senha
-  gravados em user-secrets e ver o painel (7 / 7 / 10 e a faixa de placeholder). O agente mediu os
-  quatro valores na fonte; a tela atrás do login só você vê.
-- **CI verde no GitHub:** a fase 1 do roadmap diz "CI is green on GitHub". O push foi feito; o
-  resultado do primeiro `ci.yml` **não foi medido nesta conversa** — abrir a aba *Actions* do
-  repositório e confirmar (ou colar o erro na conversa 3).
+**Fechadas pelo Rod em 2026-09-05, depois do resumo (capturas de tela na conversa):**
+- **Item 7 da conferência — conferido:** painel `/admin` com **7 / 7 / 10** e a faixa "The catalog
+  still carries placeholder data" `[V, captura do Rod]`. Os dez itens da §8 estão fechados.
+- **CI verde no GitHub — conferido:** runs `ci #1` (`f8933c6`) e `ci #2` (`8850d97`) verdes em
+  *Actions* `[V, captura do Rod]`. A fase 1 do roadmap está completa em todos os "done means".
+
+**Validação humana (Rod), ainda aberta:**
 - **Direção de design** (A, B, C ou mistura) — continua sem resposta explícita; a leva 01 executou
   os tokens da direção A por D7/01.
 - **Q1, Q2, Q9, Q10, Q11** em `Docs/open-questions.md` destravam a leva 02 (frota, preços, dados
