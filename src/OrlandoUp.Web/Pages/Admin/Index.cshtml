@@ -9,13 +9,6 @@
     <div class="page">
         <h1>@L["Admin_DashboardTitle"]</h1>
 
-        @if (Model.ShowsPlaceholderData)
-        {
-            <div class="notice" role="status">
-                <strong>@L["Admin_PlaceholderBanner"]</strong>
-            </div>
-        }
-
         <div class="stat-row">
             <div class="stat">
                 <span class="stat__value">@Model.ProductCount</span>

@@ -1,0 +1,48 @@
+@page "/delivery-areas"
+@model DeliveryAreasModel
+@{
+    ViewData["Title"] = L["Delivery_Title"].Value;
+    ViewData["MetaDescription"] = L["Delivery_MetaDescription"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Delivery_Title"]</h1>
+        <p class="section__lead">@L["Delivery_Intro"]</p>
+    </div>
+</section>
+
+<section class="section section--tint">
+    <div class="page">
+        @foreach (var zone in Model.Zones)
+        {
+            <div class="zone">
+                <h2>@zone.Name</h2>
+
+                @* The hand-over text comes from the same column the booking will read, rendered
+                   through the one gate that turns Markdown into HTML and sanitises it. *@
+                <div class="prose">@Html.Raw(zone.InstructionsHtml)</div>
+
+                @if (Model.Locations.TryGetValue(zone.Code, out var places) && places.Count > 0)
+                {
+                    <h3>@L["Delivery_LocationsTitle"]</h3>
+                    <p>@L["Delivery_LocationsNote"]</p>
+                    <ul class="zone__locations">
+                        @foreach (string place in places)
+                        {
+                            <li>@place</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+<section class="section">
+    <div class="page prose">
+        <h2>@L["Delivery_FeeTitle"]</h2>
+        <p>@L["Delivery_FeeNote"]</p>
+        <p><a asp-page="/Contact" asp-route-culture="@CultureLink.Current">@L["Delivery_AskCta"]</a></p>
+    </div>
+</section>

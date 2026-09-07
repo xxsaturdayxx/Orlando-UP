@@ -39,10 +39,17 @@ public class SeedingTests : IAsyncLifetime
         Assert.Equal(0, code);
         Assert.Equal(7, await db.Products.CountAsync());
         Assert.Equal(14, await db.ProductTranslations.CountAsync());
-        Assert.Equal(7, await db.Units.CountAsync());
         Assert.Equal(6, await db.AddOns.CountAsync());
         Assert.Equal(4, await db.DeliveryZones.CountAsync());
         Assert.Equal(10, await db.DeliveryLocations.CountAsync());
+
+        // The fleet is units, not products: three products are on sale and carry 4 + 4 + 2 real
+        // machines, and the four coming-soon strollers carry none. That is why the administration
+        // shows 7 and 10 rather than the same number twice.
+        Assert.Equal(10, await db.Units.CountAsync());
+        Assert.Equal(3, await db.Products.CountAsync(product => product.IsBookable));
+        Assert.Equal(4, await db.Products.CountAsync(product => !product.IsBookable));
+        Assert.Equal(0, await db.Units.CountAsync(unit => !unit.Product!.IsBookable));
     }
 
     [Fact]

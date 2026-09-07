@@ -17,6 +17,14 @@
     <section class="section section--tint" id="@group.Key.ToString().ToLowerInvariant()">
         <div class="page">
             <h2>@L[CategoryArt.NameKey(group.Key)]</h2>
+
+            @* A whole category that is not on sale explains itself once, above its cards, instead
+               of asking four pills to each carry the explanation. *@
+            @if (group.All(card => !card.IsBookable))
+            {
+                <p class="section__lead">@L["Rentals_ComingSoonNote"]</p>
+            }
+
             <ul class="grid grid--3">
                 @foreach (var card in group)
                 {

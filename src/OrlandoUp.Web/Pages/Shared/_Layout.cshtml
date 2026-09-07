@@ -29,7 +29,7 @@
         <meta name="description" content="@description" />
     }
 
-    @* While the catalog carries placeholder prices the site must not be indexed (D11/01). *@
+    @* Indexing stays off until the site can take a booking; phase 5 of the roadmap flips it. *@
     @if (!seo.AllowIndexing)
     {
         <meta name="robots" content="noindex" />
@@ -72,6 +72,7 @@
                 <ul>
                     <li><a asp-page="/Rentals/Index" asp-route-culture="@CultureLink.Current">@L["Nav_Rentals"]</a></li>
                     <li><a asp-page="/HowItWorks" asp-route-culture="@CultureLink.Current">@L["Nav_HowItWorks"]</a></li>
+                    <li><a asp-page="/DeliveryAreas" asp-route-culture="@CultureLink.Current">@L["Nav_DeliveryAreas"]</a></li>
                     <li><a asp-page="/Faq" asp-route-culture="@CultureLink.Current">@L["Nav_Faq"]</a></li>
                     <li><a asp-page="/Contact" asp-route-culture="@CultureLink.Current">@L["Nav_Contact"]</a></li>
                 </ul>
@@ -117,6 +118,7 @@
                     <ul>
                         <li><a asp-page="/Rentals/Index" asp-route-culture="@CultureLink.Current">@L["Nav_Rentals"]</a></li>
                         <li><a asp-page="/HowItWorks" asp-route-culture="@CultureLink.Current">@L["Nav_HowItWorks"]</a></li>
+                        <li><a asp-page="/DeliveryAreas" asp-route-culture="@CultureLink.Current">@L["Nav_DeliveryAreas"]</a></li>
                         <li><a asp-page="/Faq" asp-route-culture="@CultureLink.Current">@L["Nav_Faq"]</a></li>
                         <li><a asp-page="/Contact" asp-route-culture="@CultureLink.Current">@L["Nav_Contact"]</a></li>
                         <li><a asp-page="/Privacy" asp-route-culture="@CultureLink.Current">@L["Footer_Privacy"]</a></li>

@@ -155,6 +155,28 @@ public sealed class CatalogQueries
         return result;
     }
 
+    /// <summary>
+    /// The example places of every active zone, keyed by zone code. They are names a visitor
+    /// recognises, not a closed list of where we go, and the page says so: a zone with no row here
+    /// is a zone we serve by address rather than by hotel.
+    /// </summary>
+    public async Task<IReadOnlyDictionary<string, IReadOnlyList<string>>> ActiveLocationsByZoneAsync(
+        CancellationToken cancellation)
+    {
+        var rows = await _db.DeliveryLocations
+            .AsNoTracking()
+            .Where(location => location.IsActive && location.Zone!.IsActive)
+            .OrderBy(location => location.SortOrder)
+            .Select(location => new { location.Zone!.Code, location.Name })
+            .ToListAsync(cancellation);
+
+        return rows
+            .GroupBy(row => row.Code)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<string>)group.Select(row => row.Name).ToList());
+    }
+
     private static IReadOnlyList<string> ReadHighlights(string json)
     {
         if (string.IsNullOrWhiteSpace(json))

@@ -27,13 +27,20 @@
             <p class="section__lead">@product.Tagline</p>
         }
 
-        @* Three answers, one badge: it is shown on a measured fit and on nothing else. *@
-        @if (product.FitsDisneyTransport == true)
-        {
-            <ul class="badges">
+        <ul class="badges">
+            @* The pill carries the word, not only the colour (D9), and it replaces every number on
+               the page: a product we have not bought shows no price, no price table and no add-on. *@
+            @if (!product.IsBookable)
+            {
+                <li class="badge badge--soon">@L["Product_ComingSoon"]</li>
+            }
+
+            @* Three answers, one badge: it is shown on a measured fit and on nothing else. *@
+            @if (product.FitsDisneyTransport == true)
+            {
                 <li class="badge badge--transport">@L["Product_FitsDisneyBuses"]</li>
-            </ul>
-        }
+            }
+        </ul>
 
         <p>
             <img src="@(product.ImagePath is null ? CategoryArt.PathFor(product.Category) : "/" + product.ImagePath)"
@@ -166,9 +173,16 @@
             </ul>
         }
 
-        <p>
-            <button type="button" class="button button--disabled" disabled>@L["Product_BookingSoon"]</button>
-        </p>
-        <p class="section__lead">@L["Product_BookingSoonNote"]</p>
+        @if (product.IsBookable)
+        {
+            <p>
+                <button type="button" class="button button--disabled" disabled>@L["Product_BookingSoon"]</button>
+            </p>
+            <p class="section__lead">@L["Product_BookingSoonNote"]</p>
+        }
+        else
+        {
+            <p class="section__lead">@L["Product_ComingSoonNote"]</p>
+        }
     </div>
 </section>

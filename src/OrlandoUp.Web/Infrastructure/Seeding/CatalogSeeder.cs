@@ -80,6 +80,7 @@ internal static class CatalogSeeder
                 TurnaroundDays = 0,
                 IsActive = true,
                 SortOrder = seed.SortOrder,
+                IsBookable = seed.IsBookable,
                 ImagePath = null,
                 CreatedAtUtc = now,
             };
@@ -107,26 +108,46 @@ internal static class CatalogSeeder
                 });
             }
 
-            // The price list of a product is refused before it is written, not after: a set with a
-            // gap would advertise a length nobody can be charged for.
-            PricingTierSetProblem problem = PricingTierRules.Validate(product.PricingTiers);
+            // The guard has two sides, and both matter. A product on sale is refused unless its
+            // price list covers every rental length without a gap and without an overlap: a gap
+            // would advertise a length nobody can be charged for. A product NOT on sale is refused
+            // if it carries a price list at all, because a price nobody can pay is worse than no
+            // price - it is the number a visitor remembers and quotes back on the phone (D32).
+            if (seed.IsBookable)
+            {
+                PricingTierSetProblem problem = PricingTierRules.Validate(product.PricingTiers);
 
-            if (problem != PricingTierSetProblem.None)
+                if (problem != PricingTierSetProblem.None)
+                {
+                    logger.LogError(
+                        "seed-catalog: the price list of {Slug} is invalid ({Problem}); nothing was written.",
+                        seed.Slug,
+                        problem);
+
+                    return 1;
+                }
+            }
+            else if (product.PricingTiers.Count > 0 || seed.AddOnCodes.Length > 0)
             {
                 logger.LogError(
-                    "seed-catalog: the price list of {Slug} is invalid ({Problem}); nothing was written.",
-                    seed.Slug,
-                    problem);
+                    "seed-catalog: {Slug} is not on sale and must carry no price and no add-on; nothing was written.",
+                    seed.Slug);
 
                 return 1;
             }
 
-            product.Units.Add(new Unit
+            // One row per physical unit, tagged the way the labels are read in the warehouse. A
+            // product with no unit gets none, which is what makes the admin count the fleet rather
+            // than the catalog.
+            for (int number = 1; number <= seed.UnitCount; number++)
             {
-                AssetTag = seed.Slug.ToUpperInvariant() + "-001",
-                Status = UnitStatus.Available,
-                CreatedAtUtc = now,
-            });
+                product.Units.Add(new Unit
+                {
+                    AssetTag = $"{seed.Slug.ToUpperInvariant()}-{number:000}",
+                    Status = UnitStatus.Available,
+                    CreatedAtUtc = now,
+                });
+            }
 
             foreach (string code in seed.AddOnCodes)
             {

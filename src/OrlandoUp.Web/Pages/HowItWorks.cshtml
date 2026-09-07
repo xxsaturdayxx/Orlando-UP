@@ -37,6 +37,9 @@
         <div class="page prose">
             <h2>@L["HowItWorks_MeetTitle"]</h2>
             @Html.Raw(Model.DisneyZone.InstructionsHtml)
+
+            @* The zone list lives on one page only, so the two can never drift apart. *@
+            <p><a asp-page="/DeliveryAreas" asp-route-culture="@CultureLink.Current">@L["HowItWorks_AreasCta"]</a></p>
         </div>
     </section>
 }

@@ -11,18 +11,29 @@
             <p class="product-card__tagline">@Model.Tagline</p>
         }
 
-        @* A missing price is written as a missing price. Turning it into a zero would advertise a
-           free rental, and no test of a number can tell those two apart (D15). *@
-        <p class="product-card__price">
-            @if (Model.FromPricePerDay is decimal daily)
-            {
-                @L["Product_FromPerDay", MoneyFormat.Usd(daily)]
-            }
-            else
-            {
-                @L["Product_PriceOnRequest"]
-            }
-        </p>
+        @* Three states, and the middle one is the point of D32. A product we do not own yet shows
+           the words "coming soon" and no number at all; a product we own shows its price; a price
+           that cannot be read is written as absent, never as a zero, because a zero advertises a
+           free rental and no test of a NUMBER can tell those two apart (D15). *@
+        @if (!Model.IsBookable)
+        {
+            <ul class="badges">
+                <li class="badge badge--soon">@L["Product_ComingSoon"]</li>
+            </ul>
+        }
+        else
+        {
+            <p class="product-card__price">
+                @if (Model.FromPricePerDay is decimal daily)
+                {
+                    @L["Product_FromPerDay", MoneyFormat.Usd(daily)]
+                }
+                else
+                {
+                    @L["Product_PriceOnRequest"]
+                }
+            </p>
+        }
 
         @* Three answers, one badge: it is shown on a measured fit and on nothing else. *@
         @if (Model.FitsDisneyTransport == true)

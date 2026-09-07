@@ -4,10 +4,18 @@ Copyright 2018 The Manrope Project Authors (https://github.com/sharanda/manrope)
 Two families are served from this folder, and both are under the same licence, whose text is
 reproduced once below:
 
-  bricolage-grotesque-latin.woff2      headings, weight axis 500-800, latin
-  bricolage-grotesque-latin-ext.woff2  the same, latin-ext (the Portuguese accents)
-  manrope-latin.woff2                  body, weight axis 400-700, latin
+  bricolage-grotesque-latin.woff2      headings, wght 200-800 + opsz 12-96, latin
+  bricolage-grotesque-latin-ext.woff2  the same, latin-ext
+  manrope-latin.woff2                  body, wght 200-800, latin
   manrope-latin-ext.woff2              the same, latin-ext
+
+The two subsets are latin (U+0000-00FF and a few punctuation ranges) and latin-ext
+(U+0100-024F). Portuguese is served entirely by latin: its accented letters live in
+U+00C0-U+00FF. Measured with fontTools over these four files, latin carries 28 of the 28
+accented characters Portuguese needs and latin-ext carries 1 of them. latin-ext ships for
+Central and Eastern European letters, which turn up in a hotel name or a guest's name; the
+unicode-range declaration means a browser fetches it only when a character on the page
+needs it, so those bytes are repository size and never page weight.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
 This license is copied below, and is also available with a FAQ at:

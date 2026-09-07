@@ -131,7 +131,7 @@
     <value>Keep up with your family. Rest when you want.</value>
   </data>
   <data name="Home_HeroSubheadline" xml:space="preserve">
-    <value>Mobility scooters, wheelchairs and strollers delivered to your hotel around the Orlando parks, and picked up when you leave.</value>
+    <value>Mobility scooters and wheelchairs delivered to your hotel around the Orlando parks - tested, charged, and sized to fit the Disney buses and the Skyliner.</value>
   </data>
   <data name="Home_HeroCta" xml:space="preserve">
     <value>See the equipment</value>
@@ -161,7 +161,7 @@
     <value>What we deliver</value>
   </data>
   <data name="Home_ProductsSubtitle" xml:space="preserve">
-    <value>The price shown is the lowest daily rate of each model.</value>
+    <value>The price shown is the lowest daily rate of each model. Strollers arrive for the winter season.</value>
   </data>
   <data name="Home_SeeAll" xml:space="preserve">
     <value>See every model</value>
@@ -200,7 +200,7 @@
     <value>Every mobility scooter, wheelchair and stroller we deliver around the Orlando parks, with sizes, capacity and daily rates.</value>
   </data>
   <data name="Rentals_Intro" xml:space="preserve">
-    <value>Delivery and pick-up are included at the hotels we serve. Sizes are listed so you can check the park transport before you book.</value>
+    <value>Sizes and capacities are listed so you can check the park transport before you book. Delivery and pick-up are arranged with your booking.</value>
   </data>
   <data name="Category_MobilityScooter" xml:space="preserve">
     <value>Mobility scooters</value>
@@ -353,7 +353,7 @@
     <value>Can I cancel?</value>
   </data>
   <data name="Faq_A5" xml:space="preserve">
-    <value>Yes. The terms page carries the cancellation window in force.</value>
+    <value>Online booking is not open yet, so there is nothing to cancel today. When it opens, the cancellation window will be written on the terms page before you pay.</value>
   </data>
   <data name="Faq_Q6" xml:space="preserve">
     <value>Can I bring a wagon into the parks instead?</value>
@@ -371,7 +371,7 @@
     <value>How do I reach you during the trip?</value>
   </data>
   <data name="Faq_A8" xml:space="preserve">
-    <value>By phone or WhatsApp, on the number on the contact page, during the hours listed there.</value>
+    <value>The contact page carries every way to reach us. A WhatsApp line dedicated to Orlando Up is being set up, and it appears there the day it is live.</value>
   </data>
   <data name="Contact_Title" xml:space="preserve">
     <value>Contact</value>
@@ -454,9 +454,6 @@
   <data name="Admin_CountLocations" xml:space="preserve">
     <value>Delivery locations</value>
   </data>
-  <data name="Admin_PlaceholderBanner" xml:space="preserve">
-    <value>The catalog still carries placeholder data. See Docs/open-questions.md, Q1 and Q2.</value>
-  </data>
   <data name="Admin_ProductsTitle" xml:space="preserve">
     <value>Products</value>
   </data>
@@ -492,5 +489,62 @@
   </data>
   <data name="Admin_BackToDashboard" xml:space="preserve">
     <value>Back to the dashboard</value>
+  </data>
+  <data name="Nav_DeliveryAreas" xml:space="preserve">
+    <value>Delivery areas</value>
+  </data>
+  <data name="Home_TeamTitle" xml:space="preserve">
+    <value>A local Orlando team</value>
+  </data>
+  <data name="Home_TeamText" xml:space="preserve">
+    <value>Orlando Up is run by Ronatrip, a travel company based in Orlando. The person who hands you the scooter is the person who answers when you call, and the equipment is ours - not a booking passed on to somebody else.</value>
+  </data>
+  <data name="Rentals_ComingSoonNote" xml:space="preserve">
+    <value>We do not have these yet. The stroller fleet arrives for the winter season, and these pages will carry sizes and prices before booking opens.</value>
+  </data>
+  <data name="Product_ComingSoon" xml:space="preserve">
+    <value>Coming soon</value>
+  </data>
+  <data name="Product_ComingSoonNote" xml:space="preserve">
+    <value>We are buying these for the winter season. Tell us your dates and we will let you know the moment they arrive.</value>
+  </data>
+  <data name="HowItWorks_AreasCta" xml:space="preserve">
+    <value>See every area we deliver to</value>
+  </data>
+  <data name="Delivery_Title" xml:space="preserve">
+    <value>Where we deliver</value>
+  </data>
+  <data name="Delivery_MetaDescription" xml:space="preserve">
+    <value>The hotels and areas we deliver to around the Orlando parks, and how the hand-over works at each of them.</value>
+  </data>
+  <data name="Delivery_Intro" xml:space="preserve">
+    <value>We deliver around the Disney and Universal resorts, along International Drive and Lake Buena Vista, and to the vacation homes near the parks. How the equipment reaches you depends on the rules of the place you are staying.</value>
+  </data>
+  <data name="Delivery_LocationsTitle" xml:space="preserve">
+    <value>Hotels we go to often</value>
+  </data>
+  <data name="Delivery_LocationsNote" xml:space="preserve">
+    <value>Examples, not a closed list. If your hotel is not named here, ask us - it is very likely in the same zone.</value>
+  </data>
+  <data name="Delivery_FeeTitle" xml:space="preserve">
+    <value>What delivery costs</value>
+  </data>
+  <data name="Delivery_FeeNote" xml:space="preserve">
+    <value>Delivery and pick-up are quoted with your booking, once we know where you are staying and which days. We would rather give you the real number for your address than publish an average that turns out wrong at the door.</value>
+  </data>
+  <data name="Delivery_AskCta" xml:space="preserve">
+    <value>Ask about your hotel</value>
+  </data>
+  <data name="Faq_Q9" xml:space="preserve">
+    <value>Can you deliver to a Disney resort hotel?</value>
+  </data>
+  <data name="Faq_A9" xml:space="preserve">
+    <value>Yes, and we meet you in person to do it. Disney allows only its featured provider to leave equipment with Bell Services, so we agree a time with you and hand it over at the resort. It takes about five minutes.</value>
+  </data>
+  <data name="Faq_Q10" xml:space="preserve">
+    <value>Do you rent strollers?</value>
+  </data>
+  <data name="Faq_A10" xml:space="preserve">
+    <value>Not yet. The stroller fleet arrives for the winter season. The models are already listed on the rentals page, marked as coming soon, and they will carry sizes and prices before booking opens.</value>
   </data>
 </root>

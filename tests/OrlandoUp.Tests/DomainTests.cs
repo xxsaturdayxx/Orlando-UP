@@ -162,6 +162,12 @@ public class PricingTierRulesTests
     [Fact]
     public void Every_seeded_product_carries_a_valid_price_list()
     {
+        // Two sides, because the seed now has two kinds of product. One on sale must cover every
+        // rental length with no gap and no overlap; one not on sale must carry no price at all,
+        // since a price nobody can pay is the number a visitor remembers and quotes back (D32).
+        int onSale = 0;
+        int comingSoon = 0;
+
         foreach (SeedProduct seed in CatalogSeedData.Products)
         {
             PricingTier[] tiers = seed.Tiers
@@ -174,7 +180,47 @@ public class PricingTierRulesTests
                 })
                 .ToArray();
 
-            Assert.Equal(PricingTierSetProblem.None, PricingTierRules.Validate(tiers));
+            if (seed.IsBookable)
+            {
+                onSale++;
+                Assert.Equal(PricingTierSetProblem.None, PricingTierRules.Validate(tiers));
+            }
+            else
+            {
+                comingSoon++;
+                Assert.Empty(tiers);
+                Assert.Empty(seed.AddOnCodes);
+            }
+        }
+
+        // Reach: neither branch may be the empty one, or half of this test proves nothing.
+        Assert.True(onSale > 0 && comingSoon > 0, $"on sale: {onSale}, coming soon: {comingSoon}");
+    }
+
+    [Fact]
+    public void Only_a_product_on_sale_carries_units()
+    {
+        foreach (SeedProduct seed in CatalogSeedData.Products)
+        {
+            if (seed.IsBookable)
+            {
+                Assert.True(seed.UnitCount > 0, $"{seed.Slug} is on sale with no unit behind it");
+            }
+            else
+            {
+                Assert.Equal(0, seed.UnitCount);
+            }
+        }
+    }
+
+    [Fact]
+    public void No_seeded_product_carries_a_dimension_that_was_never_measured()
+    {
+        // Width and length are either both known or both absent. Half a measurement cannot answer
+        // the question the badge asks, and the page has no way to say "we measured one side".
+        foreach (SeedProduct seed in CatalogSeedData.Products)
+        {
+            Assert.Equal(seed.WidthIn is null, seed.LengthIn is null);
         }
     }
 }
