@@ -16,6 +16,6 @@ cmd	Resources	if [ -f src/OrlandoUp.Web/Resources/SharedResource.resx ] && [ -f 
 cmd	Resources	n=$(grep -c '<data name=' src/OrlandoUp.Web/Resources/SharedResource.resx); test ${n:-0} -ge 20 && echo sim || echo nao	C13 ALCANCE de C12 o filtro de chaves nao zera o universo	sim
 cmd	OrlandoUp.sln	dotnet build OrlandoUp.sln --nologo -v q >/dev/null 2>&1; echo $?	C14 a solucao compila	0
 cmd	OrlandoUp.sln	dotnet test OrlandoUp.sln --nologo -v q >/dev/null 2>&1; echo $?	C15 a suite passa	0
-cmd	src/OrlandoUp.Web/appsettings.json	n=$(grep -cF 'TODO-' src/OrlandoUp.Web/appsettings.json); test ${n:-0} -ge 4 && echo sim || echo nao	C16 EXPIRA COM Q9 os dados de empresa continuam marcados como pendentes	sim
+cmd	src/OrlandoUp.Web/appsettings.json	n=$(grep -cF 'TODO-' src/OrlandoUp.Web/appsettings.json); test ${n:-0} -ge 4 && echo sim || echo nao	C16 EXPIRA COM Q12 telefone e whatsapp continuam marcados como pendentes	sim
 cmd	src	grep -rIE '[?][?] *0|GetValueOrDefault[(]' --include='*.cs' --include='*.cshtml' src | wc -l	C17 D15 preco ausente nunca coalesce para zero	0
 cmd	src	test $(grep -rIlE 'decimal[?]' --include='*.cs' src | wc -l) -ge 1 && echo sim || echo nao	C18 ALCANCE de C17 ha tipo monetario anulavel alcancado pela varredura	sim

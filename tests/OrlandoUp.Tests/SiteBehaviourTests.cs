@@ -104,8 +104,12 @@ public class SiteBehaviourTests : IAsyncLifetime
         Assert.DoesNotContain("US$ 0.00", body);
     }
 
-    /// <summary>Every public address of the site, in both cultures.</summary>
-    public static TheoryData<string> PublicPaths() =>
+    /// <summary>Every public address of the site, in both cultures, typed by hand on purpose.</summary>
+    /// <remarks>
+    /// Independent of the set the framework derives, and useful only while the two agree - which is
+    /// what SeoTests asserts. A page added to the site and forgotten here shows up there by name.
+    /// </remarks>
+    public static readonly IReadOnlyList<string> PublicPathList =
     [
         "/", "/pt",
         "/rentals", "/pt/rentals",
@@ -118,6 +122,18 @@ public class SiteBehaviourTests : IAsyncLifetime
         "/terms", "/pt/terms",
         "/privacy", "/pt/privacy",
     ];
+
+    public static TheoryData<string> PublicPaths()
+    {
+        TheoryData<string> data = [];
+
+        foreach (string path in PublicPathList)
+        {
+            data.Add(path);
+        }
+
+        return data;
+    }
 
     [Theory]
     [MemberData(nameof(PublicPaths))]
@@ -163,10 +179,27 @@ public class SiteBehaviourTests : IAsyncLifetime
     [Fact]
     public async Task The_catalog_page_prices_what_is_on_sale_and_only_that()
     {
+        // The name of this test promises a negative, so the negative is what it counts. "from US$
+        // is present, Coming soon is present, US$ 0.00 is absent" was satisfied by a page printing
+        // a price under a stroller card, and a name that promises cover it does not give is worse
+        // than no test: somebody later reads the name and stops looking.
+        using IServiceScope scope = _factory.Services.CreateScope();
+        var catalog = scope.ServiceProvider.GetRequiredService<OrlandoUp.Infrastructure.Data.CatalogQueries>();
+
+        var cards = await catalog.ActiveCardsAsync("en-US", CancellationToken.None);
+
+        int bookable = cards.Count(card => card.IsBookable);
+        int comingSoon = cards.Count - bookable;
+
+        Assert.True(bookable > 0 && comingSoon > 0, $"on sale: {bookable}, coming soon: {comingSoon}");
+
         string body = await _factory.CreateClient().GetStringAsync("/rentals");
 
-        Assert.Contains("from US$", body, StringComparison.Ordinal);
-        Assert.Contains("Coming soon", body, StringComparison.Ordinal);
+        int prices = System.Text.RegularExpressions.Regex.Matches(body, "from US\\$").Count;
+        int pills = System.Text.RegularExpressions.Regex.Matches(body, "badge--soon").Count;
+
+        Assert.Equal(bookable, prices);
+        Assert.Equal(comingSoon, pills);
         Assert.DoesNotContain("US$ 0.00", body, StringComparison.Ordinal);
     }
 
@@ -199,6 +232,16 @@ public class SiteBehaviourTests : IAsyncLifetime
         {
             Assert.Contains(zone.Name, text, StringComparison.Ordinal);
         }
+
+        // And the sentence, not only the name. The page exists because the hand-over instruction a
+        // visitor reads has to be the same string the booking will show (D5/02) - four names listed
+        // and the instructions silently dropped would have passed everything above.
+        var disney = zones.First(zone => zone.Handover == OrlandoUp.Domain.HandoverMode.MeetAndGreet);
+        string instructions = System.Text.RegularExpressions.Regex.Replace(
+            System.Net.WebUtility.HtmlDecode(disney.InstructionsHtml), "<[^>]+>", string.Empty);
+
+        Assert.True(instructions.Length > 80, $"the instructions read {instructions.Length} characters");
+        Assert.Contains(instructions.Trim()[..60], text, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -109,6 +109,7 @@ builder.Services.AddRazorPages(options =>
 builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<RichText>();
 builder.Services.AddScoped<CatalogQueries>();
+builder.Services.AddScoped<PublicPages>();
 
 WebApplication app = builder.Build();
 
@@ -163,6 +164,7 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapHealthEndpoints();
 app.MapRobotsTxt();
+app.MapSitemap();
 
 app.Run();
 

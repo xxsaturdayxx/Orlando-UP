@@ -43,5 +43,11 @@ public sealed record ProductDetail(
     IReadOnlyList<PricingRow> PricingRows,
     IReadOnlyList<AddOnRow> AddOns);
 
-/// <summary>The four steps and the hand-over text of a zone, for the how-it-works page.</summary>
-public sealed record ZoneInstructions(string Code, string Name, string InstructionsHtml);
+/// <summary>The hand-over text of one delivery zone, as the public pages show it.</summary>
+/// <remarks>
+/// The hand-over MODE travels with it so that a page can ask for "the zone where we meet you in
+/// person" instead of naming a zone by its code. A code typed into a page is fleet data living in
+/// source: rename the zone in the administration and the page quietly stops finding it, with
+/// nothing failing anywhere.
+/// </remarks>
+public sealed record ZoneInstructions(string Code, string Name, string InstructionsHtml, HandoverMode Handover);

@@ -4,6 +4,7 @@
     var product = Model.Product;
     ViewData["Title"] = product.Name;
     ViewData["MetaDescription"] = product.Tagline;
+    ViewData["StructuredDataProduct"] = product;
 
     // Every row of the list below is conditional, so the heading has to be too: a product whose
     // measurements nobody has taken would otherwise print a title over an empty list, which reads

@@ -17,6 +17,15 @@
 
     string title = ViewData["Title"] as string ?? company.TradeName;
     string description = ViewData["MetaDescription"] as string ?? string.Empty;
+
+    // A product page puts its product here; every other page leaves it absent, and the document
+    // then describes only the business. What the site is willing to claim is decided in one type,
+    // not in this file (D7/02).
+    string structuredData = StructuredData.ForPage(
+        company,
+        origin,
+        uiCulture,
+        ViewData["StructuredDataProduct"] as OrlandoUp.Application.Catalog.ProductDetail);
 }
 <!DOCTYPE html>
 <html lang="@htmlLang">
@@ -56,6 +65,8 @@
     }
     <meta property="og:locale" content="@(isPortuguese ? "pt_BR" : "en_US")" />
     <meta property="og:url" content="@(origin + (isPortuguese ? portuguesePath : englishPath))" />
+
+    <partial name="_StructuredData" model="structuredData" />
 
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="icon" href="~/favicon.ico" />

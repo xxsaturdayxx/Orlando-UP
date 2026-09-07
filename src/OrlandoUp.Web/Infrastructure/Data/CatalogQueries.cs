@@ -149,7 +149,7 @@ public sealed class CatalogQueries
                 continue;
             }
 
-            result.Add(new ZoneInstructions(zone.Code, text.Name, _richText.ToHtml(text.Instructions)));
+            result.Add(new ZoneInstructions(zone.Code, text.Name, _richText.ToHtml(text.Instructions), zone.HandoverMode));
         }
 
         return result;

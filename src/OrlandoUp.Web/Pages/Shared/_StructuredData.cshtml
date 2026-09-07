@@ -1,0 +1,17 @@
+@model string
+@*
+    The one place the site emits machine-readable data. Everything it says was decided in
+    Application/StructuredData.cs, including what is left out; this file only writes it down, and
+    it deliberately names no culture of its own - the language arrives already resolved.
+
+    The whole element is written raw, and only for one reason: Razor encodes an attribute value,
+    so the media type would leave here as "application/ld&#x2B;json". Every real HTML parser
+    decodes that back to a plus and reads it correctly, but the source then looks wrong to a human
+    checking the page and to any validator that matches text instead of parsing. The JSON itself is
+    escaped by the serializer, which is what keeps a "</script>" inside a product name from ending
+    this block early.
+*@
+@if (!string.IsNullOrWhiteSpace(Model))
+{
+    @Html.Raw("<script type=\"application/ld+json\">" + Model + "</script>")
+}
