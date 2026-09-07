@@ -384,6 +384,56 @@ are named at every point where they touch the work.
 > `EMENDA-02-05`; expected `grep -c EMENDA-02-05 <artefato>` >= 1.
 ---
 
+> **AMENDMENT EMENDA-02-06 — 2026-09-07, review of P3b (Claude Web).**
+> `Docs/relatorio-leva-02-etapa-4.md` (`5ee7789`) was reviewed against the endpoint, the encoder,
+> the tests and both control files. **Two corrections, both small, and then the leva closes.**
+>
+> **F1 — the sitemap emits `hreflang` and `x-default` and NOTHING asserts them. Fix before the
+> content commit.** §8 requires each address to carry the `xhtml:link rel="alternate"` pair plus an
+> `x-default` pointing at the English one, and `SitemapEndpoints.cs` writes all three. `SeoTests`
+> covers the `<loc>` set from both sides — derived page set, product set, the hidden product
+> leaving — and never opens an `xhtml:link`: measured, the strings `hreflang` and `x-default` do
+> not appear anywhere in the test sources. A regression that drops the alternates passes all 137
+> tests, and the sitemap is the artefact this class exists for precisely because nobody opens it
+> again. Add to `The_sitemap_carries_every_public_page_in_both_cultures`, or beside it: every
+> `<url>` carries one `xhtml:link` per culture plus `x-default`; the `x-default` href equals the
+> English address of that same page; and a reach assertion that the alternates were found at all.
+>
+> **F2 — one method warns.** `SeoTests.The_two_lists_of_public_pages_agree_with_each_other` is
+> declared `async Task` and awaits nothing (CS1998); it is the only one in the suite. Drop the
+> `async` and return `void`. The leva-01 standard is a build with zero warnings, and a warning that
+> is always there is a warning nobody reads.
+>
+> **F3 — how the leva closes, so the two commits are not improvised.** Content commit first, with
+> F1 and F2 folded in: everything now in the tree, plus the two test corrections. Then the closing
+> commit, whose ONLY change is `Docs/fila-cc.md` — the State column of the `2026-09-05` line to
+> `concluido` and the Commit column to the content commit's short hash, with the total number of
+> rows unchanged and no other cell rewritten. The push is Rod's. **The leva closes with item 13 of
+> the conference open:** the Lighthouse accessibility score belongs to the phase-2 gate of
+> `Docs/roadmap.md`, not to this leva's content, and it stays recorded in
+> `Docs/conferencia-leva-02.md` as Rod's to run.
+>
+> **Verified independently in this review, and holding:** all 16 command controls of the committed
+> `Docs/controles/public-site.tsv` run by me from the file — **16 of 16 at target**, including the
+> new C16/C17, whose negative side I reproduced (a slug literal added to a copy of the tree moves
+> it from 0 to 1, in a comment). `Docs/controles/foundation.tsv` shows exactly one changed line and
+> it is the C16 label, `EXPIRA COM Q9` to `EXPIRA COM Q12`; the pattern, target and expected value
+> are byte-identical. `Docs/fila-cc.md` untouched, as it must be until the closing commit. No
+> negative file in the range, no BOM. `PublicPages` derives the page set from
+> `IActionDescriptorCollectionProvider`, which is B5 satisfied at the source rather than in the
+> test, and `The_two_lists_of_public_pages_agree_with_each_other` turns the hand-typed list into a
+> real second opinion. The script-injection fix of §4.1 is right where it matters:
+> `AllowRange(UnicodeRanges.All)` followed by `ForbidCharacters('<', '>', '&')` — allowing a range
+> does not re-forbid what is dangerous, which is exactly the trap, and the test drives a
+> `</script>` through a product name to prove it. The E2, E3 and E4 corrections of `EMENDA-02-05`
+> are applied and, in E4's case, found a sibling the amendment did not know about: a zone code
+> typed into `HowItWorks.cshtml.cs`, fixed at the root by carrying `HandoverMode` instead.
+>
+> **Proof that this amendment was read:** the content commit's message, or a line appended to
+> `Docs/relatorio-leva-02-etapa-4.md` above its Revisão section, contains the string
+> `EMENDA-02-06`; expected `grep -c EMENDA-02-06 <artefato>` >= 1.
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-05`

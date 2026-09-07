@@ -203,4 +203,60 @@ pelo `RichText` injetado.
 
 ---
 
-## Revisão (Claude Web, )
+## Revisão (Claude Web, 2026-09-07)
+
+**Veredito: executar após duas correções, ambas dentro do commit de conteúdo.** Conferido abrindo o
+endpoint, o encoder, os dois arquivos de controle e os testes — não o relato. Nada volta; as duas
+correções são um teste a mais e uma palavra a menos.
+
+**F1 — o sitemap emite `hreflang` e `x-default` e nenhum teste os afirma.** A §8 exige o par
+`xhtml:link rel="alternate"` por cultura e o `x-default` apontando para a inglesa, e o
+`SitemapEndpoints.cs` escreve os três (linhas 117–132). O `SeoTests` cobre o conjunto de `<loc>`
+pelos dois lados — páginas derivadas, produtos, o produto escondido saindo — e **nunca abre um
+`xhtml:link`**: medido, as strings `hreflang` e `x-default` não aparecem em nenhum fonte de teste.
+Uma regressão que derrube os alternates passa nos 137. É o artefato para o qual essa classe existe,
+justamente porque ninguém o abre de novo. Três asserções ao lado do teste que já lê o XML: cada
+`<url>` tem um `xhtml:link` por cultura mais o `x-default`; o `href` do `x-default` é o endereço
+inglês daquela mesma página; e um alcance provando que algum alternate foi encontrado.
+
+**F2 — um método avisa.** `SeoTests.The_two_lists_of_public_pages_agree_with_each_other` é
+`async Task` e não espera nada (CS1998) — o único da suíte, medido varrendo os corpos. Tire o
+`async`. O padrão da leva 01 é build sem aviso, e aviso permanente é aviso que ninguém lê.
+
+**O que remedi por conta própria, e bateu:**
+
+| Afirmação | Como conferi | Resultado |
+|---|---|---|
+| 17 controles no alvo | rodei os 16 `cmd` do arquivo **commitado** | **16 de 16** no esperado |
+| o C16 sabe dizer não | copiei a árvore e acrescentei `// var x = "drive-scout-4";` | 0 na árvore real, **1** na cópia — e pega dentro de comentário |
+| o `foundation.tsv` mudou só o rótulo | `git diff --numstat` e leitura das duas linhas | **1 linha**, `Q9` → `Q12`; padrão, alvo e esperado idênticos |
+| a fila não foi tocada | `git diff -- Docs/fila-cc.md` | intacta, como tem de estar até o commit de fechamento |
+| a B5 foi cumprida na fonte | li o `PublicPages.cs` | conjunto derivado de `IActionDescriptorCollectionProvider`; e o teste que compara as duas listas transforma a lista digitada em segunda opinião de verdade |
+| a §4.1 fechou o buraco | li o `ScriptSafeEncoder()` | `AllowRange(UnicodeRanges.All)` **seguido de** `ForbidCharacters('<','>','&')` |
+| E2, E3 e E4 da emenda anterior | li os três testes | aplicadas; a E2 afirma 60 caracteres da instrução com alcance de 80, a E3 afirma **igualdade** com alcance dos dois lados, a E4 virou C16/C17 |
+| superfície, BOM, negativos | `git diff --name-only` e os três primeiros bytes | 16 arquivos, todos previstos; nenhum BOM; nenhum negativo |
+
+**A §4.1 é o achado da leva e é de segurança.** Permitir uma faixa Unicode não reproíbe o que é
+perigoso — é uma armadilha que a documentação não grita, e ela estava num caminho completo de uma
+caixa de edição do administrador até código rodando no navegador do visitante. Você fechou por
+teste que dirige um `</script>` pelo nome do produto, não por leitura. E a §4.2 (o `XmlWriter`
+tomando a codificação do writer, não das settings) é a mesma classe: verde que mentia.
+
+**A E4 encontrou um irmão que a emenda não conhecia**, e a correção certa foi na raiz: `zone.Code ==
+"disney-resorts"` com `FirstOrDefault` degradava em silêncio — renomeie a zona e a página de como
+funciona simplesmente para de mostrar o bloco, sem erro nenhum. `ZoneInstructions` passou a carregar
+o `HandoverMode` e a página pede a zona pelo que ela **faz**. É a diferença entre consertar o
+sintoma e tirar o dado de dentro do código.
+
+**Sobre a §5 (esquema das URLs atrás do App Service):** concordo em não mexer agora — configurar
+`ForwardedHeaders` para um ambiente que não existe é adivinhar. Registrado em
+`Docs/backlog-conhecido.md` com destino ao portão de deploy da fase 5.
+
+**O fechamento, para não ser improvisado** (`EMENDA-02-06` F3): commit de conteúdo com F1 e F2
+dentro; depois o commit de fechamento cuja **única** mudança é a linha `2026-09-05` da
+`Docs/fila-cc.md` — Estado para `concluido`, Commit com o hash curto do primeiro, número total de
+linhas inalterado, nenhuma outra célula reescrita. O push é seu. **A leva fecha com o item 13 da
+conferência aberto**: o número do Lighthouse é do portão da fase 2 do roadmap, não do conteúdo
+desta leva, e fica registrado na conferência como seu.
+
+**Faça F1 e F2, commite o conteúdo, feche a fila. Não há mais parada.**
