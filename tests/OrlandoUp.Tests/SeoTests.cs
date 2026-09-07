@@ -20,6 +20,7 @@ public class SeoTests : IAsyncLifetime
 {
     private const string Sitemap = "/sitemap.xml";
     private static readonly XNamespace Urlset = "http://www.sitemaps.org/schemas/sitemap/0.9";
+    private static readonly XNamespace Xhtml = "http://www.w3.org/1999/xhtml";
 
     private readonly SiteFactory _factory = new();
 
@@ -84,7 +85,7 @@ public class SeoTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task The_two_lists_of_public_pages_agree_with_each_other()
+    public void The_two_lists_of_public_pages_agree_with_each_other()
     {
         // SiteBehaviourTests carries a hand-typed list of addresses, and it is useful precisely
         // because it is independent. Independent is only worth something while the two agree, so
@@ -148,6 +149,52 @@ public class SeoTests : IAsyncLifetime
 
         Assert.DoesNotContain(after, url => url.EndsWith("/rentals/infant-stroller", StringComparison.Ordinal));
         Assert.Contains(after, url => url.EndsWith("/rentals/drive-scout-4", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Every_address_in_the_sitemap_declares_its_alternates_and_a_default()
+    {
+        // The alternates are the whole reason a bilingual site has a sitemap at all, and they are
+        // also the part nobody ever opens again: a regression that dropped every xhtml:link would
+        // have left the locs intact and passed every other assertion in this file.
+        XDocument document = XDocument.Parse(await _factory.CreateClient().GetStringAsync(Sitemap));
+
+        List<XElement> addresses = document.Descendants(Urlset + "url").ToList();
+
+        Assert.True(addresses.Count >= 20, $"only {addresses.Count} addresses were found");
+
+        int alternates = 0;
+
+        foreach (XElement address in addresses)
+        {
+            string loc = address.Element(Urlset + "loc")!.Value;
+
+            Dictionary<string, string> byLanguage = address
+                .Elements(Xhtml + "link")
+                .Where(link => (string?)link.Attribute("rel") == "alternate")
+                .ToDictionary(
+                    link => (string)link.Attribute("hreflang")!,
+                    link => (string)link.Attribute("href")!,
+                    StringComparer.Ordinal);
+
+            alternates += byLanguage.Count;
+
+            foreach ((_, string culture) in PublicPages.Cultures)
+            {
+                Assert.True(byLanguage.ContainsKey(culture), $"{loc} declares no {culture} alternate");
+            }
+
+            Assert.True(byLanguage.ContainsKey("x-default"), $"{loc} declares no x-default");
+
+            // The default is the English address of THIS page, not of some other one and not the
+            // page itself: on a /pt address, an x-default pointing at the /pt address would tell a
+            // search engine that Portuguese is what to serve someone with no language preference.
+            Assert.Equal(byLanguage[PublicPages.Cultures[0].Culture], byLanguage["x-default"]);
+        }
+
+        // Reach: every assertion above is inside a loop, and a document whose urls carried no link
+        // at all would have made each of them vacuous had they been written as absences.
+        Assert.Equal(addresses.Count * (PublicPages.Cultures.Count + 1), alternates);
     }
 
     [Fact]
