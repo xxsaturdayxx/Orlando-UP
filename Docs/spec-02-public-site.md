@@ -261,6 +261,64 @@ are named at every point where they touch the work.
 > `grep -c EMENDA-02-03 <artefato>` >= 1.
 ---
 
+> **AMENDMENT EMENDA-02-04 — 2026-09-06, review of P2 (Claude Web).**
+> `Docs/relatorio-leva-02-etapa-2.md` (`d204ce0`) and the E2 addendum to
+> `Docs/relatorio-leva-02-etapa-1.md` (`e9d537b`) were reviewed against the files, not the prose.
+> **P2 is approved.** Four things go back into the spec, one of them a fact this project has been
+> repeating since leva 01 and which is false.
+>
+> **D1 — `latin-ext` does NOT carry the Portuguese accents; `latin` does. This is now written into
+> a file the product ships and must be corrected.** Measured with fontTools over the four staged
+> `.woff2`: `manrope-latin` and `bricolage-grotesque-latin` each carry **28 of 28** Portuguese
+> accented characters (á à â ã é ê í ó ô õ ú ü ç and their capitals, plus º ª);
+> `manrope-latin-ext` and `bricolage-grotesque-latin-ext` each carry **1 of 28**. The Portuguese
+> accents live in U+00C0–U+00FF, which is inside the `latin` unicode-range; `latin-ext` is
+> U+0100–024F, which is Central and Eastern European. **Correct in `wwwroot/fonts/OFL.txt`** the
+> line reading `bricolage-grotesque-latin-ext.woff2  the same, latin-ext (the Portuguese accents)`,
+> and correct §2 of the P2 report where it says the Portuguese page is the one that pulls the
+> accented subset. The error is inherited from leva 01 (D7/01 says the same thing about Nunito) and
+> is recorded in `Docs/backlog-conhecido.md`; nothing renders wrong today, because both subsets
+> ship.
+>
+> **D2 — keep `latin-ext`, with a true reason written down.** With D1 corrected, neither `en-US`
+> nor `pt-BR` needs it, and Spanish would not either (ñ is U+00F1, also `latin`). It stays because
+> `unicode-range` means a browser downloads a subset only when a character needs it, so the 45,856
+> bytes are repo size and never page weight, and because a Central-European character in a hotel
+> name or a guest's name then renders in the site's own type instead of falling back. The
+> "Portuguese accents" reason is retired.
+>
+> **D3 — the two families have axes nobody has declared, and E4 must declare them on purpose.**
+> Measured: Manrope is `wght 200–800`; **Bricolage Grotesque is `wght 200–800` AND `opsz 12–96`**.
+> §6 of the spec and the OFL header name 500–800 and 400–700, which are the ranges D29 *uses*, not
+> the ranges the files *carry*. In E4: `@font-face` declares the file's real range
+> (`font-weight: 200 800`), and the optical-size axis is a decision — `font-optical-sizing: auto`
+> lets an 84 px display heading and a 24 px sub-heading take different letterforms, which is what
+> the axis is for and is the recommendation; pinning it with `font-variation-settings` without
+> saying so would silently discard it.
+>
+> **D4 — §5.4 moves out of E2, exactly as the report argues.** The destructive block (delete the
+> catalog, re-run `seed-catalog`) cannot run before E5: `CatalogSeedData.cs` still carried the
+> leva-01 placeholder fleet, so deleting and re-seeding would have reinserted the same seven rows,
+> and the counts §5.4 promises — 7 products and **10** units — exist only once E5 writes the real
+> fleet. **The block runs immediately after E5**, against LocalDB, with `SELECT DB_NAME()` printed
+> first, FK order preserved and the Identity tables untouched, and its before/after counts go in
+> the P3 report.
+>
+> **D5 — the display scale is a desktop scale and `clamp()` is approved.** §6 of the spec reads
+> "84 / 48 / 40 / 32 / 26 / 24 px desktop"; reducing with `clamp()` on narrow viewports is the
+> intended reading. Two things do not scale down with it: hit targets stay >= 44 px and the
+> `:focus-visible` ring stays visible at every size (D9). Visual-check item 8 at 375 px is the
+> proof.
+>
+> **One hardening for the control file, in E4:** C08 (the reach sibling of C07) is satisfied today
+> by `wwwroot/fonts/OFL.txt` alone — the heading family is *licensed* but not yet *used*, and the
+> control cannot tell the two apart. Narrow its target to `wwwroot/css/site.css`, so that what it
+> proves is that the stylesheet names the family.
+>
+> **Proof that this amendment was read:** `Docs/relatorio-leva-02-etapa-3.md` contains the string
+> `EMENDA-02-04`; expected `grep -c EMENDA-02-04 <artefato>` >= 1.
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-05`

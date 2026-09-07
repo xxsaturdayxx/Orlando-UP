@@ -153,4 +153,57 @@ abri-lo.
 
 ---
 
-## Revisão (Claude Web, )
+## Revisão (Claude Web, 2026-09-06)
+
+**Veredito: seguir para a E4.** Conferido abrindo os arquivos: os quatro `.woff2` foram lidos com
+`fontTools`, o `OFL.txt` e o diff foram lidos linha a linha, e os controles grepáveis foram
+rodados por mim. A correção de ordem da §4 está certa e virou `EMENDA-02-04` D4.
+
+**O que remedi, e bateu:**
+
+| Afirmação | Como conferi | Resultado |
+|---|---|---|
+| os quatro arquivos são woff2 íntegros, não HTML de erro | assinatura `wOF2` e campo de tamanho do cabeçalho (offset 8) contra o tamanho real | confirmado nos quatro; `76888/76888` e `15120/15120` nos dois que abri |
+| ambas são variáveis, um arquivo por subconjunto | tabela `fvar` | confirmado — e ver a D3 abaixo, porque há mais eixo do que você declarou |
+| `OFL.txt` não nomeia mais a família aposentada | `grep -ci nunito` | 0 |
+| C07 = 6, todas em `site.css` | `grep -rIion` com o corte de `bin`/`obj` | confirmado — linhas 43, 50, 53, 57, 64, 68 |
+| nada além da superfície declarada foi tocado | `git diff --name-only 3b2cd58 d204ce0` | 7 arquivos, todos previstos; nenhum negativo; sem BOM |
+| a §10 do relatório da etapa 1 ficou acima da Revisão | leitura do arquivo | confirmado (B6) |
+
+**A §4 é achado seu e está certo.** O bloco da §5.4 não podia rodar na E2 — o `CatalogSeedData.cs`
+ainda era o placeholder, e as 10 unidades que a §5.4 promete só existem depois da E5. Aprovado e
+levado para a spec, para que uma sessão futura não leia a §5.4 na posição errada.
+
+**Uma coisa que você afirmou e que é falsa — e já está dentro do produto.** O `OFL.txt` commitado
+diz `bricolage-grotesque-latin-ext.woff2  the same, latin-ext (the Portuguese accents)`, e a §2
+deste relatório diz que "é a portuguesa que puxa os acentuados". Medi com `fontTools` nos quatro
+arquivos:
+
+```
+manrope-latin.woff2              acentos PT: 28/28   U+0000-00FF: 192   U+0100-024F:   4
+manrope-latin-ext.woff2          acentos PT:  1/28   U+0000-00FF:   5   U+0100-024F: 121
+bricolage-grotesque-latin.woff2  acentos PT: 28/28   U+0000-00FF: 189   U+0100-024F:   4
+bricolage-...-latin-ext.woff2    acentos PT:  1/28   U+0000-00FF:   4   U+0100-024F: 111
+```
+
+Os acentos do português moram em U+00C0–U+00FF, que é o `latin`. O `latin-ext` é U+0100–024F —
+Europa Central e Oriental. **Nada renderiza errado**, porque os dois subconjuntos são servidos; o
+que está errado é a razão escrita, e ela é herdada da leva 01 (a D7/01 diz o mesmo do Nunito).
+Corrija a linha do `OFL.txt` na E4 e a §2 deste relatório. A `EMENDA-02-04` D1 registra o fato e a
+D2 mantém o `latin-ext` com uma razão verdadeira.
+
+**E uma coisa que você não afirmou e que a E4 precisa decidir.** As duas famílias declaram
+`wght 200–800`, não 500–800 e 400–700 — esses são os pesos que a D29 usa, não o que os arquivos
+carregam. E o **Bricolage Grotesque tem um segundo eixo, `opsz 12–96`**, que ninguém mencionou até
+agora: com `font-optical-sizing: auto` um título de 84 px e um de 24 px ganham desenhos diferentes,
+que é exatamente para isso que o eixo existe. Está na `EMENDA-02-04` D3, com recomendação.
+
+**A pergunta da sua §6 — aprovada.** A escala do §12 é de desktop e o `clamp()` é a leitura certa.
+Duas coisas não descem com ela: alvo de toque ≥ 44 px e anel de foco visível em todo tamanho (D9).
+O item 8 da conferência, a 375 px, é a prova.
+
+**Uma linha de endurecimento para a E4:** o C08 está verde hoje por causa do `OFL.txt` — a família
+de título está **licenciada**, não **usada**, e o controle não distingue as duas coisas. Estreite o
+alvo dele para `wwwroot/css/site.css`.
+
+**Pode seguir para a E4 e a E5.** A próxima parada é a P3.
