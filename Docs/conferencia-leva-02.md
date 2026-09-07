@@ -29,13 +29,16 @@ layout e a spec proíbe usar um no lugar de olhar.
 | 10 | fonte de `/rentals/drive-scout-4` | um bloco `application/ld+json`, `Product` sem `offers`, nenhum `TODO-` | **1** bloco, `offers` **0**, `TODO-` **0**; o tipo sai literal, sem entidade | ✅ |
 | 11 | `/sitemap.xml` | XML válido, duas culturas por página, produtos presentes, nada de `/admin` | **30** `<loc>` = 8 páginas × 2 + 7 produtos × 2; `admin` **0**; declara `encoding="utf-8"`, que é o que os bytes são | ✅ |
 | 12 | `/robots.txt` | ainda fechado | `User-agent: *` / `Disallow: /` | ✅ |
-| 13 | **Rod:** Lighthouse, categoria acessibilidade, em `/` e `/rentals` | ≥ 95 (portão da fase 2 do roadmap) | **não rodado** — precisa do Chrome DevTools; peso das páginas medido para contexto: `/` 11,8 kB, `/rentals` 10,0 kB, fonte de título 76,9 kB | ⬜ **seu** |
+| 13 | **Rod:** Lighthouse, categoria acessibilidade, em `/` e `/rentals` | ≥ 95 (portão da fase 2 do roadmap) | **100 e 100**, rodado pelo Rod em 2026-09-07. Peso das páginas, medido para contexto: `/` 11,8 kB, `/rentals` 10,0 kB, fonte de título 76,9 kB | ✅ |
 | 14 | `/es` | 404 localizado | **404** | ✅ |
 
 ## O que eu não consegui alcançar, e por quê
 
-- **O item 13 é seu.** Lighthouse roda dentro do Chrome; daqui eu meço o que a página contém, não o
-  que uma ferramenta de auditoria pontua. É o único portão do roadmap que ainda não tem número.
+- **O item 13 era seu, e fechou em 2026-09-07 com 100 nas duas páginas.** Lighthouse roda dentro
+  das Ferramentas do desenvolvedor do Chrome (F12); daqui eu meço o que a página contém, não o que
+  uma ferramenta de auditoria pontua. Com ele, **a cláusula de acessibilidade da fase 2 do
+  `roadmap.md` está cumprida** — o que ainda falta naquela fase é a cláusula das fotos reais da
+  frota, adiada de propósito pela D3/02 e reversível assim que as imagens existirem.
 - **Os itens 7, 8 e 9 têm a metade mecânica verde e a metade humana aberta.** Eu provo que o anel de
   foco existe e nunca é removido, que a escala encolhe e que o alvo de toque é 44 px; nada disso
   prova que o Tab passa na ordem que faz sentido nem que o menu cabe na sua mão. Vale abrir o site

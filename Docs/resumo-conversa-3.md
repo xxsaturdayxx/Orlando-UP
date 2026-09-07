@@ -139,8 +139,9 @@ parada isso quase virou relato de portão vermelho. **Todo número de build e de
 **Do Rod (validação humana que a automação não alcança):**
 
 1. **Push** — 13 commits à frente do remoto `[V]`.
-2. **Lighthouse**, categoria acessibilidade, em `/` e `/rentals`, alvo ≥ 95. É o item 13 da
-   `Docs/conferencia-leva-02.md` e o único "done means" da fase 2 do `roadmap.md` sem número.
+2. ~~Lighthouse~~ — **feito em 2026-09-07: 100 em `/` e 100 em `/rentals`** `[V, registrado no item
+   13 da `Docs/conferencia-leva-02.md`]`. A cláusula de acessibilidade da fase 2 do `roadmap.md`
+   está cumprida; da fase 2 sobra a cláusula das fotos reais da frota, adiada pela D3/02.
 3. **Passeio de Tab no desktop e o site no telefone a 375 px** — itens 7, 8 e 9 da conferência têm a
    metade mecânica verde e a metade humana aberta.
 4. **Q13** — ler as etiquetas: nomes exatos dos modelos e contagem por modelo. **Q12** — o número do
@@ -171,12 +172,13 @@ frase falsa sobre `latin-ext` na D7/01, e o `ForwardedHeaders` do App Service.
    ```
    git push origin main
    ```
-2. **Você — ação:** rodar o Lighthouse (Chrome DevTools → Lighthouse → só Accessibility) em
-   `https://localhost:7420/` e `/rentals`, e anotar os dois números.
+2. ~~Rodar o Lighthouse~~ — **feito: 100 e 100.** Fica a nota de caminho, porque o nome em inglês
+   não existe no menu: é **F12** → aba **Lighthouse** (pode estar atrás do `»`) → só *Accessibility*
+   → *Analyze page load*.
 3. **Cole no Claude (Cowork):** *"abrindo a conversa 4 do Orlando Up. Leva 02 fechada em `383fe27`
-   / `f59c0e2`. Lighthouse deu &lt;número&gt; em `/` e &lt;número&gt; em `/rentals`. Quero decidir a
-   frente da conversa 4."* — depois do item 2, não antes, porque o número do Lighthouse pode virar
-   uma frente de acessibilidade em vez da leva seguinte.
+   / `f59c0e2`, conversa 3 fechada em `fca2f57`. Lighthouse deu 100 em `/` e 100 em `/rentals`.
+   Quero decidir a frente da conversa 4."* — o número já não abre frente de acessibilidade, então a
+   decisão do item 4 é a primeira coisa da conversa.
 4. **Você — decisão:** leva 03 (reserva) ou leva 04 (CRUD)? A 03 precisa de Q3–Q6; a 04 não precisa
    de nada e leva o conserto do `IsActive` junto.
 5. **Cole no Claude Code:** só depois de a spec da frente escolhida existir e de a linha nascer em
@@ -185,5 +187,6 @@ frase falsa sobre `latin-ext` na D7/01, e o `ForwardedHeaders` do App Service.
 ---
 
 *O site público existe e é honesto: todo número nele veio da D26 ou da D27, e o que ninguém mediu
-aparece como ausência em vez de valor inventado. O que falta para ele ser um negócio é a reserva —
-e o que falta para ele ser publicável é um número de Lighthouse e um push.*
+aparece como ausência em vez de valor inventado. A acessibilidade fechou em 100 nas duas páginas
+auditadas. O que falta para ele ser um negócio é a reserva; o que falta para ele estar no remoto é
+um push.*
