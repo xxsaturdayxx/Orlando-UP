@@ -319,6 +319,71 @@ are named at every point where they touch the work.
 > `EMENDA-02-04`; expected `grep -c EMENDA-02-04 <artefato>` >= 1.
 ---
 
+> **AMENDMENT EMENDA-02-05 — 2026-09-07, review of the E4/E5 stop (Claude Web).**
+> `Docs/relatorio-leva-02-etapa-3.md` (`0bcc67d`) was reviewed against the stylesheet, the seed, the
+> tests and the diff. **The stop is approved and E6 may start.** Five things go into the spec.
+>
+> **E1 — this stop is NOT the P3 of §0, and the four stops become five.** §0 defines P3 as
+> *everything written, tests green, before the content commit*, carrying the pre-commit sweep, the
+> control measurements and `Docs/conferencia-leva-02.md`. E6 and E7 have not started and
+> `Docs/controles/public-site.tsv` is deliberately uncommitted, so this is a different stop.
+> Renamed: **P3a** = E4 + E5 + the §5.4 block (this one, `relatorio-leva-02-etapa-3.md`);
+> **P3b** = E6 + E7, everything written and green, carrying the conference, both `.tsv` files and
+> the C16 label, reported in `Docs/relatorio-leva-02-etapa-4.md` and approved before the content
+> commit. Splitting here was the right instinct — the destructive block had just run and the whole
+> visible surface had changed — and holding the `.tsv` back rather than committing two permanent
+> reds is the correct reading of what a control file is for.
+>
+> **E2 — the delivery-areas test asserts the zone NAMES and not the sentence the page exists to
+> publish.** D5/02 puts that page in the leva because the hand-over instruction a visitor reads
+> must be the same string the booking will show. `The_delivery_page_names_every_active_zone_from_the_database`
+> reads the zones through DI and asserts every `zone.Name` appears — but nothing asserts
+> `zone.InstructionsHtml` rendered. A page that lists four names and silently drops the
+> instructions passes today. In E7: assert a distinctive fragment of at least one zone's rendered
+> instructions, with the reach assertion that the fragment is non-empty in the query result.
+>
+> **E3 — `The_catalog_page_prices_what_is_on_sale_and_only_that` promises more than it asserts.**
+> The body proves `from US$` is present, `Coming soon` is present, and `US$ 0.00` is absent. A
+> `from US$ 32/day` printed under a stroller card satisfies all three. The name claims *and only
+> that*, so make it count: read the number of bookable products from `CatalogQueries` through DI
+> and assert the occurrences of `from US$` on `/rentals` equal it. A test whose name promises a
+> negative it does not assert makes a later reader trust a cover that is not there.
+>
+> **E4 — the defect of §6.1 deserves a control, not just a fix.** `Pages/Admin/Index.cshtml.cs`
+> called `CatalogSeedData.Products.Single(p => p.Slug == "standard-scooter")`, which throws once
+> that slug stops existing; no test opens `/admin` authenticated, so nothing would have caught it,
+> and the A12 file list did not contain the file — what found it was compiling and reading.
+> Measured now: **zero** slug literals outside `Infrastructure/Seeding/CatalogSeedData.cs` in
+> `src/`, and no `Single(`/`First(` over the seed list anywhere in `src/`. Add to
+> `public-site.tsv` in E7 a control that keeps it at zero, with a reach sibling proving the scan
+> reaches the seed file. The slug is data; a slug typed into code is a landmine with a date on it.
+>
+> **E5 — what the §5.4 block did, recorded here because §5.4 will be re-read.** Ran after E5, on
+> LocalDB, with the database name checked inside the script rather than trusted to the operator.
+> Products 7 → 7, Units 7 → **10**, PricingTiers 16 → **8**, ProductAddOns 28 → **12**;
+> AspNetUsers 1 → 1 and AspNetRoles 2 → 2, untouched. The wheelchair and the four strollers carry
+> NULL width and length, which is the migration of P1 earning its place: without it each would have
+> needed an invented measurement to exist as a row.
+>
+> **Verified independently in this review, and holding:** the 15 contrast pairs in the stylesheet
+> header recomputed from the token values with the WCAG relative-luminance formula — **all 15 match
+> to the hundredth**, including the two the report flags as diverging from §12 (the fit pill at
+> 6.58 where §12 rounds to ">= 7", the tint at 6.25 where §12 says 6.4); the measured number
+> governs, and both clear D9. The four `@font-face` carry the correct `unicode-range`, which is
+> what makes D2 true — without it, two faces of one family and weight would collide and the
+> `latin-ext` file (4 glyphs below U+0100) could win for the whole page. `--color-focus` is
+> reassigned in the four dark contexts and `outline: none` occurs 0 times. The seed carries nothing
+> D26 does not: 20.5 × 42.3, 19.5 × 39 with the seat width only on the Spitfire, the wheelchair with
+> every dimension null, the four strollers with no unit, no tier and no add-on, and K3 (a)'s single
+> price list. **No delivery-fee number appears anywhere under `Pages/` or `Resources/`** — K1 (b)
+> obeyed. Resource parity equal at 163 keys per culture; `Admin_PlaceholderBanner` gone from all of
+> `src/`; `TODO-` at exactly 4, the zero margin A1 predicted; 13 of the 13 measurable controls of
+> `public-site.tsv` at target, run from the saved file; no negative file touched, no BOM.
+>
+> **Proof that this amendment was read:** `Docs/relatorio-leva-02-etapa-4.md` contains the string
+> `EMENDA-02-05`; expected `grep -c EMENDA-02-05 <artefato>` >= 1.
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-05`

@@ -251,4 +251,59 @@ negativos da §12.1 da spec aparece no `git status`.
 
 ---
 
-## Revisão (Claude Web, )
+## Revisão (Claude Web, 2026-09-07)
+
+**Veredito: aprovado, pode começar a E6.** Conferido abrindo a folha de estilo, o seed, os testes e
+o diff — não o relato. Uma correção de nome (esta parada não é a P3 da §0), três correções que
+entram na E7, e nenhuma que volte trabalho já feito. Tudo em `EMENDA-02-05`.
+
+**O que remedi por conta própria, e bateu:**
+
+| Afirmação | Como conferi | Resultado |
+|---|---|---|
+| a tabela de contraste foi **calculada**, não estimada | recalculei os 15 pares da fórmula WCAG sobre os hexes do próprio `:root` | **os 15 batem na casa centesimal** — inclusive as duas divergências que você aponta contra o §12 (6,58 onde ele arredonda para "≥ 7"; 6,25 onde ele diz 6,4) |
+| os 13 controles mensuráveis estão no alvo | rodei os 13 do arquivo gravado | 13/13 — hex 0, tokens 0, nunito 0, fontes só as quatro, C10 `22 − 22 = 0` com o operando subindo de 18 para 22 |
+| o foco passa nos dois fundos | `:focus-visible` único + `--color-focus` reatribuído | reatribuído em `.site-header`, `.hero`, `.section--navy`, `.site-footer`; `outline: none` = 0 |
+| o seed não inventa número | li o `CatalogSeedData.cs` contra a D26 | `20.5 × 42.3`; `19.5 × 39` com assento 17 **só** no Spitfire; cadeira com todas as medidas nulas; carrinhos sem unidade, sem faixa e sem adicional; K3 (a) obedecida |
+| K1 (b) obedecida | varredura por número de taxa em `Pages/` e `Resources/` | nenhum |
+| paridade de recurso e faixa do C16 | `diff` das chaves e `grep -cF TODO-` | 163 = 163; `TODO-` = **4**, a margem zero que a A1 previu |
+| `Admin_PlaceholderBanner` saiu | `grep` em todo `src/` | 0 |
+| superfície, BOM, negativos | `git diff --name-only` e os três primeiros bytes de cada arquivo | 30 arquivos, todos previstos; nenhum BOM; nenhum negativo |
+
+**E uma que eu não tinha pensado em conferir e que decide a leva:** os quatro `@font-face` trazem o
+`unicode-range` certo. É ele que faz a D2 ser verdade — sem ele, duas faces da mesma família e do
+mesmo peso colidem e o arquivo `latin-ext`, que tem **4 glifos** abaixo de U+0100, poderia vencer
+para a página inteira. Você não afirmou isso no relatório; está certo no arquivo.
+
+**A §6.1 é o achado da leva, e ele justifica o ritual inteiro.** `Single(... == "standard-scooter")`
+lançaria no primeiro acesso ao painel depois do reseed, e nenhum teste abre `/admin` autenticado —
+não havia teste para falhar. Você está certo também sobre o que o encontrou: não foi a lista da
+A12, foi compilar e ler. Medi o entorno: **zero** literais de slug fora do `CatalogSeedData.cs` em
+`src/`, e nenhum `Single(`/`First(` sobre a lista de seed. Isso vira controle na E7 (`EMENDA-02-05`
+E4) — slug é dado, e slug digitado dentro de código é mina com data marcada.
+
+**A correção de nome.** Esta parada não é a P3 da §0 — a P3 de lá é "tudo escrito, testes verdes,
+antes do commit de conteúdo", com a conferência e os dois `.tsv`. Passa a ser **P3a**; a P3b é a
+E6 + E7, em `Docs/relatorio-leva-02-etapa-4.md`. Parar aqui foi a leitura certa: o bloco destrutivo
+tinha acabado de rodar e toda a superfície visível mudou. E segurar o `.tsv` em vez de commitar
+dois vermelhos permanentes é o que um arquivo de controle é.
+
+**As três que entram na E7, nenhuma bloqueia esta parada:**
+
+1. **A página de áreas tem teste de nome de zona e não do texto que ela existe para publicar.** A
+   D5/02 põe a página na leva porque a instrução de entrega em mãos tem de ser a mesma string que a
+   reserva vai mostrar — e nada afirma que `InstructionsHtml` renderizou. Quatro nomes listados e a
+   instrução perdida passa hoje.
+2. **`The_catalog_page_prices_what_is_on_sale_and_only_that` promete mais do que afirma.** "from
+   US$" presente + "Coming soon" presente + sem "US$ 0.00" é satisfeito por uma página que imprima
+   "from US$ 32/day" debaixo de um carrinho. Conte: ocorrências de `from US$` iguais ao número de
+   produtos reserváveis lido por injeção.
+3. **`PublicPaths()` é lista digitada de 21 endereços.** Serve para asserção por página; a regra da
+   B5 cai na E7, quando o conjunto de páginas do sitemap tiver de vir por injeção — e aí a lista
+   digitada vira a segunda fonte independente, se você afirmar que as duas coincidem.
+
+Uma observação sem ação: `No_seeded_product_carries_a_dimension_that_was_never_measured` não tem
+asserção de alcance própria; ela passaria numa frota inteira medida. O teste ao lado, no mesmo
+arquivo e sobre a mesma coleção, tem — então a cobertura existe, só não está onde o nome promete.
+
+**Pode seguir para a E6 e a E7. A próxima parada é a P3b.**
