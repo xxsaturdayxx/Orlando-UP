@@ -480,3 +480,140 @@ Depois da migration, `IsActive` no snapshot é **letra por letra** o que `IsBook
 Depois de aplicar, vale conferir três coisas — a skill pede e elas são baratas: que o
 `__EFMigrationsHistory` passou a ter **3** linhas, que `AuditEntries` existe e aceita uma linha, e
 que o `sys.default_constraints` de `Products` não lista mais `IsActive`.
+
+---
+
+## Revisão (Claude Web, 2026-09-08)
+
+**Prova de leitura exigida pela `EMENDA-04-03`:** ocorrências da cadeia `EMENDA-04-03` **nesta
+seção**, contadas com `sed -n '/^## Revisão (Claude Web, 2026-09-08)/,$p'
+Docs/relatorio-leva-04-etapa-1.md | grep -c "EMENDA-04-03"`: **6**.
+
+**Veredito do revisor: aplicar, depois do C1.** Classificado por ele a partir do SQL gerado, não do
+`.cs`: `Up` com zero sentenças destrutivas e zero sentenças de dado, `Down` com uma destrutiva que é
+a certa, e as oito armadilhas da skill conferidas uma a uma. Remedido por ele em `ac01f5e`: sem BOM
+nos três gerados, os quatro diffs de configuração com uma linha cada e nada mais, os 17 controles do
+`public-site.tsv` no alvo e os 18 do `foundation.tsv` também, exceto o C14 e o C15, que respondem
+`127` no shell dele por falta de `dotnet`. O C01 do `.tsv` novo em **4 → 0** e o C03 firme em 0.
+
+**O achado da §7 foi respondido (b), e é o que esta seção executa.** Os itens C2 e C3 não são desta
+etapa: o C3 já está feito — a **D35** de `Docs/decisions.md`, escrita pelo revisor, corrige o
+mecanismo — e o C2, a reescrita do comentário de `ProductConfiguration.cs:28-34`, é do commit de
+conteúdo, com a §11.1 aberta para ele pela `EMENDA-04-03`.
+
+### R.0 Duas linhas do corpo deste relatório envelheceram, e ficam como estavam
+
+O corpo é o registro do que era verdade quando a parada foi pedida e **não** é reescrito; esta
+seção é que vale onde as duas discordarem. As duas linhas:
+
+- a tabela da **§1** diz que a migration e o `.Designer.cs` foram *"gerados, não editados à mão"*.
+  Continua verdade para o `.Designer.cs` e para o snapshot; **deixou de ser** para o `.cs` da
+  migration, que ganhou os dois blocos da R.1;
+- o item 1 da **§9** pede a decisão entre (a), (b) e (c). Está respondida: **(b)**, pela
+  `EMENDA-04-03` C1. O que resta de você é o item 2 e o item 3, repetidos na R.5.
+
+### R.1 O que o C1 acrescentou à migration
+
+Dois blocos escritos à mão no
+`20260908215113_RemoveActiveFlagStoreDefaultsAndAddAuditEntries.cs`, e **só nele**: o `.Designer.cs`
+e o `AppDbContextModelSnapshot.cs` não mudaram um byte, porque SQL escrito à mão é invisível para o
+modelo. `git status --short` lista **um** arquivo.
+
+No `Up`, depois dos quatro `AlterColumn` e antes do `CreateTable`, a quinta remoção — a mesma forma
+dinâmica que o gerador emite para as outras quatro, porque o nome da restrição é gerado pelo
+servidor:
+
+```sql
+DECLARE @bookableDefault nvarchar(max);
+SELECT @bookableDefault = QUOTENAME([d].[name])
+FROM [sys].[default_constraints] [d]
+INNER JOIN [sys].[columns] [c] ON [d].[parent_column_id] = [c].[column_id]
+                              AND [d].[parent_object_id] = [c].[object_id]
+WHERE ([d].[parent_object_id] = OBJECT_ID(N'[Products]') AND [c].[name] = N'IsBookable');
+IF @bookableDefault IS NOT NULL EXEC(N'ALTER TABLE [Products] DROP CONSTRAINT ' + @bookableDefault + ';');
+```
+
+**A variável tem nome e não número, e isso não é gosto:** o script inteiro é **um batch**, e em
+T-SQL o escopo de variável é o batch e não o bloco `BEGIN`/`END`. Os blocos gerados já ocupam `@var`
+até `@var3`; um `@var` repetido seria erro de compilação do script todo, não de um bloco.
+
+No `Down`, o espelho, depois dos quatro `AlterColumn` que repõem os padrões do `IsActive`:
+
+```sql
+ALTER TABLE [Products] ADD DEFAULT CAST(0 AS bit) FOR [IsBookable];
+```
+
+**`CAST(0 AS bit)` e não `1`:** a restrição que a leva 02 criou diz `false`, que é a resposta de
+falha fechada para um produto que ninguém decidiu (D32). Com ela, descer leva ao estado que esta
+migration encontrou, e não a um terceiro estado que migration nenhuma descreve — que é o que a
+`EMENDA-04-03` C1 pede quando diz *simétrico*.
+
+### R.2 O bloco não é decorativo, e as duas metades foram medidas
+
+A migration continua **não aplicada**, então a prova é a metade `SELECT` do bloco, rodada
+**somente leitura** contra o `OrlandoUpDb`, precedida do `SELECT DB_NAME()` (D12). Nada foi
+alterado:
+
+```
+OrlandoUpDb
+IsBookable  -> [DF__Products__IsBook__6E01572D]
+SortOrder   -> (NULL, o IF nao dispara)
+migrations gravadas: 2
+```
+
+Os dois lados: o `WHERE` do bloco **acha** a restrição que existe, então o `IF` dispara e o
+`DROP CONSTRAINT` acontece; apontado a uma coluna sem padrão, **devolve `NULL`** e o `IF` não
+dispara. O bloco é seguro num banco criado do zero, onde a restrição também existiria por vir da
+leva 02, e é inócuo em qualquer banco onde ela já não esteja lá.
+
+### R.3 A migration reclassificada, com o bloco dentro
+
+`python scripts/classificar.py` sobre os dois scripts **regerados**, não sobre os de antes:
+
+| Script | Sentenças | Destrutivas | Atenção | Aditivas |
+|---|---:|---:|---:|---:|
+| `Up`, antes do C1 | 28 | 0 | 5 | 2 |
+| **`Up`, depois do C1** | **33** | **0** | **6** | **2** |
+| `Down`, antes do C1 | 24 | 2 | 4 | 4 |
+| **`Down`, depois do C1** | **25** | **2** | **4** | **5** |
+
+O item de atenção novo do `Up` é o quinto `DROP CONSTRAINT`, justificado como os outros quatro:
+**é o objeto da migration**, e restrição de padrão não guarda dado — derrubá-la não toca nenhuma
+das 7 linhas de `Products`. A sentença aditiva nova do `Down` é o `ADD DEFAULT` da R.1. **O `Up`
+continua com zero destrutivas e zero sentenças de dado** — o único `INSERT` do script segue sendo a
+linha do `__EFMigrationsHistory`, e é o mesmo falso positivo do classificador que a §5.1 já explica.
+Os dois destrutivos do `Down` são os mesmos de antes, pelas mesmas razões.
+
+Nenhuma armadilha da §5.3 muda de resposta: o bloco não cria índice, não renomeia nada, não
+acrescenta coluna, não toca data e não introduz chave estrangeira.
+
+### R.4 Os portões, remedidos com o bloco na árvore
+
+| Portão | Antes do C1 | Depois do C1 |
+|---|---|---|
+| `dotnet build OrlandoUp.sln --nologo -v q` | limpo, 0 avisos | **limpo, 0 avisos** |
+| `dotnet test OrlandoUp.sln --nologo -v q` | 138 passando, 0 falhando | **138 passando, 0 falhando** |
+| `foundation.tsv` | 18, 0 fora do esperado | **18, 0 fora do esperado** |
+| `public-site.tsv` | 17, 0 fora do esperado | **17, 0 fora do esperado** |
+| C01 do `.tsv` novo | 0 | **0** |
+| C03 do `.tsv` novo | 0 | **0** |
+| BOM no arquivo editado | ausente | **ausente** — `75 73 69` |
+
+**A §4.1 da spec agora fala de cinco colunas**, e é a `EMENDA-04-03` C1 que a emendou; eu não
+editei a spec. A afirmação *"nenhuma coluna booleana carrega padrão de banco"* passa a ficar
+verdadeira **no modelo e no banco** no mesmo dia, que era exatamente o motivo de o C1 escolher (b).
+
+### R.5 O que continua faltando, e é seu
+
+1. **Aplicar a migration**, na sua máquina, agora que esta seção está commitada:
+
+   ```
+   dotnet ef database update --project src/OrlandoUp.Web
+   ```
+
+2. **A liberação da P2.**
+
+Depois de aplicar, a conferência barata ganha um quarto item: além das **3** linhas do
+`__EFMigrationsHistory`, da existência de `AuditEntries` e do sumiço do `IsActive` de
+`sys.default_constraints`, confira que **`IsBookable` também sumiu de lá** — é o que o C1
+acrescentou, e é a única parte da migration que nenhum diff de modelo teria produzido.
