@@ -15,7 +15,7 @@ public sealed class DeliveryLocationConfiguration : IEntityTypeConfiguration<Del
         builder.Property(l => l.Name).HasMaxLength(160).IsRequired();
         builder.Property(l => l.Address).HasMaxLength(300);
         builder.Property(l => l.Notes).HasMaxLength(400);
-        builder.Property(l => l.IsActive).HasDefaultValue(true).IsRequired();
+        builder.Property(l => l.IsActive).IsRequired();
         builder.Property(l => l.SortOrder).IsRequired();
 
         builder.HasIndex(l => new { l.ZoneId, l.Name }).IsUnique();

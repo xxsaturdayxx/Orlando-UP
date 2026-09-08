@@ -63,3 +63,12 @@ public enum HandoverMode
     FrontDesk = 2,
     Doorstep = 3,
 }
+
+/// <summary>What an audited write did to the row it names.</summary>
+public enum AuditAction
+{
+    Created = 1,
+    Updated = 2,
+    Deactivated = 3,
+    Reactivated = 4,
+}

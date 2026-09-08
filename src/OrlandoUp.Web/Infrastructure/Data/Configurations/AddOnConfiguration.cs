@@ -17,7 +17,7 @@ public sealed class AddOnConfiguration : IEntityTypeConfiguration<AddOn>
 
         builder.Property(a => a.PricingMode).IsRequired();
         builder.Property(a => a.Amount).HasPrecision(10, 2).IsRequired();
-        builder.Property(a => a.IsActive).HasDefaultValue(true).IsRequired();
+        builder.Property(a => a.IsActive).IsRequired();
         builder.Property(a => a.SortOrder).IsRequired();
 
         builder.HasMany(a => a.Translations)

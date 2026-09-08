@@ -19,7 +19,7 @@ public sealed class DeliveryZoneConfiguration : IEntityTypeConfiguration<Deliver
         builder.Property(z => z.DeliveryFee).HasPrecision(10, 2).IsRequired();
         builder.Property(z => z.HandoverMode).IsRequired();
         builder.Property(z => z.SalesTaxRate).HasPrecision(6, 4).HasDefaultValue(0m).IsRequired();
-        builder.Property(z => z.IsActive).HasDefaultValue(true).IsRequired();
+        builder.Property(z => z.IsActive).IsRequired();
         builder.Property(z => z.SortOrder).IsRequired();
 
         builder.HasMany(z => z.Translations)

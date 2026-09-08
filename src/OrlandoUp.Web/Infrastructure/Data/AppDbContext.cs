@@ -41,6 +41,8 @@ public class AppDbContext : IdentityDbContext<IdentityUser, IdentityRole, string
 
     public DbSet<DeliveryLocation> DeliveryLocations => Set<DeliveryLocation>();
 
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

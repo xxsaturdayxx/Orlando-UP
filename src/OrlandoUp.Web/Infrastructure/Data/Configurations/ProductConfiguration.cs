@@ -23,7 +23,7 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.RangeMiles).HasPrecision(5, 1);
 
         builder.Property(p => p.TurnaroundDays).HasDefaultValue(0).IsRequired();
-        builder.Property(p => p.IsActive).HasDefaultValue(true).IsRequired();
+        builder.Property(p => p.IsActive).IsRequired();
 
         // No store default on this one, on purpose, and the reason is a trap rather than a taste.
         // A store default on a non-nullable bool makes the provider unable to tell "the caller said
