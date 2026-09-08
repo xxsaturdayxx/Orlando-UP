@@ -164,6 +164,48 @@ inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and c
 
 ---
 
+> **AMENDMENT EMENDA-04-02 — 2026-09-08, review of the revised `scratchpad/leva04/plano.md`
+> (Claude Web).** Second round. Items are numbered `B` to keep them apart from the `A` items of
+> `EMENDA-04-01`, which stays in force except where corrected below.
+>
+> **Verdict: execute. P1 is open.** The twelve items A1–A12 are applied; the twelve controls of
+> `Docs/controles/admin-catalog.tsv` were re-measured by the reviewer at `ec01a99` and every value
+> is identical to the one the plan reports. Two items of `EMENDA-04-01` are corrected here, and
+> both corrections are the agent's, not the reviewer's.
+>
+> **B1 — A6 is withdrawn: its diagnosis was a supposition presented as a measurement.** A6 stated
+> that control C01 was "anchored on the literal `true`", inferring it from the fact that it measured
+> 4. The reviewer had not read the command — the first round of the plan reported labels and values
+> only — and the command already covered both directions. Re-measured today, from the written file,
+> against synthetic targets outside the repository: the form matches `HasDefaultValue(true)` and
+> `HasDefaultValue(false)` (2 of 2) and matches neither `HasDefaultValue(0)`, `HasDefaultValue(0m)`
+> nor `HasDefaultValueSql(...)` (0). **What A6 asked for is satisfied; the reason it gave was
+> wrong.** The rule the reviewer broke is the project's own: an assertion about what a file shows is
+> emitted only after opening that file.
+>
+> **B2 — A8 was incomplete, and the control it asked for was born a false green. The agent caught it
+> with the two-sided assertion, which is the assertion working.** A8 asked for a reach sibling
+> asserting the test-seam identifiers appear at least once under `tests/`, and did not carry into it
+> the sweep rule this repository already pays for. Reproduced by the reviewer today, outside the
+> repository: with nothing but a binary under `bin/`, the naive form returns `sim` — green before
+> the seam exists; with `-I` and `--exclude-dir=bin --exclude-dir=obj` it returns `nao`, and returns
+> `sim` only once a real source file carries the seam. The identifier of the antiforgery helper is
+> **`FormPoster`**, not `FormPost`, because the shorter string occurs inside compiled assemblies.
+> The header of `Docs/controles/public-site.tsv` records the same trap for the same reason; A8
+> should have cited it. **Controls C11 and C12 as written in the plan are adopted as written.**
+>
+> **B3 — nothing else is corrected.** The re-measurement of all 35 existing controls at `ec01a99`
+> (a scope-changing amendment forces it, and the agent did it rather than copying the values from
+> `200c687`), the two-sided assertions of C01, C05 and C11/C12 run from the written file, the
+> negative of A2 moved to the P3 report as a scope negative measured against the commit range rather
+> than into the permanent `.tsv`, and the re-anchoring of C05's audit operand on `[.]Record[(]` now
+> that the services are injected, are all accepted as written. The execution order of §9 stands.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04-02` in `Docs/relatorio-leva-04-etapa-1.md`, expected `>= 1`, with the count reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
