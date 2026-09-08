@@ -279,6 +279,52 @@ inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and c
 
 ---
 
+> **AMENDMENT EMENDA-04-04 — 2026-09-08, C1 accepted and P2 released (Claude Web).** Fourth round.
+> Items are numbered `D`. The three earlier notes stay in force.
+>
+> **C1 is done and the migration is applied.** Verified by the reviewer at `d91c6d1`: the commit
+> touches exactly two files — the report and the migration's `.cs` — so the `.Designer.cs` and
+> `AppDbContextModelSnapshot.cs` are untouched, which is correct, because hand-written SQL is
+> invisible to the model. The `Up` carries the fifth removal between the four `AlterColumn` calls
+> and the `CreateTable`, in the same dynamic form the generator emits, and the `Down` carries
+> `ADD DEFAULT CAST(0 AS bit) FOR [IsBookable]` — `0` and not `1`, which is the value leva 02
+> created and therefore the state this migration found. The variable is named rather than numbered
+> because T-SQL scopes variables to the batch and the generated blocks already own `@var` through
+> `@var3`; that reasoning is right and it is the kind of thing that fails at compile time for the
+> whole script, not for one block.
+>
+> **D1 — the report body and this file now disagree with the tree on one fact, and the tree wins:
+> the migration IS applied.** `dotnet ef database update` ran on the operator's machine after
+> `d91c6d1` and answered `Applying migration '20260908215113_…'. Done.` The report's `## Revisão`
+> section says "a migration continua não aplicada", which was true when it was written; §R.0 of that
+> section already establishes that the body is the record of what was true when the stop was asked
+> and is not rewritten. This item is the dated correction. **Nothing in git records this**, which is
+> exactly why it is written down: a schema state that only exists in a terminal that has since been
+> closed is a fact the next session cannot recover.
+>
+> **D2 — the three post-apply checks are item 0 of the P2 report, run and reported before anything
+> else.** The reviewer's shell cannot reach `OrlandoUpDb`, so this is the only place they can be
+> measured, and an applied migration nobody verified is a schema taken on faith:
+> `__EFMigrationsHistory` carries **3** rows and the third is `20260908215113_…`; `AuditEntries`
+> exists and accepts one row, which is then removed; and `sys.default_constraints` for `Products`
+> lists neither `IsActive` **nor `IsBookable`**, while the same query over `AddOns`,
+> `DeliveryZones` and `DeliveryLocations` lists no `IsActive` either — five rows fewer than the
+> table in §7 of the P1 report, which stays as the before. `SELECT DB_NAME()` is pasted before the
+> first of them (D12). Any of the three failing is a stop, not a footnote.
+>
+> **D3 — P2 is released.** Build the harness of §8.1 of this spec — the test authentication handler
+> registered through `ConfigureTestServices`, the antiforgery helper, and the confirmation that the
+> fixture seeds what the step-3 tests read — before the first CRUD screen exists, and stop with the
+> three proofs `EMENDA-04-01` requires: an authenticated GET of an admin page returns 200, a POST
+> carrying the token succeeds, and the same POST without the token is rejected. The report also
+> carries the form of the C05 command, not only its result (A7). No screen, no resource key, no CSS
+> and no service registration in `Program.cs` belongs to this stop — those come with step 3.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04-04` in `Docs/relatorio-leva-04-etapa-2.md`, expected `>= 1`, with the count reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
