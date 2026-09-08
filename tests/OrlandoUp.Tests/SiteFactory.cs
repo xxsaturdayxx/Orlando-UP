@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -69,6 +71,39 @@ public sealed class SiteFactory : WebApplicationFactory<Program>
             _registeredServiceNames.AddRange(services.Select(descriptor =>
                 descriptor.ServiceType.FullName ?? descriptor.ServiceType.Name));
         });
+
+        // The test authentication seam of D1/04, and it is here — after the application has
+        // registered everything — precisely so the application does not have to know it exists.
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddAuthentication()
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
+
+            // Only the AUTHENTICATE scheme moves. The CHALLENGE scheme stays the Identity cookie
+            // that AddIdentity chose, so a request without the header is still redirected to
+            // /admin/login instead of getting a bare 401 — which is the behaviour
+            // SiteBehaviourTests asserts, and it must keep asserting the application and not this
+            // file. Registered last, so it is the last Configure to run and therefore the one
+            // that wins.
+            services.Configure<AuthenticationOptions>(options =>
+                options.DefaultAuthenticateScheme = TestAuthHandler.SchemeName);
+        });
+    }
+
+    /// <summary>
+    /// A client that is already signed in as a member of staff. The default
+    /// <see cref="WebApplicationFactory{TEntryPoint}.CreateClient()"/> stays anonymous.
+    /// </summary>
+    public HttpClient CreateStaffClient(bool allowAutoRedirect = true)
+    {
+        HttpClient client = CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = allowAutoRedirect,
+        });
+
+        client.DefaultRequestHeaders.Add(TestAuthHandler.HeaderName, "1");
+
+        return client;
     }
 
     /// <summary>Creates the schema and writes the placeholder catalog into it.</summary>
