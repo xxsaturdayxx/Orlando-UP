@@ -300,3 +300,31 @@ on all four domain classes; only the store default goes. `TurnaroundDays` (defau
 screen yet: they are backlog, with the front that will bite named. Rule from here on: a boolean
 column is declared `IsRequired()` and nothing else, and the rows that already exist are filled by an
 explicit statement in the migration, where a reviewer can read it.
+
+**D35 — 2026-09-08 (conversation 4, review of the leva 04 P1) — The mechanism stated in D32 and D34
+is backwards: the store default that swallows an explicit `false` is the one declared by SQL, not
+the one declared by value.** **[assistant]**, correcting the reason of a decision without changing
+what it does. Measured twice by the agent on EF Core 10.0.11, the second time re-run rather than
+quoted, in a throwaway project outside this repository, and recorded in full in
+`Docs/relatorio-leva-04-etapa-1.md` §6. EF decides whether to send a column by comparing the
+property's value against its **sentinel**. `HasDefaultValue(true)` moves the sentinel to `true`, so
+an explicit `false` differs from it, is sent, and reads back `false`. `HasDefaultValueSql(...)`
+leaves the sentinel at the language default, so an explicit `false` coincides with it, the column is
+omitted, and the database default writes `true` over the caller's intent. This repository declares
+no default by SQL, so the defect described in D32, in D34 and in the comment of
+`ProductConfiguration.cs` never bit here. The finding is about EF's update pipeline and not about
+the provider: the include-or-omit decision is taken before any provider sees the statement, and the
+SQLite in-memory database was only the cheap place to run it. **What does not change:** D34 stands
+and the migration is applied. Removing the store defaults is schema hygiene that is worth doing on
+its own — the schema comes to say what the model means — and the rule it installs, *a boolean column
+is `IsRequired()` and nothing else*, is what closes the door on the by-SQL form, which is the one
+that does bite. The behavioural neutrality of the change is proved in that same §6, not asserted.
+**And a second trap, measured in `sys.default_constraints` of `OrlandoUpDb` and recorded here
+because nothing in the code would ever reveal it:** a column added by `AddColumn<bool>(…
+defaultValue: x)` leaves a **permanent** default constraint in SQL Server that the model snapshot
+never carries, so no later migration removes it and no model-level control can see it. That is how
+`Products.IsBookable` — the column D32 deliberately gave no model default — ended up with
+`DEFAULT ((0))` in the database. It is inert, because a property whose model declares no default has
+`valueGenerated=Never` and EF names it in every `INSERT`; it is removed anyway, in the same
+migration, by `EMENDA-04-03` C1. Rule from here on: after a migration that adds a column with a
+`defaultValue`, read `sys.default_constraints` — the model will not tell you.

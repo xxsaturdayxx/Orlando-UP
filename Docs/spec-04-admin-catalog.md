@@ -206,6 +206,79 @@ inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and c
 
 ---
 
+> **AMENDMENT EMENDA-04-03 — 2026-09-08, review of the P1 report and of the migration
+> (Claude Web).** Third round. Items are numbered `C`. `EMENDA-04-01` and `EMENDA-04-02` stay in
+> force.
+>
+> **Verdict on the migration: apply, after C1.** Classified by the reviewer from the generated SQL,
+> not from the `.cs`, as the `revisao-migration-efcore` skill requires.
+>
+> - **`Up`: zero destructive statements and zero data statements.** Four guarded
+>   `DROP CONSTRAINT` of default constraints (a default constraint holds no data), one
+>   `CREATE TABLE [AuditEntries]`, one non-unique unfiltered `CREATE INDEX` on a table that is
+>   empty by construction, one history row. The whole script is inside one transaction. The plan
+>   promised no data statement and said an emitted `UPDATE` would be a stop; none was emitted.
+> - **`Down`: one destructive statement, and it is the right one.** `DROP TABLE [AuditEntries]`
+>   loses the audit rows written since the migration — inherent to rolling back the table that holds
+>   them, and it destroys nothing that predates the migration. The four defaults are put back.
+> - **Traps checked, one by one:** no `HasData` anywhere, so nothing reconciles; `AuditAction` is
+>   persisted as `int` with explicit values appended at the end of `Domain/Enums.cs`, displacing
+>   nothing; the index is neither unique nor filtered, so no `QUOTED_IDENTIFIER` requirement and no
+>   duplicate check needed; no self-referencing foreign key, so no cascade cycle; `OccurredAtUtc` is
+>   `datetime2` and an **instant**, and no calendar date is added; every string column is bounded
+>   (`nvarchar(256)`, `(40)`, `(400)`) with no `nvarchar(max)` by inattention; nothing is renamed, so
+>   no drop-and-add masquerading as a rename; the only new `NOT NULL` columns are on the new empty
+>   table.
+> - Re-measured by the reviewer at `ac01f5e`: no BOM on the three generated files; the four
+>   configuration diffs are one line each and nothing else; the 17 controls of `public-site.tsv` are
+>   on target and the 18 of `foundation.tsv` are too except C14 and C15, which answer `127` to the
+>   reviewer's shell for want of `dotnet`; control C01 of the new `.tsv` moved 4 → **0** and C03
+>   held at 0, which is the pair proving the store defaults left without costing the C# initialisers.
+>
+> **C1 — the §7 finding is answered (b): the fifth default constraint is removed in THIS migration,
+> and §4.1 is amended from four columns to five.** The agent measured, in `sys.default_constraints`
+> of `OrlandoUpDb`, that `Products.IsBookable` carries a `DEFAULT ((0))` created by leva 02's
+> `AddColumn<bool>(… defaultValue: false)` — a constraint SQL Server made permanent, that the model
+> snapshot never carried, and that therefore no later migration removes. He was right to stop rather
+> than widen the migration on his own. **(b) is chosen because leaving it makes D34 false in the
+> database on the day it becomes true in the model**, and a decision that holds in one of its two
+> places is the defect this project has already paid for three times. The block is written by hand,
+> with the same dynamic `DECLARE`/`EXEC` the generator emits, because the constraint's name is
+> server-generated and differs between databases. **It is symmetric: the `Down` puts the
+> `IsBookable` default back**, so a rollback lands on the state this migration found and not on a
+> third state no migration describes. The removal is behaviourally inert, and that is measured in
+> §7 of the report, not assumed: with `valueGenerated=Never` the EF names the column in every
+> `INSERT`, and this repository contains no raw `INSERT` that omits it. The report gains a
+> `## Revisão (Claude Web, 2026-09-08)` section recording the added block and its re-measurement,
+> and the operator applies only after that section is committed.
+>
+> **C2 — §11.1 is opened for one more thing, and only this: the comment at
+> `ProductConfiguration.cs:28-34` is rewritten in the content commit.** It describes the mechanism
+> backwards, and after this migration it also sits under an `IsActive` that no longer has a default,
+> which makes its "on this one, on purpose" ambiguous as well as wrong. Rules 2 and 3 of
+> `Docs/regras-de-controle.md` exist because prose sitting next to a control and describing it
+> wrongly is a defect already bought here. The new text says what was measured — that the form which
+> swallows an explicit `false` is `HasDefaultValueSql` on a non-nullable `bool`, not
+> `HasDefaultValue(value)` — and it **describes the forbidden form without transcribing it**, so it
+> cannot break control C01. Nothing else in that file is touched.
+>
+> **C3 — `Docs/decisions.md` D35 records the correction of the mechanism, written by the reviewer,
+> dated today, with the provenance of the measurement attached.** The agent was right not to touch
+> D32, D34 or the comment on his own. D35 does not change what D34 *does*; it corrects why.
+>
+> **C4 — nothing else. The report's own answers are accepted:** the step-0 re-measurement at
+> `bc8b762` rather than copied from the plan, the row counts taken before the migration was written,
+> the A11 measurement re-run rather than quoted, the snapshot diff that names where the A1 form
+> assertion will measure in step 3, and the explicit list of what P1 deliberately did not do. The
+> `.tsv` staying in `scratchpad/` until the content commit is accepted as the plan stated, on the
+> condition that it lands **before** the end-of-session gate, since that gate verifies three files.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04-03` in the `## Revisão` section of `Docs/relatorio-leva-04-etapa-1.md`, expected
+> `>= 1`, with the count reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
