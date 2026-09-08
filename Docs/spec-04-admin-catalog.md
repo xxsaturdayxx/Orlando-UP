@@ -325,6 +325,77 @@ inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and c
 
 ---
 
+> **AMENDMENT EMENDA-04-05 — 2026-09-08, P2 accepted and step 3 released (Claude Web).** Fifth
+> round. Items are numbered `E`. The four earlier notes stay in force.
+>
+> **P2 is accepted.** Verified at `ada594e` by opening the code rather than reading the report:
+> `src/` appears in **zero** lines of the commit's `git diff --stat`, the four files are all under
+> `tests/`, and `quem-ancora` over the four returns **0 anchorages in 2 `.tsv` swept** — no existing
+> control looks at `tests/`, which is why C11 and C12 are the first. The reviewer re-measured the
+> twelve controls of the new `.tsv` at `ada594e` and every value matches the report, including the
+> one that matters: **C12 moved `nao` → `sim` while C11 held at 0**, which is what turns "the seam
+> is not in the product" into a statement instead of a zero measuring nothing. The 17 controls of
+> `public-site.tsv` and the 18 of `foundation.tsv` are on target, the two exceptions being C14 and
+> C15, which answer `127` to the reviewer's shell for want of `dotnet`.
+>
+> **The three post-apply checks of `EMENDA-04-04` D2 pass, and §0.3 of the report is the line that
+> matters:** the table in §7 of the P1 report listed **seven** default constraints and the same
+> query now returns **two**, both on non-boolean columns. Five gone, exactly the five — the four
+> `IsActive` and the `IsBookable` that only the hand-written C1 block could remove, because no
+> model-to-model diff would ever have produced it. D34 is now true in the model **and** in the
+> database, which is the whole reason C1 chose (b).
+>
+> **What the harness got right, named so it is not undone by a later refactor:** only the default
+> **authenticate** scheme is replaced and the **challenge** scheme stays the Identity cookie, so an
+> unauthenticated request still gets 302 to `/admin/login` and `SiteBehaviourTests` keeps proving
+> the application's gate rather than the harness; the handler answers `NoResult` without the header,
+> so the default client stays anonymous; `FormPoster.ReadTokenAsync` **throws** instead of returning
+> an empty string; and proof 4 reads the token page first so the antiforgery **cookie** is present
+> and the only thing missing from the post is the field — without that line the 400 would arrive for
+> the wrong reason. Proof 2 was not required and is there anyway, as the other half of proof 1.
+>
+> **E1 — one hardening, and it is not a defect: proof 3's assertion is widened where it should be
+> exact.** `A_post_carrying_the_antiforgery_token_is_accepted` asserts `Found` plus a `Location`
+> *containing* `/admin/login`. The authorization redirect a **non**-authenticated POST would produce
+> is also a `Found` whose `Location` contains `/admin/login`, so the assertion as written does not
+> exclude the failure the test's name rules out. **It does not currently pass for the wrong
+> reason** — the reviewer opened `FormPoster` to check: `ReadTokenAsync` calls
+> `EnsureSuccessStatusCode()`, and with `allowAutoRedirect: false` a 302 on the token page throws
+> before the POST is ever sent. But that discrimination lives inside a helper's internals and is
+> invisible in the test body, so a later softening of that one line would silently empty a test that
+> never mentioned it. The fix is one line, and it is exact because the two redirects differ:
+> `LogoutModel.OnPostAsync` returns `RedirectToPage("/Admin/Login")`, whose `Location` is
+> `/admin/login` and nothing else, while the cookie handler's challenge appends
+> `?ReturnUrl=%2Fadmin%2Flogout`. **Assert equality with `/admin/login` instead of containment**, and
+> say in one comment why the exact form is the point.
+>
+> **E2 — a third statement of this spec's body was wrong, and the agent caught it. It is the
+> reviewer's error, of the same class both times before.** §3 of this spec records that
+> `grep -nE "Testing|IsEnvironment" src/OrlandoUp.Web/Program.cs` returns "only the
+> `IsDevelopment()` of line 138". It returns **nothing**: `IsDevelopment` matches neither term. Two
+> separate facts from the survey — that the command was empty, and that the file's only environment
+> branch is an `IsDevelopment()` — were merged into one sentence that reads as a measurement and is
+> not one. As the agent notes, the assertion that matters comes out **stronger**, not weaker:
+> `Program.cs` carries no environment branch of the kind D1/04 forbids, and this leva adds none.
+> Together with A6 (a command diagnosed without being read) and A8 (a control asked for without the
+> sweep rule that repository already pays for), that is three, all from the reviewer paraphrasing a
+> measurement instead of re-running it.
+>
+> **E3 — step 3 is released**, and it carries, beyond the screens, resource keys, CSS and services:
+> the A1 pair (a form assertion over the model, red before the migration and green after, plus the
+> behaviour round-trip that passes both ways); the A3 test (a product created through the POST reads
+> `IsActive = false`); the A4 write of `Product.UpdatedAtUtc` from `IClock.UtcNow`; the A5 highlights
+> round-trip carrying `<`, `>` and `&`; the C2 rewrite of the comment at
+> `ProductConfiguration.cs:28-34`; the two `AddScoped` lines in `Program.cs` that A2 authorises, with
+> the scope negative measured against the **commit range** and pasted into the P3 report; and
+> **`Docs/controles/admin-catalog.tsv` landing in `Docs/controles/`**, without which the end-of-
+> session gate cannot verify three files.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04-05` in `Docs/relatorio-leva-04-etapa-3.md`, expected `>= 1`, with the count reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
