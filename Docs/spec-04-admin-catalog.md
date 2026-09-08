@@ -22,6 +22,148 @@ inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and c
 
 ---
 
+> **AMENDMENT EMENDA-04-01 — 2026-09-07, review of `scratchpad/leva04/plano.md` (Claude Web).**
+> The plan of leva 04 was reviewed against this spec and against the tree at `200c687`. The body of
+> this spec is **not** rewritten — the corrections below amend it, and where a correction and the
+> body disagree, **the correction wins**. Everything here was measured, not recalled; the command
+> that produced each number is in the item. The agent applies these before writing the first line
+> of code, and P1 does not open until they are in the revised plan.
+>
+> **Verdict: execute after the corrections below.** The plan is complete and reviewable: it names
+> the files, declares the migration and whether it touches data, measures every control at the
+> initial HEAD, and stopped where it should have. Four of its findings are accepted as written
+> (A9–A12) and two of its recommendations are refused (A2, A3).
+>
+> **A1 — THIS ONE INVERTS A RESULT. The test §8.2 item 1 asks for, as this spec words it, would be
+> green before AND after the migration.** The plan measured, on EF Core 10.0.11, that a store
+> default declared **by value** (`HasDefaultValue(true)`) makes EF set the property's sentinel to
+> that value, so an explicit `false` **is** sent and reads back `false`; only a default declared
+> **by SQL** drops it, and this repository declares none that way. So a round-trip test writing
+> `false` passes today, before anything changes — a false green by construction, which
+> `Docs/regras-de-controle.md` forbids. **The plan's replacement is adopted:** a pair, where the
+> form half asserts over the **model** (`IEntityType`/`IProperty`) that the four properties carry
+> no store default and that the sentinel is back to the neutral value — red before the migration,
+> green after — and the behaviour half keeps the `false` round-trip, which passes both ways and
+> proves the write path works. Control C01 of the new `.tsv` is the same assertion measured outside
+> the compiler. **The sentence "this is the test that justifies the migration" in §8.2 item 1 is
+> withdrawn**; what justifies the migration is D34 as hygiene, stated in A11.
+>
+> **A2 — REFUSED: `CatalogWriter` and `AuditTrail` are NOT static. `Program.cs` receives exactly two
+> registration lines, and §11.1 is amended to allow them.** The plan is right that §11.1 puts
+> `Program.cs` in the negative list and that a scoped service needs a line there; it is the reviewer's
+> omission, not a design constraint. The project's own rule settles it: *a control that gets in the
+> way of the design is to be revised, never the design bent to fit it.* `CatalogQueries` — the
+> sibling this spec names in §8.3 — is a class holding the `DbContext`, registered `AddScoped` at
+> `Program.cs:111`; the writer is its mirror and is registered the same way. The static classes of
+> this codebase (`PricingTierRules`, `TranslationPicker`, `StructuredData`) are all **pure**; none
+> holds a `DbContext`. **New negative control, replacing the blanket one for this file:**
+> `Program.cs` appears in the leva's range diff with **exactly 2 added lines and 0 removed**, and
+> both added lines are service registrations. Anything else in that file is a stop.
+>
+> **A3 — REFUSED as written, and it is a gap this spec left open: a product created through the
+> screen is born HIDDEN.** The create handler sets `IsActive = false` explicitly; the edit screen is
+> where it is published. `Product.cs:35` initialises `= true`, which is right for a row the seeder
+> writes and fail-**open** for a row a half-filled form writes: the moment the operator clicks save,
+> a product with no description, no highlights, no price and no image is on `/rentals`. The C#
+> initialiser stays as it is (control C03 of the new `.tsv` still holds); the handler overrides it.
+> This composes with A10 — create asks the minimum, saves a hidden draft, redirects to the editor,
+> and publishing is a deliberate second gesture. **A test asserts it**: the product created through
+> the POST reads `IsActive = false`. That test is also the only place in the leva where the real
+> product path exercises an explicit `false` on one of the four repaired columns, which is what A1
+> is about.
+>
+> **A4 — `Product.UpdatedAtUtc` is written on every save of a product, from `IClock.UtcNow`.**
+> Measured: `grep -rn UpdatedAtUtc src tests`, excluding `bin`, `obj` and `Migrations`, returns
+> **one** line — the declaration at `Domain/Product.cs:52`. Nothing writes it and nothing reads it.
+> The editor is the first thing in the project that can fill it, and a column that stays null
+> forever is a fact the next front will read as "never edited" and trust. `Unit` has no such column
+> and does not gain one in this leva: the audit row is its record, and adding a column to `Units`
+> is outside §11.1.
+>
+> **A5 — the highlights round-trip test of §8.2 item 9 also carries `<`, `>` and `&`, not only a
+> quote and a backslash.** Measured: `CatalogSeeder.cs:20` serialises highlights with
+> `JavaScriptEncoder.UnsafeRelaxedJsonEscaping`, which leaves `<` and `>` alone. That is safe here
+> and stays safe **for a measured reason, not by luck**: highlights never enter a `<script>` — the
+> only fields that reach the JSON-LD block are `Name` and `Tagline`
+> (`Application/StructuredData.cs`, the `Product` builder), and that block is written with the
+> encoder of `StructuredData.cs` `ScriptSafeEncoder`, which calls `ForbidCharacters('<','>','&')`
+> after `AllowRange(UnicodeRanges.All)`. The test with the three characters is what keeps the
+> reason true. **And the P3 report states, in one sentence:** this leva makes `Name` and `Tagline`
+> editable through a screen for the first time, and the guard that protects them is at
+> serialisation, so it holds whatever the source of the text is.
+>
+> **A6 — control C01 of the new `.tsv` must catch `HasDefaultValue(false)` as well.** It measures 4
+> today, which is exactly the count of `HasDefaultValue(true)` in
+> `Infrastructure/Data/Configurations`; anchored on that literal, a future boolean column declared
+> with a `false` default passes the control while breaking D34, whose wording is *no boolean column
+> carries a store default* — both directions. The reach sibling C02 stays as proposed.
+>
+> **A7 — control C05 anchors on the handler NAME, never on the return type.** `Docs/regras-de-controle.md`
+> rule 4, corollary: anchoring a count of entry points on the return type repeats inside the control
+> the hole that reflection exists to close. The plan's arithmetic is right — 2 write handlers and 0
+> audit calls today, 6 and 4 at the end, difference 2 in both, where the 2 is the allowlist of the
+> two session handlers — and the P2 report states the form of the command, not only its result.
+>
+> **A8 — one control is missing, and it is the one that makes D1/04 measurable: the test seam appears
+> in ZERO files under `src/`.** `TestAuthHandler` and `FormPost` counted over `src/` alone, expected
+> 0, with a reach sibling asserting the same identifiers are at least 1 under `tests/` — otherwise
+> zero over zero is also zero and the control is green measuring nothing. D1/04 exists so that no
+> authentication bypass can ship; today nothing in the tree would catch one that did.
+>
+> **A9 — accepted, and this spec's §5 is corrected: `/admin/products/create` asks only what a
+> product needs to exist and redirects to the editor of the new product.** The plan's §9 is a
+> deviation by **improvement**, registered here rather than left in the plan: it needs no shared
+> partial, no file outside §11.1 and no further amendment, and it makes price bands and add-on links
+> edited against a row that exists instead of assembled in the air. The wording of §5 that calls
+> `/admin/products/create` "the product editor, empty" is replaced by this.
+>
+> **A10 — the three open points of §10 are answered, all (a), as the plan recommends.** **K1:** the
+> unit's product is an editable field, and the audit line names the product it left and the one it
+> joined; making it read-only after creation is code added, not removed, and this leva deletes
+> nothing. **K2:** `/admin/audit` shows the 100 most recent rows, flat, no filter; a filter buys
+> little while one person writes and becomes its own front when there are two. **K3:** nothing is
+> saved and the form comes back whole with the message naming which of the six pricing problems it
+> is — the objection this spec raised against (a) does not hold, because Razor re-renders from the
+> bound properties and the typing comes back; and (b) has a cost (a) does not, which is leaving the
+> operator believing a product is on sale when the flag was refused.
+>
+> **A11 — D34 stands, and its stated MECHANISM is now known to be wrong. Neither is fixed by the
+> agent.** The plan's measurement contradicts the mechanism written in D32, D34 and the comment at
+> `ProductConfiguration.cs:28-34`, all of which describe the by-value default as the one that drops
+> an explicit `false`. The migration is still written and still applied: D34 is the operator's
+> decision, it is defensible as schema hygiene on its own — the schema comes to say what the model
+> means, and the rule *a boolean column is `IsRequired()` and nothing else* closes the door on the
+> by-SQL form, which is the one that does bite — and it is **behaviourally neutral**, which the P1
+> report proves rather than asserts. The agent is right not to edit `Docs/decisions.md` or that
+> comment: both are in the negative list, and a decision changes only by a new numbered line.
+> **The P1 report carries the measurement in full**, naming EF Core 10.0.11 and stating that it was
+> run on SQLite and that the finding is about EF's update pipeline and not about the provider — so
+> that the correction of the prose is the reviewer's, dated, and recorded as a new decision when P1
+> lands.
+>
+> **A12 — three numbers in the body of this spec are corrected, none of them a divergence.** (i) §0
+> says `git ls-files` counts **157** and `git rev-list --left-right --count origin/main...main`
+> reads **`0 0`**; both were measured at `cacd725`, before this spec's own commit existed. At
+> `200c687` they read **158** and **`0 1`**, the difference being this file and the commit that
+> brought it. `src/` is 109 in both, as the body says. The unpushed commit is the operator's to
+> push and is not the agent's business. (ii) The opening paragraph says there are **four** page
+> models under `Pages/Admin/`; there are **five** — `Pages/Admin/Language.cshtml.cs` is the fifth,
+> and it writes the administration's culture cookie (D4/01). The assertion that matters is
+> unchanged and was re-checked: **no POST handler under `Pages/Admin/` touches the catalog.**
+> (iii) §3 inherits "137 tests" as `[H]`; the plan measured **138** passing at `200c687`. The
+> pending mark is discharged with that number.
+>
+> **Nothing else in the plan is corrected.** The step-0 measurements, the `quem-ancora` and
+> `proibidos` sweeps, the eleven controls the plan adds to the seven this spec named, the zero-count
+> of every new identifier, the row counts, the harness of §6.3 with its three proofs, and the
+> execution order of §10 are accepted as written.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04-01` in the revised `scratchpad/leva04/plano.md`, expected `>= 1`, with the count
+> reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
