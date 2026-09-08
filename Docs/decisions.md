@@ -269,3 +269,34 @@ become nullable, and `FitsDisneyTransport` becomes `bool?`: a product we own but
 and one we have not bought, must not publish an invented dimension or a badge that claims a fit —
 the same reason D15 gives for a missing price. Consequence for later phases: availability and
 checkout read `IsBookable`, never `IsActive` alone. Spec: `Docs/spec-02-public-site.md` §4.
+
+**D33 — 2026-09-07 (conversation 4, choosing the front) — Leva 04 runs before leva 03: the
+booking-independent half of roadmap phase 4 is executed first.** **[operator]**, on the reviewer's
+recommendation. `Docs/roadmap.md` declares phase 4 as depending on phase 3, and the half of it that
+reads bookings does. The half specified in `Docs/spec-04-admin-catalog.md` — catalog editor, fleet
+CRUD, audit trail — reads nothing that does not already exist, and running it now buys three things
+leva 03 would otherwise pay for: the operator stops needing a commit to change what the site says,
+the `IsActive` store-default defect is closed before a screen exercises it, and the authenticated
+test client that leva 03 needs for its own admin screens exists already. Leva 03 keeps its number
+and its scope; phase 3 is the next front. Consequence: the leva numbers follow the roadmap phases,
+not the order of execution, and `Docs/spec-03-*.md` will be written after `spec-04`. What stays out
+of leva 04 for lack of bookings, and must not be read as forgotten: today's deliveries and pickups,
+the booking detail with its timeline, unit assignment and the calendar.
+
+**D34 — 2026-09-07 (conversation 4, writing the leva 04 spec) — No boolean column carries a store
+default; the four that do are repaired in one migration.** **[operator]**, on the reviewer's
+recommendation, extending the rule stated for `IsBookable` in D32 to the whole schema. Measured on
+2026-09-07 with `grep -rn HasDefaultValue` over
+`src/OrlandoUp.Web/Infrastructure/Data/Configurations`: six occurrences, four of them `bool` —
+`ProductConfiguration.cs:26`, `AddOnConfiguration.cs:20`, `DeliveryZoneConfiguration.cs:22`,
+`DeliveryLocationConfiguration.cs:18`. The backlog entry of 2026-09-06 had recorded only the first.
+The reason is the one written in `ProductConfiguration.cs:28-34`: a store default on a non-nullable
+`bool` makes the provider unable to tell *the caller said false* from *the caller said nothing*, so
+the explicit `false` is dropped and the row is inserted with the default. It bites on INSERT, which
+is exactly what an administration screen does, and it cannot be caught by any value assertion —
+the row is written, the count is right, and the meaning is wrong. The C# initializer `= true` stays
+on all four domain classes; only the store default goes. `TurnaroundDays` (default `0`) and
+`SalesTaxRate` (default `0m`) share the mechanism but are not booleans and are not written by any
+screen yet: they are backlog, with the front that will bite named. Rule from here on: a boolean
+column is declared `IsRequired()` and nothing else, and the rows that already exist are filled by an
+explicit statement in the migration, where a reviewer can read it.

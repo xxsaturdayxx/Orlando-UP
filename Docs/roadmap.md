@@ -16,6 +16,13 @@ phase is started while an earlier phase has an open `aguardando` line in `Docs/f
 | 7 | **Content and social automation** | Social profiles (Instagram, Facebook, TikTok, YouTube, Pinterest, Google Business, TripAdvisor) created by Rod from a naming/bio kit; a content calendar and a "Content Studio" in the admin that drafts posts (both languages) from guides and fleet photos and schedules them through a posting API (candidates: Ayrshare, Meta Graph API directly). Guides section live and feeding posts. | 5 |
 | 8 | **Native apps — decision gate** | A written decision, measured against demand and the API's stability, on whether to ship .NET MAUI apps for iOS and Android; if yes, a spec. | 6, 7 |
 
+**Phase 4 is split, and its first half runs before phase 3 (D33, 2026-09-07).** The half that reads
+bookings — today's deliveries and pickups, booking detail with timeline, unit assignment, the
+calendar — cannot exist before phase 3 and stays here. The half that reads nothing new — catalog
+editor, fleet CRUD, audit trail — is `Docs/spec-04-admin-catalog.md` and is executed first. The leva
+numbers follow these phase numbers, not the order of execution: leva 04 is written and executed
+before leva 03.
+
 ## Cost envelope (monthly, USD, to be validated in phase 5)
 
 App Service: **0 extra** while Orlando Up (production and staging) runs as two apps on Ronatrip's

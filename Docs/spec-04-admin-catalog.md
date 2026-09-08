@@ -1,0 +1,746 @@
+# Spec — Leva 04: catalog administration (the first screens that write, and the test client that can reach them)
+
+**Date:** 2026-09-07, conversation 4. **Pair:** conversation 4 ↔ leva 04. **Executor:** Claude Code,
+strongest model — the leva changes the schema once, introduces the first authenticated write path
+in the application, and builds the test harness every later leva will inherit.
+
+**What this leva closes:** `/admin` reads and never writes. Measured on 2026-09-07: the four page
+models under `src/OrlandoUp.Web/Pages/Admin/` are `Index` (three `CountAsync`), `Products/Index`
+(one projection, `AsNoTracking`), `Login` and `Logout`; none carries an `OnPost` handler that
+touches the catalog, and `Pages/Admin/Products/Index.cshtml:13` renders the resource key
+`Admin_ProductsReadOnly` saying so on the screen. Every fact a visitor reads today can only be
+changed by editing `CatalogSeedData.cs`, deleting the catalog and re-seeding — which is also the
+only way to correct a model name when Q13 is answered.
+
+**Why it runs before leva 03.** `Docs/roadmap.md` declares phase 4 as depending on phase 3, and it
+does — for the half of phase 4 that reads bookings (today's deliveries, booking timeline, unit
+assignment, calendar). The half specified here reads nothing that does not already exist. Running
+it now buys three things leva 03 would otherwise pay for: the operator stops needing a commit to
+fix content, the `IsActive` store-default defect is closed before a screen exercises it, and the
+authenticated test client — which leva 03 needs for its own admin screens — exists already. This
+inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and comes next.
+
+---
+
+## 0. Execution surface
+
+**Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
+whose description starts with *"LEVA 04 — CATALOG ADMINISTRATION"*. **Not "the `aguardando`
+line"** — that line, by name.
+
+**Tree state at receipt, measured 2026-09-07:** HEAD is a descendant of `cacd725`
+(`docs: resumo da conversa 3`); the commit that adds this spec and its queue line comes after it
+and is the expected HEAD. `git status --porcelain` **empty**. `git rev-list --left-right --count
+origin/main...main` reads `0 0` — nothing to push, nothing to pull. `git ls-files` counts **157**
+files, **109** under `src/`. `Docs/controles/foundation.tsv` has 18 controls and
+`Docs/controles/public-site.tsv` has 17; every control except C14 and C15 of `foundation.tsv` was
+re-measured from the file on 2026-09-07 and is on target. **C14 and C15 were not measured by the
+reviewer**: they shell out to `dotnet build` and `dotnet test`, and `dotnet` does not exist in the
+reviewer's shell — it answers `127`, which is `command not found` and not a red gate. The agent
+measures those two at step 0 and reports the real value; if either is red on arrival, that is a
+stop with a report.
+
+A Windows CRLF warning and a stale git index are not divergence — they exist on some trees and not
+others; ignore them. Any other modified or untracked file outside `scratchpad/` is a stop with a
+report.
+
+**Files the front ALTERS:** the closed list is §11.1. A file altered outside it is a stop with a
+report, **without a cardinal** — the list discriminates the intruder, never a count, which ages
+between writing and execution.
+
+**Files the front PRODUCES as record** (authorized by this declaration; they are not scope drift):
+`scratchpad/leva04/plano.md` (never committed); `Docs/relatorio-leva-04-etapa-N.md`, one per stop,
+committed before approval is asked; `Docs/controles/admin-catalog.tsv`; `Docs/conferencia-leva-04.md`.
+
+**Files the TOOL generates coupled:** `dotnet ef migrations add` rewrites
+`src/OrlandoUp.Web/Infrastructure/Data/Migrations/AppDbContextModelSnapshot.cs` and writes the
+migration's own `.Designer.cs`. Both are authorized by this declaration and are not a stop.
+
+**Steps that need a human hand, with the exact command.** The operator's shell is **PowerShell on
+Windows**; the commands below are written for it and carry no Bash syntax.
+
+1. **Apply the migration, after P1 is approved** — the operator runs it, not the agent:
+
+   ```
+   dotnet ef database update --project src/OrlandoUp.Web
+   ```
+
+2. **Strip the BOM before `git add`.** `CLAUDE.md:82-83` records it and `.githooks/pre-commit`
+   enforces it: `dotnet ef migrations add` writes UTF-8 with a byte-order mark and the hook refuses
+   a file whose first three bytes are `efbbbf`. This leva generates one migration plus its
+   designer plus the snapshot — three files at risk.
+
+3. **Sign in to `/admin`** during the visual check. The credentials are the two user-secrets seeded
+   in leva 01 (`AdminSeed:Email`, `AdminSeed:Password`); they belong to the operator and are never
+   printed by the agent (D24).
+
+4. **The visual check of §9 is the operator's**, on his machine, at `https://localhost:7420`, after
+   the migration is applied. What it does not reach goes into `Docs/conferencia-leva-04.md` with
+   the measured reason, never left unsaid.
+
+**Four mandatory stops.** In each one the report is committed **before** approval is asked.
+
+| Stop | When | What it carries |
+|---|---|---|
+| **P0** | after step 0, before altering any file | the plan, with the answers to the three open points of §10 |
+| **P1** | migration written and **not applied** | the script classified by the `revisao-migration-efcore` skill, with row counts of all four affected tables measured before |
+| **P2** | the test harness of §8.1 green, before the first CRUD screen exists | proof that an authenticated test client reaches an admin page and that a POST with the antiforgery token succeeds — and that the same POST **without** the token fails |
+| **P3** | everything written, suite green, before the content commit | the full run, both `.tsv` verified, the visual check pending |
+
+P2 is not ceremony. Measured 2026-09-07: `grep -rn "AuthenticationHandler\|ClaimsPrincipal\|TestAuthHandler\|Antiforgery\|RequestVerificationToken\|CookieContainer\|SignIn" tests/ --include=*.cs`
+returns **nothing**. No test in this repository can open an admin page other than `/admin/login`,
+and no test can post a form. Until P2 is green, every screen this leva writes would be untested by
+construction.
+
+---
+
+## 1. What the leva delivers, in plain words
+
+Rod signs in at `/admin`, opens a product, and changes what the site says about it — the English
+name and the Portuguese one, the tagline, the description, the bullet list of highlights, the
+dimensions, whether it is visible, whether it is on sale, the price bands, which add-ons it offers.
+He saves, opens `/rentals` in another tab, and the change is already there. He can create a product
+that does not exist yet, and he can hide one without losing it.
+
+He also keeps the fleet: a list of the physical units, each with the tag stuck on the machine, its
+serial, its status (available, in maintenance, retired) and the date it was bought. When a scooter
+goes to the shop he marks it, and when Q13 is answered he corrects the model names from the labels
+without touching a source file.
+
+Every write leaves a line: who, when, what changed. `/admin/audit` shows the most recent ones.
+
+**What this is not.** It is not the booking side of the back office — there are no bookings yet, so
+today's deliveries, the booking timeline, unit assignment and the calendar are not here and cannot
+be. It is not delivery-zone or add-on administration: the zones and the add-ons themselves stay
+seed data in this leva (only the *link* between a product and an existing add-on is editable). It
+is not company settings — those live in `appsettings.json` and moving them to the database is its
+own front (§12). And it is not a delete feature: nothing in this leva removes a row.
+
+---
+
+## 2. Decisions of this leva
+
+All settled on 2026-09-07, before any block of this spec existed. `[operator]` marks Rod's answers;
+`[assistant]` marks the ones taken by the reviewer under the autonomy clause of
+`Docs/protocolo-conversa.md`.
+
+**D1/04 — Test authentication is a seam in the TEST project, never in the application.**
+`[assistant]` `SiteFactory` gains `ConfigureTestServices` registering an
+`AuthenticationHandler<AuthenticationSchemeOptions>` that issues a principal carrying
+`Roles.Admin`, and a helper that returns a client already authenticated. `Program.cs` is not
+touched, and no environment check is added to it. Motive: an environment-conditional bypass in
+production start-up is a hole that ships — it is exactly one misconfigured `ASPNETCORE_ENVIRONMENT`
+away from an open administration, and nothing in the suite would notice. Measured: `Program.cs`
+contains no `IsEnvironment`/`Testing` branch today (`grep -nE "Testing|IsEnvironment"
+src/OrlandoUp.Web/Program.cs` returns only the `IsDevelopment()` of line 138); this decision keeps
+it that way.
+
+**D2/04 — Antiforgery stays ON in tests, and the token is read from the rendered form.**
+`[assistant]` The test helper does a `GET` of the page, extracts the value of the hidden
+`__RequestVerificationToken` input from the returned HTML, and sends it in the `POST` body; the
+antiforgery cookie travels because `WebApplicationFactory`'s client handles cookies. Motive:
+disabling antiforgery in the test host would make the suite green on a page that cannot be posted
+in production, and it would stop proving that the form is a real Razor `<form method="post">` — the
+only shape that gets the hidden field injected. Measured: there is no antiforgery configuration
+anywhere (`grep -rni antiforgery src tests` returns nothing outside `obj/`), so the application
+runs on the Razor Pages default, which validates every non-GET handler.
+
+**D3/04 — No admin markup branches on culture, and no admin partial is created under
+`Pages/Shared/`.** `[assistant]` The product editor shows both translations at once, laid out
+unconditionally side by side; anything that depends on the current culture is decided in the page
+model, which is a `.cs` file. The admin navigation of D9/04 lives inside `_AdminLayout.cshtml`
+itself. Motive, measured: control **C09** of `public-site.tsv` scans `Pages/` **without excluding
+`Admin`**, and its expected value is the literal two-path list
+`…/Pages/Shared/_AdminLayout.cshtml,…/Pages/Shared/_Layout.cshtml`; one new `.cshtml` under
+`Pages/Admin/` mentioning `CurrentUICulture`, `SiteCultures` or `isPortuguese` turns it into three
+paths and breaks a control of leva 02, which is closed. Control **C10** excludes `Pages/Admin/`
+with `--exclude-dir=Admin` and excludes the `_AdminLayout` lines by name — but it does **not**
+exclude `Pages/Shared/`, so an admin partial there carrying `asp-page=` without
+`asp-route-culture=` would break it too.
+
+**D4/04 — The store default leaves all four `IsActive` columns in one migration, and the existing
+rows are filled by an explicit statement.** `[operator]` Measured 2026-09-07 with
+`grep -rn HasDefaultValue src/OrlandoUp.Web/Infrastructure/Data/Configurations`: six occurrences,
+four of them `bool` — `ProductConfiguration.cs:26`, `AddOnConfiguration.cs:20`,
+`DeliveryZoneConfiguration.cs:22`, `DeliveryLocationConfiguration.cs:18`. The backlog entry of
+2026-09-06 recorded only the first. The defect is the one written in `ProductConfiguration.cs:28-34`
+to explain why `IsBookable` was left without a default: a store default on a non-nullable `bool`
+makes the provider unable to tell *the caller said false* from *the caller said nothing*, so the
+`false` is dropped and the row is inserted visible. Rod chose to close all four now: the repair is
+mechanical and identical in the four, and reopening a migration in a later leva costs more than
+doing it while one is already open. `TurnaroundDays` (default `0`) and `SalesTaxRate` (default `0m`)
+share the mechanism but are **not** touched — see §12.
+
+**D5/04 — The slug stays editable, with a warning on the screen, and becomes read-only at phase 5.**
+`[operator]` `Domain/Product.cs:8` calls the slug "stable after publication"; it is the public
+address of the product and the sitemap is generated from it. Indexing is off today
+(`appsettings.json`, `Seo:AllowIndexing: false`), and Q13 says the real model names are still to be
+read off the labels — so a correction is cheap exactly now and expensive later. The field carries a
+visible warning that changing it changes the public address, and a slug change is one of the audited
+actions of D7/04. The screen makes it read-only when Q13 is closed and the site is opened to
+indexing; that is a phase-5 gate item, not this leva.
+
+**D6/04 — Highlights are edited as one line per item; raw JSON is never shown or accepted.**
+`[assistant]` The page model splits the textarea on line breaks, drops blanks, and serializes;
+reading does the inverse. Motive, measured: `Infrastructure/Data/CatalogQueries.cs:192-195` catches
+`JsonException` and returns an empty list. A screen that accepts hand-typed JSON is a screen where a
+typo silently empties the highlights of a product with nothing failing anywhere — the same class of
+defect D15 exists for.
+
+**D7/04 — The audit trail is written explicitly by each admin write handler through one service, not
+by a `SaveChanges` interceptor.** `[assistant]` Motive, measured: a global interceptor fires
+wherever `SaveChangesAsync` is called, and two of those callers are tests with no `HttpContext` and
+no signed-in user — `SeoTests.cs:144-146` writes `hidden.IsActive = false` to prove the sitemap
+drops a hidden product, and `SeedingTests` writes the whole catalog. An interceptor that demands an
+actor would turn those red for a reason unrelated to what they test; one that tolerates a missing
+actor writes audit rows that say nobody did it, which is worse than no audit. The guarantee an
+interceptor would give is replaced by the relation control of §11.2 item 4: *number of write
+handlers under `Pages/Admin/` minus number of audit calls = 0*.
+
+**D8/04 — The pricing-tier editor calls `PricingTierRules.Validate` and refuses to save on anything
+but `None`. It never reimplements the rule.** `[assistant]` `Domain/PricingTierRules.cs:3-6` says
+the rule lives outside the pages "so that every caller — seeder, admin screen, booking — gets the
+same answer"; the admin screen is the caller it was written for. Measured: the database does **not**
+enforce the set-level rule — `PricingTierConfiguration.cs:24` creates `(ProductId, MinDays)` as a
+**non-unique** index, and the three check constraints of `:13-15` are per row. Overlap, gap and a
+missing open-ended band are caught only here.
+
+**D9/04 — `/admin` gains a navigation bar in `_AdminLayout.cshtml`, and the per-page back-links go
+away.** `[assistant]` Measured: today the whole navigation is three hand-written links
+(`_AdminLayout.cshtml:26` to the dashboard, `Admin/Index.cshtml:28` to the product list,
+`Admin/Products/Index.cshtml:10` back to the dashboard). This leva adds four screens; continuing
+the pattern multiplies back-links and still leaves no way to reach the fleet from the catalog. The
+bar carries: dashboard, products, fleet, audit. It lives in `_AdminLayout.cshtml` and not in a
+shared partial (D3/04).
+
+**D10/04 — `Admin` and `Staff` both write; no new policy is created.** `[assistant]` The folder
+convention `AuthorizeFolder("/Admin", AuthorizationPolicies.Staff)` (`Program.cs:104`) covers every
+new page with no code. A write-only policy that distinguishes the two roles is ceremony while one
+person holds both; it becomes real when a delivery employee gets an account. Recorded as backlog.
+
+**D11/04 — A product cannot be saved without an English name.** `[assistant]` Measured:
+`Application/Catalog/TranslationPicker.cs:29` falls back to `SiteCultures.English` when the
+requested culture has no row, and `CatalogQueries.cs:41-46` omits from the card list a product with
+neither. So a product whose English row is blank disappears from the site **in both cultures**,
+silently, with a 200 on the page that no longer lists it. The Portuguese name is optional and its
+absence renders the existing `Admin_MissingTranslation` marker in the list.
+
+**D12/04 — Nothing in this leva deletes a row.** `[assistant]` `ProductConfiguration.cs:56-59`
+makes the product→unit relation `OnDelete(Restrict)`, so a product with fleet cannot be deleted by
+the database anyway; `IsActive = false` is the hide, and it is what the whole catalog read path
+already honours. A unit that leaves service becomes `UnitStatus.Retired`. Motive: delete is the one
+gesture that cannot be reviewed after the fact, and the audit trail of a deleted row has nothing to
+point at.
+
+**D13/04 — The records of `Application/Catalog/CatalogViews.cs` are not touched; the admin carries
+its own input models.** `[assistant]` Measured: `SeoTests.cs:261-273` constructs
+`new ProductDetail(...)` **positionally, with 17 arguments**. Changing the shape of that record
+does not fail an assertion — it fails compilation, which turns C14 and C15 of `foundation.tsv` red
+together and stops the suite before a single test runs.
+
+---
+
+## 3. The measured terrain
+
+Everything `[V]` on 2026-09-07, read from the working tree at `cacd725` through the file bridge.
+One row per file; the command that reached **that** file is in the third column. `dotnet` is not
+reachable from the reviewer's shell, so nothing below was compiled or executed.
+
+| File | Fact | How it was measured |
+|---|---|---|
+| `src/OrlandoUp.Web/Program.cs` | `:104` `AuthorizeFolder("/Admin", AuthorizationPolicies.Staff)` and `:105` `AllowAnonymousToPage("/Admin/Login")`. Every new page under `Pages/Admin/` is closed by convention, with no attribute and no registration. | `cat -n src/OrlandoUp.Web/Program.cs` |
+| `src/OrlandoUp.Web/Program.cs` | No `[Authorize]` attribute exists anywhere in `src/`. | `grep -rn "\[Authorize" src --include=*.cs --include=*.cshtml` → empty outside `obj/` |
+| `src/OrlandoUp.Web/Program.cs` | No antiforgery registration, no `IMemoryCache`, no `OutputCache`, no `ResponseCache`. The only `Cache-Control` is `:154`, on static files. | `grep -rniE "antiforgery|responsecache|outputcache|IMemoryCache" src` → empty outside `obj/` |
+| `src/OrlandoUp.Web/Infrastructure/Localization/CultureRouteConvention.cs` | `:27` returns early for any `ViewEnginePath` starting with `/Admin`. A new admin page gets no culture route, automatically. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Localization/PublicPages.cs` | `:32-33` derives the public set from `IActionDescriptorCollectionProvider`; `:68-71` `IsPublic` excludes `/Admin`, `/Error`, `/Shared`. Not a typed list. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Data/CatalogQueries.cs` | `:27-33` reads `Products` from the `DbContext` per request, `AsNoTracking()`, filtered by `IsActive`. Registered scoped at `Program.cs:111`. **An edit in the admin shows on the public site on the next request; there is no reload step.** | `cat -n` + the cache grep above |
+| `src/OrlandoUp.Web/Infrastructure/Data/CatalogQueries.cs` | `:192-195` catches `JsonException` reading `Highlights` and returns an empty list — malformed JSON is swallowed silently. | `cat -n` |
+| `src/OrlandoUp.Web/Application/Catalog/TranslationPicker.cs` | `:29` falls back to English when the requested culture has no row. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/ProductConfiguration.cs` | `:26` `IsActive` carries `HasDefaultValue(true)`; `:35` `IsBookable` deliberately does not; `:28-34` is the comment that diagnoses the defect. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/AddOnConfiguration.cs` | `:20` `IsActive` carries `HasDefaultValue(true)`. | `grep -rn HasDefaultValue …/Configurations` |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/DeliveryZoneConfiguration.cs` | `:22` `IsActive` carries `HasDefaultValue(true)`; `:21` `SalesTaxRate` carries `HasDefaultValue(0m)`. | idem |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/DeliveryLocationConfiguration.cs` | `:18` `IsActive` carries `HasDefaultValue(true)`. | idem |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/UnitConfiguration.cs` | `:15` `AssetTag` max 40 and required; `:16` unique index on `AssetTag`; `:22` `PurchasedOn` is `HasColumnType("date")`. No default value anywhere in the file. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/PricingTierConfiguration.cs` | `:13-15` three per-row check constraints; `:22` `Amount` precision `(10,2)`; `:24` index `(ProductId, MinDays)` **not unique**. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/ProductTranslationConfiguration.cs` | `:21` unique index `(ProductId, Culture)`; `:16` `Name` max 120; `:17` `Tagline` max 200; `:18` `Description` and `:19` `Highlights` required and unbounded. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Data/Configurations/ProductAddOnConfiguration.cs` | `:13` composite key `(ProductId, AddOnId)` — a duplicate link is impossible by primary key; cascade on both sides (`:18`, `:23`). | `cat -n` |
+| `src/OrlandoUp.Web/Domain/Unit.cs` | Has `CreatedAtUtc` (`:24`) and **no** `UpdatedAtUtc`; `Product.cs:52` has one. | `cat -n` on both |
+| `src/OrlandoUp.Web/Pages/Shared/_AdminLayout.cshtml` | `:4-5` branches on `CultureInfo.CurrentUICulture` / `SiteCultures.Portuguese`; `:18` loads `~/css/site.css` — the admin shares the public stylesheet, there is no `admin.css`. | `cat -n` |
+| `src/OrlandoUp.Web/Pages/Admin/Products/Index.cshtml.cs` | `:29-45` projects with `AsNoTracking()` and **no** `IsActive` filter; `:27-28` states the reason. | `cat -n` |
+| `src/OrlandoUp.Web/Pages/Admin/Login.cshtml` | `:17` is a bare `<form method="post">` — the tag helper injects the antiforgery field, nothing is written by hand. It is the shape every new form must copy. | `cat -n` |
+| `src/OrlandoUp.Web/Resources/SharedResource.resx` | 163 `<data name=` entries, of which 23 start with `Admin_`. | `grep -c '<data name=' …resx` → 163; `grep -o 'name="Admin_[^"]*"' …resx \| sort -u \| wc -l` → 23 |
+| `src/OrlandoUp.Web/wwwroot/css/site.css` | `.field`, `.field label`, `.field input`, `.error-summary`, `.table-scroll`, `.button--quiet`, `.todo`, `.stat` exist. **No rule for `select`, `textarea` or `checkbox`.** | `grep -n` per selector |
+| `src/OrlandoUp.Web/Infrastructure/Seeding/CatalogSeeder.cs` | `:31-37` inserts into emptiness or does nothing, and `:13-16` says why: the rows become editable content the moment an administrator touches them. `:50`, `:81`, `:176`, `:197` write `IsActive = true` literally — the seeder never exercises the `false` path where the defect lives. | `cat -n` |
+| `src/OrlandoUp.Web/Infrastructure/Seeding/CatalogSeedData.cs` | The only place in `src/` where a catalog slug or zone code is typed. Nothing outside `Infrastructure/Seeding/` carries one. | `grep -rn "<the eleven identifiers>" src \| grep -v Seeding/` → only two `CategoryArt.cs` lines, which are SVG file names keyed by the enum, not slugs |
+| `tests/OrlandoUp.Tests/` (whole folder) | **No authentication, no antiforgery handling, no cookie container.** | `grep -rn "AuthenticationHandler\|ClaimsPrincipal\|TestAuthHandler\|WithWebHostBuilder\|Antiforgery\|RequestVerificationToken\|CookieContainer\|SignIn" tests/ --include=*.cs` → empty |
+| `tests/OrlandoUp.Tests/SiteFactory.cs` | `:42` environment `Testing`; `:52-66` swaps the provider for SQLite in memory; `:83` and `:98` create the schema with `EnsureCreatedAsync()` from the model. **The suite never runs a migration.** | `cat -n` |
+| `tests/OrlandoUp.Tests/SeoTests.cs` | `:144-146` writes `hidden.IsActive = false` and calls `SaveChangesAsync()` with no `HttpContext`. `:261-273` builds `ProductDetail` with 17 positional arguments. | `cat -n` |
+| `tests/OrlandoUp.Tests/RenderedTextTests.cs` | `:28-49` is a hand-typed list of 22 addresses; `:49` is `/admin/login`, the only admin page in it. `:61-67` asserts that no page body contains the **name** of any of the 163 resource keys. | `cat -n` |
+| `tests/OrlandoUp.Tests/SiteBehaviourTests.cs` | `:112-124` `PublicPathList`, 21 typed addresses, feeds two `[Theory]` here and the cross-check at `SeoTests.cs:88`. `:273-289` asserts that no registered service name contains `EmailSender`. | `cat -n` |
+| `tests/OrlandoUp.Tests/DomainTests.cs` | `:50` asserts `product.IsActive` is true — that assertion is about the **C# initializer** `Product.cs:35`, not about the store default. `:44-46` is a comment that becomes false once the store default is removed. | `cat -n` |
+| `Docs/controles/public-site.tsv` | C09 scans `Pages/` with no `Admin` exclusion and expects a literal two-path list. C10 excludes `--exclude-dir=Admin` and the `_AdminLayout` lines, but **not** `Pages/Shared/`. C16 scans `src/` for eleven catalog identifiers excluding only the file named `CatalogSeedData.cs`. | `cat` + `bash Docs/medir-controles.sh verificar Docs/controles/public-site.tsv` |
+| `Docs/controles/foundation.tsv` | C17 expects `0` occurrences of the two null-to-zero forms across `src/` (`.cs` and `.cshtml`). C06 expects the real-clock read to live in exactly one file, `Infrastructure/SystemClock.cs`. C11 expects Markdig/Ganss to enter through `Application/RichText.cs` alone. | `cat` + `verificar` |
+
+**Inherited and not re-checked `[H]`, therefore pending, not fact:** the suite counts 137 tests and
+both `.tsv` were green at the close of leva 02 — read from the agent's report in
+`Docs/resumo-conversa-3.md` §1, never measured by the reviewer, because C14 and C15 need `dotnet`.
+
+---
+
+## 4. The schema change
+
+One migration. Suggested name: `RemoveActiveFlagStoreDefaultsAndAddAuditEntries` — the project names
+migrations verb-plus-object in PascalCase, with no leva number (`InitialCreate`,
+`AddIsBookableAndOptionalDimensions`).
+
+### 4.1 The four store defaults
+
+`HasDefaultValue(true)` is removed from the model for `Products.IsActive`, `AddOns.IsActive`,
+`DeliveryZones.IsActive` and `DeliveryLocations.IsActive`. The C# initializer `= true` stays on all
+four domain classes — it is what `DomainTests.cs:50` asserts, and it is the right default for a row
+somebody creates without thinking about visibility. What must not exist is the **store** default,
+which is what makes the provider drop an explicit `false`.
+
+The `Up` drops the four column defaults. It does **not** need to fill existing rows: the columns are
+already `NOT NULL` and every existing row already carries a value — unlike
+`AddIsBookableAndOptionalDimensions`, which added a column and therefore had to state what the old
+rows meant. The agent measures the row counts of the four tables **before** writing the migration
+and puts them in the P1 report; if any of the four is non-zero and the generated `Up` contains a
+data statement, that is a stop.
+
+The `Down` restores the four defaults, and this direction is honest: putting a default back cannot
+invent a value for a row that already has one.
+
+**The comment at `DomainTests.cs:44-46` becomes false in this leva and is rewritten in it.** It
+currently explains the store default as the mechanism that fills old rows and contrasts `IsBookable`
+with `IsActive`. Rules 2 and 3 of `Docs/regras-de-controle.md` exist because prose that sits next to
+a control and describes it wrongly is a defect this project has already paid for.
+
+### 4.2 The audit table
+
+A new entity, `Domain/AuditEntry.cs`, and its configuration. It is a plain POCO with no navigation
+property and no foreign key to Identity: an audit row must survive the deletion of the account that
+wrote it, and `ArchitectureTests.cs:17` forbids `OrlandoUp.Domain` from depending on any other
+layer.
+
+| Column | Type | Null | Why |
+|---|---|---|---|
+| `Id` | `int` identity | no | — |
+| `OccurredAtUtc` | `datetime2` | no | An **instant**, not a calendar date. Read from `IClock` (D16), never `DateTime.UtcNow` — control C06 of `foundation.tsv` expects the real clock to be read in one file only. |
+| `ActorEmail` | `nvarchar(256)` | no | The signed-in user's name at the moment of the write, copied as text. A row, not a link: the account can be renamed or removed and the record must still say who. |
+| `EntityType` | `nvarchar(40)` | no | `Product`, `ProductTranslation`, `PricingTier`, `ProductAddOn`, `Unit`. Written from `nameof`, never a typed string literal. |
+| `EntityId` | `int` | no | The key of the row that changed. For `ProductAddOn`, which has a composite key, it is the **product** id — and the summary names the add-on. |
+| `Action` | `int` (enum `AuditAction`) | no | `Created = 1`, `Updated = 2`, `Deactivated = 3`, `Reactivated = 4`. Explicit numbers, like every other enum in `Domain/Enums.cs`: the values are persisted and a reordered member would silently repoint existing rows. |
+| `Summary` | `nvarchar(400)` | no | One human sentence in English, for a human to read: what changed, from what to what. Never a serialized diff. |
+
+Index on `(OccurredAtUtc)` descending, because the only read is "the most recent ones".
+
+**No `HasDefaultValue` on any column of this table.** That is the whole point of D4/04.
+
+---
+
+## 5. The screens
+
+Every route is written lowercase and by hand on the `@page` directive, as the four existing admin
+pages do (`@page "/admin"`, `@page "/admin/products"`, `@page "/admin/login"`).
+
+| Route | What it does |
+|---|---|
+| `/admin/products` | **exists**; gains an "edit" link per row and a "new product" button. `Admin_ProductsReadOnly` is removed from both `.resx` files. |
+| `/admin/products/create` | the product editor, empty. On save it redirects to the edit screen of the new product. |
+| `/admin/products/edit/{id:int}` | the product editor, loaded. One form, four blocks: the product itself, the two translations, the price bands, the add-on links. |
+| `/admin/units` | the fleet list: tag, product, status, serial, purchase date. Ordered by product then tag. Shows retired units too, marked. |
+| `/admin/units/create` | one unit. |
+| `/admin/units/edit/{id:int}` | one unit. |
+| `/admin/audit` | the 100 most recent audit rows, newest first, read-only. |
+
+The dashboard at `/admin` keeps its three counts and loses its single link to the product list —
+navigation moves to the bar of D9/04.
+
+### 5.1 The product editor, block by block
+
+**The product.** Slug (with the D5/04 warning), category, seat configuration (only meaningful for
+strollers), max rider weight, width, length, seat width, range, turnaround days, sort order, image
+path, `IsActive`, `IsBookable`.
+
+Absence is a first-class value on this screen and must survive the round trip: a dimension nobody
+measured is an **empty field**, saved as `NULL`, and it comes back empty. It is never shown as `0`
+and never saved as `0`. This is D15 and it is control C17 — see §11.2 item 2 for the form the code
+must not use.
+
+`IsBookable` is refused when the product has no valid price list: saving a product as bookable while
+`PricingTierRules.Validate` returns anything but `None` fails validation with the reason named. That
+is the same coherence `CatalogSeeder.cs:116-134` enforces on the seed, applied to the screen.
+
+**The two translations.** Both visible at once, unconditionally (D3/04): name, tagline, description
+(Markdown), highlights (one per line, D6/04). The English name is required (D11/04). The Portuguese
+row may be absent entirely; saving with every Portuguese field blank deletes that translation row
+rather than storing empties, and the list screen then shows the existing `Admin_MissingTranslation`
+marker.
+
+The description is stored as Markdown and rendered by `Application/RichText.cs` when the public page
+reads it. **The editor does not preview it**, and nothing in this leva imports `Markdig` or `Ganss`:
+`ArchitectureTests.cs:43` asserts the exact list of types that carry those packages, and control C11
+of `foundation.tsv` asserts the exact file. A preview is worth its own front with its own control.
+
+**The price bands.** A repeating row: min days, max days (empty means open-ended), mode, amount.
+Validation calls `PricingTierRules.Validate` on the whole proposed set and refuses to save on
+`Empty`, `InvalidBand`, `DoesNotStartAtOneDay`, `Overlap`, `Gap` or `NoOpenEndedBand`, naming which
+one — the six members already exist in `Domain/PricingTierSetProblem.cs`. Each gets a resource key.
+
+**The add-on links.** A checkbox per existing active add-on. Checking creates the `ProductAddOn`
+row, unchecking removes it; the composite primary key makes a duplicate impossible. A product that
+is not bookable carries no links, matching `CatalogSeeder.cs:133-134` and the assertion at
+`DomainTests.cs:192`.
+
+### 5.2 The unit screen
+
+Asset tag (required, max 40, **unique across the fleet**), product, serial, status, notes, purchase
+date. The unique index at `UnitConfiguration.cs:16` means a duplicate tag must be caught as a
+validation message, not as a database exception reaching the user: the screen checks before saving
+and still catches the update exception, because two operators can race.
+
+`PurchasedOn` is a **calendar date in Orlando**, stored as `date` — not an instant. `CreatedAtUtc`
+is an **instant**, written from `IClock` at creation and never touched again. `Unit` has no
+`UpdatedAtUtc` column and this leva does not add one; the audit trail is what records the change.
+
+Changing the product a unit belongs to is open point K1 of §10.
+
+---
+
+## 6. Validation, and what each refusal says
+
+Every refusal renders in the existing `p.error-summary` shape with `role="alert"`, as
+`Pages/Admin/Login.cshtml:14` does, and every message is a resource key present in both cultures.
+
+| Rule | Where it comes from | Refusal |
+|---|---|---|
+| English name required | D11/04 | the product cannot be saved |
+| Slug required, unique, max 80 | `ProductConfiguration.cs:15-16` | named as a duplicate, not as an exception |
+| One translation row per culture | unique index `ProductTranslationConfiguration.cs:21` | impossible to reach through this screen; still caught |
+| Price set valid | `PricingTierRules.Validate` | the specific problem is named |
+| Bookable requires a valid price set | D8/04, `CatalogSeeder.cs:116-125` | the checkbox is refused, the rest of the form is kept |
+| Not bookable carries no add-on link | `CatalogSeeder.cs:133-134` | the links are refused |
+| Asset tag unique, max 40 | `UnitConfiguration.cs:15-16` | named as a duplicate |
+| Amount > 0, min days ≥ 1, max ≥ min | check constraints `PricingTierConfiguration.cs:13-15` | caught before the database sees it |
+| Every decimal field | D20, `CLAUDE.md:41-44` | binding is `en-US`; a comma-decimal input is a validation error, never a silent reinterpretation |
+
+---
+
+## 7. Resource keys
+
+Every visible string is a key in **both** `SharedResource.resx` and `SharedResource.pt-BR.resx`, and
+no value is blank in either — `LocalizationParityTests.cs:16` compares the key sets and `:32` refuses
+an empty value. Control C12 of `foundation.tsv` measures the same thing from the files.
+
+**Every new key keeps the `Admin_` prefix.** This is not a naming preference: `RenderedTextTests.cs`
+takes the **names** of all 163 keys and asserts that none of them appears as a substring in the body
+of any of 22 pages, most of them public. A key named after a CSS class, an id, a route segment or a
+common word would turn a public page red in a leva that never touched it. The 23 keys that exist
+today all carry the prefix.
+
+`Admin_ProductsReadOnly` is **removed** from both files in this leva, because the screen stops being
+read-only. Removal is symmetric or the parity test fails.
+
+---
+
+## 8. Tests
+
+### 8.1 The harness — first delivery, and stop P2
+
+Three pieces, all inside `tests/OrlandoUp.Tests/`, none of them in `src/`:
+
+1. **An authentication handler for tests**, registered through `ConfigureTestServices` in
+   `SiteFactory`, issuing a principal in role `Roles.Admin` (D1/04). It exposes a client factory so
+   a test asks for an authenticated client explicitly; the default client stays anonymous, so
+   `SiteBehaviourTests.cs:54` keeps proving the gate.
+2. **An antiforgery helper** that GETs a page, extracts `__RequestVerificationToken` from the
+   returned HTML and posts a form with it (D2/04).
+3. **Seeded fleet data in the fixture.** The tests below read products, tiers, add-ons and units;
+   `SiteFactory.SeedAsync()` already writes the whole catalog, so the fixture is sufficient — the
+   agent confirms it at step 0 rather than assuming, because a test whose fixture lacks its row
+   fails by exception, not by assertion.
+
+**P2 is approved on three proofs, in the same report:** an authenticated GET of an admin page
+returns 200; a POST carrying the token succeeds; the same POST **without** the token is rejected.
+The third is what proves the second is measuring something.
+
+### 8.2 What the leva proves
+
+Every absence assertion states a presence in the same method — a "does not contain" alone passes on
+a page that redirected, errored or came back empty.
+
+1. **The store default is really gone.** Insert a product with `IsActive = false` through the
+   `DbContext` and read it back as `false`. Under SQLite, `EnsureCreated` builds the schema from the
+   model, so the defect and its repair both reproduce there. Same test for the add-on, the zone and
+   the location. **This is the test that justifies the migration**, and without it the repair rots
+   at the first refactor.
+2. **The editor writes what it was given.** Post a change to a product's English name and read it
+   back on the public `/rentals` page — one test that crosses the whole path, admin write to public
+   read, and proves the no-cache finding of §3 rather than trusting it.
+3. **An absent dimension survives the round trip.** Post the form with the width field empty; the
+   column reads `NULL`, and the product page shows no transport badge (`FitsDisneyTransport` is
+   `null`, three answers not two).
+4. **A product cannot be saved as bookable with a broken price set** — one test per
+   `PricingTierSetProblem` member that a screen can produce.
+5. **The English name cannot be blanked** (D11/04).
+6. **A duplicate asset tag is refused as validation**, and the presence half asserts that a
+   different tag saves.
+7. **Every write leaves exactly one audit row**, with the actor, the entity type from `nameof` and
+   an action from the enum. One test per write handler.
+8. **The hidden product stays visible in the administration** — the property
+   `Admin/Products/Index.cshtml.cs:27-28` states and no test asserts today.
+9. **Highlights round-trip as lines**, and a highlight containing a quote or a backslash comes back
+   intact — the serializer is the only thing between a typo and a silently empty list.
+
+### 8.3 What the leva must not break
+
+Named here so the agent recognizes a red as its own doing: `SeoTests.cs:201` (the sitemap says
+nothing about `/admin`), `SeoTests.cs:88` (the two lists of public pages agree — **do not add any
+address to `SiteBehaviourTests.PublicPathList`**), `CultureRoutingTests.cs:64` (a Portuguese page
+links nowhere outside the prefix — **do not link `/admin` from the public layout**),
+`SiteBehaviourTests.cs:273` (nothing can send a message to anybody — this leva registers no sender),
+`SeedingTests.cs:31` (nine hard cardinals of the seed — this leva does not touch `CatalogSeedData`),
+`ArchitectureTests.cs:32` (the application layer knows nothing about infrastructure — **the write
+service goes in `Infrastructure/Data/`, beside `CatalogQueries`, never in `Application/`**).
+
+---
+
+## 9. Visual check
+
+**Before any item, in one block:** (1) rebuild — the schema changed and the pages are new;
+(2) apply the migration first (§0 step 1), because every screen here reads a column whose default
+just moved; (3) sign in as the seeded administrator, the only role that exists; (4) the database is
+the LocalDB `OrlandoUpDb` with the real fleet already in it — seven products, ten units, eight
+tiers, twelve add-on links; (5) **step 1 is the proof of a fresh build**: the navigation bar of
+D9/04 is visible on `/admin`, which cannot be true of the old binary.
+
+**Roteiro.** Each item says what is expected on screen.
+
+1. `/admin` shows the navigation bar with four destinations, and the three counts unchanged.
+2. `/admin/products` shows an edit link per row and a "new product" button, and no longer says the
+   screen is read-only.
+3. Open a scooter, change the Portuguese tagline, save. `/pt/rentals` shows it **without restarting
+   anything**.
+4. Clear the width of the wheelchair, save, reopen: the field is empty, not `0`. Its public page
+   shows no transport badge.
+5. Try to make a stroller bookable: refused, naming the price problem. Add a valid band set, try
+   again: accepted, and `/rentals` starts showing a price for it. **Undo this** — the strollers are
+   not bought (`CatalogSeedData.cs:24-25`).
+6. Create a product, then hide it with `IsActive` off: it disappears from `/rentals` and 404s on its
+   own address, and it is still listed in `/admin/products`.
+7. `/admin/units`: mark a scooter as in maintenance, then create a unit with a tag that already
+   exists — refused with a message, not a stack trace.
+8. `/admin/audit` lists every gesture above, newest first, each with the operator's e-mail.
+9. Keyboard only, on one editor screen: every field reachable by Tab, every focus ring visible, the
+   error summary announced. D9 makes accessibility a requirement of the administration too.
+10. The same editor at 375 px wide: the price band rows and the add-on checkboxes stay usable and
+    nothing scrolls the page sideways.
+
+**The result is written to `Docs/conferencia-leva-04.md`**, including whatever the check could not
+reach and the measured reason.
+
+---
+
+## 10. Open points for Rod, answered at P0
+
+The agent carries these into the plan and does not start without the answers.
+
+**K1 — Can a unit be moved to another product?** (a) Yes, the product is an editable field of the
+unit; (b) no, the product is chosen at creation and fixed afterwards, and a mistake is corrected by
+retiring the unit and creating another. Cost of (a): a unit that moves takes its history with it and
+the audit line has to say so. Cost of (b): a typo at creation costs a row.
+
+**K2 — What does `/admin/audit` show?** (a) The 100 most recent rows, flat, no filter — the smallest
+honest screen; (b) the same with a filter by entity type and by actor. (b) costs a form and buys
+little while one person writes.
+
+**K3 — When a product is saved as bookable with a broken price set, what happens to the rest of the
+form?** (a) Nothing is saved and the whole form comes back with the message; (b) everything except
+the bookable flag is saved, and the message says the flag was refused. (a) is safer and loses
+typing; (b) never loses typing and can leave the operator believing the product is on sale.
+
+---
+
+## 11. Controls
+
+### 11.1 Files the front alters
+
+**New:**
+`src/OrlandoUp.Web/Domain/AuditEntry.cs`;
+`src/OrlandoUp.Web/Infrastructure/Data/Configurations/AuditEntryConfiguration.cs`;
+one migration plus its designer under `src/OrlandoUp.Web/Infrastructure/Data/Migrations/`;
+the write service and the audit service under `src/OrlandoUp.Web/Infrastructure/Data/`;
+the page pairs (`.cshtml` + `.cshtml.cs`) for `Products/Create`, `Products/Edit`, `Units/Index`,
+`Units/Create`, `Units/Edit`, `Audit/Index` under `src/OrlandoUp.Web/Pages/Admin/`;
+`tests/OrlandoUp.Tests/AdminCrudTests.cs` and the harness files of §8.1;
+`Docs/controles/admin-catalog.tsv`; `Docs/conferencia-leva-04.md`;
+`Docs/relatorio-leva-04-etapa-N.md`.
+
+**Modified, and only in this:**
+`AppDbContext.cs` (one `DbSet`);
+`ProductConfiguration.cs`, `AddOnConfiguration.cs`, `DeliveryZoneConfiguration.cs`,
+`DeliveryLocationConfiguration.cs` (the store default leaves; nothing else);
+`Domain/Enums.cs` (the `AuditAction` enum);
+`AppDbContextModelSnapshot.cs` (tool-generated);
+`Pages/Shared/_AdminLayout.cshtml` (the navigation bar);
+`Pages/Admin/Index.cshtml` and `Pages/Admin/Products/Index.cshtml` (links, and the read-only note
+goes);
+`Resources/SharedResource.resx` and `SharedResource.pt-BR.resx` (new keys, one key removed);
+`wwwroot/css/site.css` (form controls that do not exist yet: `select`, `textarea`, `checkbox`, the
+repeating row);
+`tests/OrlandoUp.Tests/SiteFactory.cs` (the test-only registrations of D1/04);
+`tests/OrlandoUp.Tests/DomainTests.cs` (**only** the comment at `:44-46`, which this leva makes
+false — no assertion changes);
+`Docs/fila-cc.md` (the Estado and Commit columns of this leva's line).
+
+**Negative, by diff column:** `Program.cs`, `CatalogSeedData.cs`, `CatalogSeeder.cs`,
+`CatalogQueries.cs`, `Application/Catalog/CatalogViews.cs`, `TranslationPicker.cs`, `RichText.cs`,
+`PricingTierRules.cs`, `Api/SitemapEndpoints.cs`, `Infrastructure/Localization/` (all four files),
+`appsettings.json`, `CLAUDE.md`, `Docs/decisions.md`, `Docs/architecture.md`, `Docs/roadmap.md`,
+`Docs/open-questions.md`, `Docs/market-notes.md`, `Docs/backlog-conhecido.md`,
+`Docs/protocolo-conversa.md`, `Docs/regras-de-controle.md`, `Docs/medir-controles.sh`, the summaries
+and the atrito files, `Docs/spec-01-foundation.md`, `Docs/spec-02-public-site.md`, the leva 01 and
+leva 02 reports and conferences, `Docs/controles/foundation.tsv`, `Docs/controles/public-site.tsv`,
+`.githooks/pre-commit`, `.gitattributes`, `.github/workflows/ci.yml`, and every test file except
+the two named as modified above — each appears in **zero** lines of `git diff --stat` over the
+leva's commit range.
+
+**Both existing `.tsv` files are in the negative list on purpose.** If this leva moves one of their
+controls, that is a **stop with a proposed amendment**, never a silent edit — and by the project's
+rule, an amendment that changes scope forces every control already proposed to be re-measured at
+HEAD before it counts.
+
+### 11.2 Invariants for `Docs/controles/admin-catalog.tsv`
+
+The exact command shape is the agent's — he read the code. The invariants:
+
+1. **No configuration file declares a store default on a `bool` column.** Anchored on the form, over
+   `Infrastructure/Data/Configurations/`, expected 0 after the leva. Its reach assertion is a
+   sibling that counts the configuration files scanned and asserts the sweep arrives.
+2. **Absence never becomes zero**, over the files this leva adds. This duplicates C17 of
+   `foundation.tsv`, which is **permanent and already scans all of `src/`** — so this leva does
+   **not** create a parallel control; it re-measures C17 at HEAD in step 0 and reports it at every
+   stop. The three coalescing forms on the same target are what the rule requires, and the existing
+   control already covers them.
+3. **The catalog identifiers are still typed in one file only.** Control C16 of `public-site.tsv` is
+   permanent in effect and scans `src/` excluding the file named `CatalogSeedData.cs`. A slug in a
+   placeholder, in an example, **or in a comment** of a new admin page breaks it. Step 0 measures
+   it; every stop reports it. Note the exclusion is by **base file name**, so a new seed-like file
+   under another name would not be excluded.
+4. **Every write handler under `Pages/Admin/` calls the audit service** — expressed as a
+   **relation**, not a count: *number of `OnPost…Async` handler names under `Pages/Admin/` minus
+   number of audit-service call sites in the same folder = 0*. Anchored on the handler **name**, never
+   on the return type. It needs a sibling reach assertion, because zero minus zero is also zero: the
+   sibling asserts the handler operand is at least the number of write screens this leva creates.
+5. **The real clock is read in one file only** — C06 of `foundation.tsv`, permanent, whose expected
+   value is a literal path. The audit timestamp must come from `IClock`. Re-measured at step 0.
+6. **Markdig and Ganss still enter through one type only** — C11 of `foundation.tsv` and
+   `ArchitectureTests.cs:43`, which are complementary: the control scans `using` lines in `*.cs` and
+   would miss a fully qualified call or a call inside a `.cshtml`; the architecture test scans the
+   compiled assembly and catches both. Neither alone is enough. This leva adds no preview, so both
+   stay put.
+7. **Culture branching in markup lives in the two layouts only** — C09 of `public-site.tsv`, whose
+   expected value is a literal two-path list and which does **not** exclude `Pages/Admin/`. This is
+   D3/04 expressed as a control that already exists; re-measured at step 0 and at every stop.
+8. **No admin address in the typed public list** — the public path list of the test project stays at
+   its current length, expressed as the relation between it and the framework-derived set that
+   `SeoTests.cs:88` already compares.
+9. **No resource key is dropped from one culture only** — C12 of `foundation.tsv`, permanent, which
+   this leva moves in both directions (keys added, one removed). Re-measured.
+
+**Every control rule of the project applies** — `Docs/regras-de-controle.md`, twelve rules, each
+bought with a real defect. Two of them bite this leva specifically: rule 2 (a comment counts in a
+control and can break another front's control) and rule 4 (an absolute count of a shared file is not
+a control; the durable form is the relation).
+
+### 11.3 What STEP 0 measures, before altering any file
+
+1. `dotnet --list-sdks`, `dotnet ef --version`, `sqllocaldb info`, and `SELECT DB_NAME()` through
+   the configured connection, reading `OrlandoUpDb`.
+2. `bash Docs/medir-controles.sh verificar Docs/controles/foundation.tsv` and the same for
+   `public-site.tsv` — **all 35 on target before anything is touched**. A control already red on
+   arrival is a stop. This includes C14 and C15, which the reviewer could not measure.
+3. `bash Docs/medir-controles.sh quem-ancora` over every file §11.1 lists as new or modified — the
+   mode exists precisely because a spec once claimed no existing `.tsv` would move and knocked down
+   eight controls. Whatever it names beyond the controls listed in §11.2 goes into the plan as a
+   contradiction.
+4. `bash Docs/medir-controles.sh proibidos` before writing a single comment in a new file.
+5. A `grep` over `src/` and `tests/` for the identifiers this leva creates — `AuditEntry`,
+   `AuditAction`, and the names chosen for the write service and the test handler — **expected
+   zero**. Any hit is a stop, and the name changes before the type exists.
+6. Row counts of `Products`, `AddOns`, `DeliveryZones` and `DeliveryLocations`, for the P1 report.
+7. The proposal for `Docs/controles/admin-catalog.tsv` with `medir` run at the initial HEAD.
+8. Confirmation that `SiteFactory.SeedAsync()` writes every row the tests of §8.2 read.
+9. **Any contradiction between this spec and the tree is reported in the plan.** The spec is never
+   obeyed against the measurement.
+
+---
+
+## 12. Out of scope, and why
+
+**Delivery zones, delivery locations and add-ons themselves.** Their `IsActive` store default is
+repaired here (D4/04) but no screen creates or edits them. Motive: the zone data is blocked on Q3
+(areas, fees, cut-off) and the add-on prices on the same answers; a screen built now would be
+rebuilt when Q3 closes.
+
+**Company settings.** They live in `appsettings.json`, and the four `TODO-` markers there are what
+control C16 of `foundation.tsv` counts, at a threshold of `>= 4` with a measured value of exactly 4
+— zero margin. Moving them to the database is a schema change **plus** the retirement of that
+control **plus** the closing of Q12, and it is its own front. When it happens, the control is retired
+with it; the threshold is never lowered.
+
+**`TurnaroundDays` and `SalesTaxRate`.** They carry store defaults with the same mechanism, but they
+are not `bool`: for a numeric column the provider's inability to distinguish `0` from silence is a
+real but different problem, and neither is written by a screen in this leva. Recorded as backlog with
+the leva that will bite named.
+
+**A separate write role.** D10/04. Recorded as backlog: it becomes real when a delivery employee gets
+an account.
+
+**Markdown preview in the editor.** §5.1. It would move `ArchitectureTests.cs:43` and control C11,
+both of which assert an exact list; that is worth a front with its own control, not a corner of this
+one.
+
+**Deleting anything.** D12/04.
+
+**Bookings and everything that reads them** — today's deliveries, the booking timeline, unit
+assignment, the calendar, refunds. They are the other half of roadmap phase 4 and they cannot exist
+before leva 03.
+
+### 12.1 Statements that were re-checked and are TRUE — do not "fix" them
+
+- **`/admin` is excluded from culture routing and from the sitemap by the `/Admin` prefix of
+  `ViewEnginePath`**, in `CultureRouteConvention.cs:27` and `PublicPages.cs:68-71`. New admin pages
+  inherit both exclusions with no registration. Nothing is to be added anywhere for them.
+- **Every page under `Pages/Admin/` is protected by the folder convention at `Program.cs:104`.** No
+  `[Authorize]` attribute is needed, and none exists in the repository.
+- **Antiforgery needs no configuration.** A plain `<form method="post">` rendered by Razor gets the
+  hidden field from the tag helper, and `AddRazorPages` validates it on every non-GET handler.
+- **The public site holds no copy of the catalog.** No cache, no reload command, no invalidation
+  step: `CatalogQueries` is scoped and queries per request. An edit in the administration is visible
+  on the next request. Do not add a cache in this leva, and do not write a reload step that has
+  nothing to reload.
+- **`Products.IsBookable` has no store default, and that is correct** —
+  `ProductConfiguration.cs:35` and the comment above it. It is the model this leva copies onto the
+  four `IsActive` columns, not a defect to make consistent in the other direction.
+- **`Admin/Products/Index.cshtml.cs` deliberately does not filter `IsActive`.** The administration
+  sees hidden products; that is the point of a soft hide.
+
+---
+
+## 13. Closing
+
+**Two commits.** The content commit first — code, tests, migration, resources, CSS, the new `.tsv`,
+`Docs/conferencia-leva-04.md`. Then the closing commit, which writes the hash of the first into the
+Commit column of this leva's line in `Docs/fila-cc.md`. A single-commit front cannot record its own
+hash.
+
+**Queue balance:** on receipt this file has **1** `aguardando` line; at the end, **0**, and this line
+reads `concluido` with the content commit's short hash. The total number of rows does not change.
+
+**End of session:** the whole `git status --short` and `git diff --stat`, plus
+`bash Docs/medir-controles.sh verificar` on all three `Docs/controles/*.tsv`, reported and never
+silenced.
+
+**Push is the operator's**, never the agent's.
