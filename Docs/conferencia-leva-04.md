@@ -4,6 +4,9 @@
 `EMENDA-04-07`. **Base:** `dotnet run --project src/OrlandoUp.Web`, LocalDB `OrlandoUpDb` **com a
 migration já aplicada**, administrador semeado da leva 01, navegador em português.
 
+**Prova de leitura exigida pelas duas notas:** ocorrências neste arquivo, contadas com
+`grep -c` do arquivo gravado — `EMENDA-04-06`: **4**; `EMENDA-04-07`: **5**.
+
 **Prova de build fresco:** a barra de navegação da D9/04, com os quatro destinos, visível em toda
 tela da administração. Ela não existia no binário anterior, então vê-la é a prova de que o que
 renderizou é esta leva.
@@ -48,6 +51,24 @@ banco guarda *Porta-copos*, *Porta-bengala*, *Proteção de sol*, *Cesto traseir
 texto. **Nenhum teste automatizado o pegaria** — uma asserção de que a caixa existe passa dos dois
 jeitos —, e é exatamente para isso que a conferência visual existe. Conserto e forma dele:
 `EMENDA-04-07` G1, no commit de conteúdo final.
+
+> **CORRIGIDO neste commit de conteúdo, na forma que a G1 fixou.** A consulta passou a carregar as
+> traduções (`.Include(addOn => addOn.Translations)`); o rótulo sai do `TranslationPicker`, que
+> responde *a cultura pedida, senão o inglês, senão nada*; e a página recebe
+> `CatalogWriter.AddOnChoice`, um `record` de duas casas declarado **ao lado do escritor** e não em
+> `Application/Catalog/CatalogViews.cs`, que a D13/04 mantém fechado porque `SeoTests.cs:261-273`
+> constrói `ProductDetail` com dezessete argumentos posicionais. O rótulo mostra **só o nome**.
+> A cultura é decidida no page model, num arquivo `.cs`, e nunca na marcação — o controle C09 do
+> `public-site.tsv` varre `Pages/` sem excluir `Admin` e continua no alvo.
+>
+> **O adicional sem tradução nenhuma cai para o código, e a queda tem teste**, como toda ausência
+> desta leva: um rótulo em branco seria uma caixa de marcação sem significado algum.
+>
+> **Os dois testes eram vermelhos antes, e isso está medido e não suposto:**
+> `git show 7b94393:src/OrlandoUp.Web/Pages/Admin/Products/Edit.cshtml` mostra, na linha 231,
+> `<label for="addon-@addOn.Id">@addOn.Code</label>`. A asserção nova
+> `Assert.DoesNotContain(">cup-holder<", html)` cai contra aquela linha, e a
+> `Assert.Contains("Cup holder", html)` também.
 
 **A2 — CONTEÚDO, e é do operador.** *"Carrinho simples"* se lê como *barato* em vez de *para uma
 criança*. A string é o `Name` em `pt-BR` do produto, numa coluna que o editor desta leva escreve:
@@ -102,6 +123,37 @@ isso agora é **ausência conhecida**. Registrado como **Q14** em `Docs/open-que
 **De pé desde a leva 02:** os itens 7, 8 e 9 da `Docs/conferencia-leva-02.md`, que têm a metade
 mecânica verde e a metade humana aberta. A acessibilidade é requisito (D9), então estes não
 desaparecem por não terem sido feitos: ficam escritos até alguém os fazer.
+
+---
+
+## O que o commit de conteúdo final carrega
+
+Pela `EMENDA-04-06` F3 passo 2, este documento e as duas coisas abaixo entram num commit só, e é o
+hash **dele** que a linha da fila grava — a leva não está completa enquanto a conferência não
+existir.
+
+| O quê | De onde |
+|---|---|
+| o conserto do seletor de adicionais | `EMENDA-04-07` G1, achado A1 acima |
+| os dois testes que o guardam | o mesmo item, que exige a queda para o código com teste |
+| `Admin_BackToDashboard` fora dos dois `.resx` | `EMENDA-04-06` F2 |
+| este documento | `EMENDA-04-06` F3 passo 2 |
+
+**A F2 vem com um aviso para quem repetir a medição:** uma varredura literal por chaves `Admin_` sem
+uso relata **catorze** órfãs e **treze são falsas** — `Admin_Tier…`, `Admin_Seat…`, `Admin_Status…`
+e `Admin_Action…` são montadas interpolando o nome do membro do enum, e nenhum `grep` as vê usadas.
+É a lacuna que o teste `Every_enum_member_a_screen_names_has_a_key_in_both_cultures` fecha, e a
+varredura ingênua vai continuar relatando aquelas treze para sempre.
+
+**A G2 não precisa de commit nenhum:** *"Carrinho simples"* se corrige pela tela, que é a leva se
+provando. O `CatalogSeedData.cs` continua com o texto antigo e está na lista negativa desta frente;
+o semeador só insere em tabela vazia (`CatalogSeeder.cs:31-37`), então ele nunca sobrescreve a
+edição — mas um banco criado do zero nasceria com o nome antigo. O revisor arquiva isso como
+backlog depois do fechamento.
+
+**Portões deste commit:** `dotnet build` limpo com **0 avisos**; `dotnet test` **170 passando, 0
+falhando** (eram 168 na P3, e as duas novas são as da G1); os três `.tsv` com **47 controles, 0 fora
+do esperado**.
 
 ---
 

@@ -397,6 +397,52 @@ public class AdminCrudTests : IAsyncLifetime
     }
 
     // ---------------------------------------------------------------------------------------
+    // The add-on picker, which the visual check caught showing an identifier to a person
+    // ---------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task The_add_on_picker_shows_the_translated_name_and_not_the_internal_code()
+    {
+        HttpClient staff = _factory.CreateStaffClient();
+        Product product = await FirstBookableAsync();
+
+        string html = await staff.GetStringAsync(EditPath(product.Id));
+
+        // The presence half first: the checkbox for that add-on is on the page, so the absence
+        // below is a label that changed and not a control that vanished.
+        int cupHolderId = await AddOnIdAsync("cup-holder");
+
+        Assert.Contains($"value=\"{cupHolderId}\"", html);
+        Assert.Contains("Cup holder", html);
+        Assert.DoesNotContain(">cup-holder<", html);
+    }
+
+    [Fact]
+    public async Task An_add_on_with_no_translation_at_all_falls_back_to_its_code()
+    {
+        using (IServiceScope writing = _factory.Services.CreateScope())
+        {
+            AppDbContext db = writing.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            // No translation row in either culture: the picker answers nothing, and a blank label
+            // would be a checkbox with no meaning. The code is the honest last resort.
+            db.AddOns.Add(new AddOn { Code = "untranslated-extra", SortOrder = 99 });
+
+            await db.SaveChangesAsync();
+        }
+
+        HttpClient staff = _factory.CreateStaffClient();
+        Product product = await FirstBookableAsync();
+
+        string html = await staff.GetStringAsync(EditPath(product.Id));
+
+        Assert.Contains("untranslated-extra", html);
+
+        // And the ordinary case is untouched by the fallback.
+        Assert.Contains("Cup holder", html);
+    }
+
+    // ---------------------------------------------------------------------------------------
     // The price list — one test per problem a screen can produce
     // ---------------------------------------------------------------------------------------
 
@@ -699,6 +745,14 @@ public class AdminCrudTests : IAsyncLifetime
         AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         return await db.Products.OrderBy(product => product.SortOrder).Select(product => product.Slug).FirstAsync();
+    }
+
+    private async Task<int> AddOnIdAsync(string code)
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        return await db.AddOns.Where(addOn => addOn.Code == code).Select(addOn => addOn.Id).SingleAsync();
     }
 
     private async Task<string> FirstAssetTagAsync()

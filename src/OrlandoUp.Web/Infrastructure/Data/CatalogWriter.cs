@@ -3,6 +3,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using OrlandoUp.Application;
+using OrlandoUp.Application.Catalog;
 using OrlandoUp.Domain;
 
 namespace OrlandoUp.Infrastructure.Data;
@@ -54,13 +55,44 @@ public sealed class CatalogWriter
     public Task<Unit?> FindUnitAsync(int id, CancellationToken cancellation) =>
         _db.Units.FirstOrDefaultAsync(unit => unit.Id == id, cancellation);
 
-    /// <summary>Every add-on the editor can link to, active ones only, in display order.</summary>
-    public async Task<IReadOnlyList<AddOn>> ActiveAddOnsAsync(CancellationToken cancellation) =>
-        await _db.AddOns
+    /// <summary>
+    /// One add-on as the editor's checkbox list needs it: the key to post back, and the name a
+    /// person reads.
+    /// </summary>
+    /// <remarks>
+    /// It is declared here and not in <c>Application/Catalog/CatalogViews.cs</c> on purpose
+    /// (D13/04): that file's records are built positionally by tests — <c>ProductDetail</c> with
+    /// seventeen arguments — and a new member there costs every one of those call sites.
+    /// </remarks>
+    public sealed record AddOnChoice(int Id, string Label);
+
+    /// <summary>
+    /// Every add-on the editor can link to, active ones only, in display order, each labelled in
+    /// the culture being served.
+    /// </summary>
+    /// <remarks>
+    /// The label goes through <see cref="TranslationPicker"/>, which answers the requested culture,
+    /// else English, else nothing. When it answers nothing the label falls back to
+    /// <see cref="AddOn.Code"/> — an add-on nobody has translated is still an add-on the operator
+    /// must be able to tick, and a blank label would be a checkbox with no meaning at all. Showing
+    /// the code as the ordinary case is the defect this method exists to have stopped doing: it is
+    /// the identifier <c>Domain/AddOn.cs</c> itself calls "never shown to the customer".
+    /// </remarks>
+    public async Task<IReadOnlyList<AddOnChoice>> ActiveAddOnsAsync(string culture, CancellationToken cancellation)
+    {
+        List<AddOn> addOns = await _db.AddOns
             .AsNoTracking()
+            .Include(addOn => addOn.Translations)
             .Where(addOn => addOn.IsActive)
             .OrderBy(addOn => addOn.SortOrder)
             .ToListAsync(cancellation);
+
+        return addOns
+            .Select(addOn => new AddOnChoice(
+                addOn.Id,
+                TranslationPicker.For(addOn.Translations, culture, text => text.Culture)?.Name ?? addOn.Code))
+            .ToList();
+    }
 
     /// <summary>Every product, for the picker on the unit screen.</summary>
     public async Task<IReadOnlyList<Product>> AllProductsAsync(CancellationToken cancellation) =>

@@ -484,9 +484,6 @@
   <data name="Admin_MissingTranslation" xml:space="preserve">
     <value>faltando</value>
   </data>
-  <data name="Admin_BackToDashboard" xml:space="preserve">
-    <value>Voltar ao painel</value>
-  </data>
   <data name="Nav_DeliveryAreas" xml:space="preserve">
     <value>Áreas de entrega</value>
   </data>

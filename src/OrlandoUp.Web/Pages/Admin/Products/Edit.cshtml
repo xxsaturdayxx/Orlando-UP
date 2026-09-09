@@ -1,5 +1,6 @@
 @page "/admin/products/edit/{id:int}"
 @model OrlandoUp.Pages.Admin.Products.EditModel
+@using OrlandoUp.Infrastructure.Data
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = L["Admin_ProductEditTitle"].Value;
@@ -223,12 +224,12 @@
             }
             else
             {
-                @foreach (AddOn addOn in Model.AvailableAddOns)
+                @foreach (CatalogWriter.AddOnChoice addOn in Model.AvailableAddOns)
                 {
                     <div class="field field--check">
                         <input id="addon-@addOn.Id" name="AddOnIds" type="checkbox" value="@addOn.Id"
                                checked="@Model.AddOnIds.Contains(addOn.Id)" />
-                        <label for="addon-@addOn.Id">@addOn.Code</label>
+                        <label for="addon-@addOn.Id">@addOn.Label</label>
                     </div>
                 }
             }

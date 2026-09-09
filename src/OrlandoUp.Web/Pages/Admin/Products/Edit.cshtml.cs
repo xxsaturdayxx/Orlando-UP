@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Localization;
@@ -123,11 +124,18 @@ public class EditModel : PageModel
     [BindProperty]
     public List<int> AddOnIds { get; set; } = [];
 
-    public IReadOnlyList<AddOn> AvailableAddOns { get; private set; } = [];
+    public IReadOnlyList<CatalogWriter.AddOnChoice> AvailableAddOns { get; private set; } = [];
 
     public string? Problem { get; private set; }
 
     public bool Saved { get; private set; }
+
+    /// <summary>
+    /// The culture the administration is being read in. Decided here, in a <c>.cs</c> file, and
+    /// never in the markup: control C09 of <c>public-site.tsv</c> scans <c>Pages/</c> without
+    /// excluding <c>Admin</c> and expects the literal two-layout list (D3/04).
+    /// </summary>
+    private static string CurrentCulture => CultureInfo.CurrentUICulture.Name;
 
     public async Task<IActionResult> OnGetAsync(CancellationToken cancellationToken)
     {
@@ -140,7 +148,7 @@ public class EditModel : PageModel
 
         ReadFrom(product);
 
-        AvailableAddOns = await _writer.ActiveAddOnsAsync(cancellationToken);
+        AvailableAddOns = await _writer.ActiveAddOnsAsync(CurrentCulture, cancellationToken);
 
         return Page();
     }
@@ -154,7 +162,7 @@ public class EditModel : PageModel
             return NotFound();
         }
 
-        AvailableAddOns = await _writer.ActiveAddOnsAsync(cancellationToken);
+        AvailableAddOns = await _writer.ActiveAddOnsAsync(CurrentCulture, cancellationToken);
 
         Slug = (Slug ?? string.Empty).Trim();
         EnglishName = (EnglishName ?? string.Empty).Trim();
