@@ -27,8 +27,12 @@ O que muda aqui:
    da pasta), em vez de abrir linha de fila de FECHAMENTO para o Claude Code — na Ronatrip cada
    fechamento custa uma sessão inteira do agente e já precisou de emenda. Pré-requisito de toda
    conversa que vai commitar: **permissão de exclusão na pasta** (o `git` apaga os próprios
-   `index.lock` e `tmp_obj_*`; sem ela o primeiro commit trava — medido na conversa 1). O push
-   continua sendo do operador. Mensagem do commit de fechamento: exatamente
+   `index.lock` e `tmp_obj_*`; sem ela o primeiro commit trava — medido na conversa 1). **A permissão cai quando a ponte reconecta, e a reconexão acontece no
+   meio da conversa sem aviso** — na conversa 4 ela caiu três vezes, e o `git` deixou
+   `index.lock`, `HEAD.lock` e arquivos `tmp_obj_*` para trás, que travam o commit seguinte de
+   qualquer uma das duas pontas, inclusive o do Claude Code. Peça a permissão na **abertura** e
+   **de novo depois de cada reconexão**, e limpe os locks antes de devolver o repositório.
+   O push continua sendo do operador. Mensagem do commit de fechamento: exatamente
    `docs: resumo da conversa N` (é o que a abertura procura).
 
 7. **A revisão de cada parada é uma seção do próprio relatório da etapa, não uma mensagem.** O
