@@ -26,6 +26,33 @@ phase 4, so it is **04b**; leva 03 keeps its number and remains the next booking
 
 ---
 
+> **AMENDMENT EMENDA-04B-01 — 2026-09-09, K1 answered before the plan asked for it (Claude Web).**
+> Where this note and the body disagree, **the note wins**.
+>
+> **A1 — K1 is answered, and the answer is a format rather than a list of what is printed today.**
+> `Docs/decisions.md` D38 fixes the tag shape for the whole fleet: three letters, a dash, two digits.
+> **The twelve battery tags this leva seeds are `BSC-01` through `BSC-06` and `BSP-01` through
+> `BSP-06`**, and **`BSC-06` is the Extended Range one** — the survivor of the two Drive Scout XL
+> (D37). All six `BSP` are Normal, because D37 confirms no Drive Spitfire XL is known to exist and
+> Q15 asks whether one ever did. Rod prints and sticks these labels; the seed and the objects meet at
+> the same string, which is the entire reason §10 preferred the real tags over generated ones.
+>
+> **A2 — the scooter and wheelchair tags are NOT changed by this leva.** They read
+> `DRIVE-SCOUT-4-001` and friends, generated from the slug by `CatalogSeeder.cs:146`. D38 gives them
+> `SCT-`, `SPT-` and `WCH-` tags, and Rod applies those **by hand through the screen leva 04 built** —
+> ten rows, no migration, no code. `Domain/Unit.cs`, `UnitConfiguration.cs` and the `Units/` pages
+> stay on this leva's negative list exactly as §11.1 already declares.
+>
+> **A3 — nothing about QR enters this leva.** D38 settles the symbology and the payload, and puts the
+> scanner after leva 03 with its own spec — it brings the first JavaScript into a tree that has none.
+> This front stores a string; nothing renders a code and nothing reads a camera.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04B-01` in the revised `scratchpad/leva04b/plano.md`, expected `>= 1`, with the count
+> reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-09` whose
