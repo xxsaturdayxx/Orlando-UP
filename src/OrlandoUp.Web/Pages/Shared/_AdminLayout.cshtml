@@ -52,6 +52,22 @@
         </div>
     </header>
 
+    @* The administration's navigation lives here and not in a partial under Pages/Shared/ (D9/04,
+       D3/04): control C10 of public-site.tsv excludes this file's lines by name and excludes
+       Pages/Admin/, but it does NOT exclude Pages/Shared/, so an admin partial there carrying
+       asp-page= without asp-route-culture= would break a control of a closed leva. *@
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav class="admin-nav" aria-label="@L["Admin_NavLabel"]">
+            <div class="page admin-nav__inner">
+                <a asp-page="/Admin/Index">@L["Admin_DashboardTitle"]</a>
+                <a asp-page="/Admin/Products/Index">@L["Admin_ProductsTitle"]</a>
+                <a asp-page="/Admin/Units/Index">@L["Admin_UnitsTitle"]</a>
+                <a asp-page="/Admin/Audit/Index">@L["Admin_AuditTitle"]</a>
+            </div>
+        </nav>
+    }
+
     <main id="main">
         @RenderBody()
     </main>

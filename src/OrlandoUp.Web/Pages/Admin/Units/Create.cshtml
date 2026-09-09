@@ -1,0 +1,66 @@
+@page "/admin/units/create"
+@model OrlandoUp.Pages.Admin.Units.CreateModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_UnitCreateTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_UnitCreateTitle"]</h1>
+
+        @if (Model.Problem is not null)
+        {
+            <p class="error-summary" role="alert">@Model.Problem</p>
+        }
+
+        <form method="post">
+            <div class="field">
+                <label for="assetTag">@L["Admin_FieldAssetTag"]</label>
+                <input id="assetTag" name="AssetTag" type="text" maxlength="40" value="@Model.AssetTag"
+                       aria-describedby="tag-help" required />
+                <p class="field__help" id="tag-help">@L["Admin_FieldAssetTagHelp"]</p>
+            </div>
+
+            <div class="field">
+                <label for="productId">@L["Admin_FieldProduct"]</label>
+                <select id="productId" name="ProductId">
+                    @foreach (Product product in Model.Products)
+                    {
+                        <option value="@product.Id" selected="@(product.Id == Model.ProductId)">@product.Slug</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="status">@L["Admin_FieldStatus"]</label>
+                <select id="status" name="Status">
+                    @foreach (UnitStatus status in Enum.GetValues<UnitStatus>())
+                    {
+                        <option value="@status" selected="@(status == Model.Status)">@L[$"Admin_Status{status}"]</option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="serialNumber">@L["Admin_FieldSerial"]</label>
+                <input id="serialNumber" name="SerialNumber" type="text" maxlength="80"
+                       value="@Model.SerialNumber" />
+            </div>
+
+            <div class="field">
+                <label for="purchasedOn">@L["Admin_FieldPurchasedOn"]</label>
+                <input id="purchasedOn" name="PurchasedOn" type="date"
+                       value="@(Model.PurchasedOn is DateOnly bought ? bought.ToString("yyyy-MM-dd") : string.Empty)" />
+            </div>
+
+            <div class="field">
+                <label for="notes">@L["Admin_FieldNotes"]</label>
+                <textarea id="notes" name="Notes" rows="4">@Model.Notes</textarea>
+            </div>
+
+            <button type="submit" class="button button--primary">@L["Admin_Save"]</button>
+            <a class="button button--quiet" asp-page="/Admin/Units/Index">@L["Admin_Cancel"]</a>
+        </form>
+    </div>
+</section>

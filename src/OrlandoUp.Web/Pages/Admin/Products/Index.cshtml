@@ -7,10 +7,9 @@
 
 <section class="section">
     <div class="page">
-        <p><a asp-page="/Admin/Index">@L["Admin_BackToDashboard"]</a></p>
-
         <h1>@L["Admin_ProductsTitle"]</h1>
-        <p class="section__lead">@L["Admin_ProductsReadOnly"]</p>
+
+        <p><a class="button button--primary" asp-page="/Admin/Products/Create">@L["Admin_NewProduct"]</a></p>
 
         <div class="table-scroll">
             <table>
@@ -22,6 +21,7 @@
                         <th scope="col">@L["Admin_ColNamePortuguese"]</th>
                         <th scope="col">@L["Admin_ColActive"]</th>
                         <th scope="col">@L["Admin_ColUnits"]</th>
+                        <th scope="col">@L["Admin_ColAction"]</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,6 +52,7 @@
                             </td>
                             <td>@(row.IsActive ? L["Admin_Yes"] : L["Admin_No"])</td>
                             <td>@row.UnitCount</td>
+                            <td><a asp-page="/Admin/Products/Edit" asp-route-id="@row.Id">@L["Admin_Edit"]</a></td>
                         </tr>
                     }
                 </tbody>

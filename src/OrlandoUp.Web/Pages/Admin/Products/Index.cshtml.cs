@@ -13,6 +13,7 @@ public class IndexModel : PageModel
     public IndexModel(AppDbContext db) => _db = db;
 
     public sealed record Row(
+        int Id,
         string Slug,
         ProductCategory Category,
         string? NameEnglish,
@@ -30,6 +31,7 @@ public class IndexModel : PageModel
             .AsNoTracking()
             .OrderBy(product => product.SortOrder)
             .Select(product => new Row(
+                product.Id,
                 product.Slug,
                 product.Category,
                 product.Translations

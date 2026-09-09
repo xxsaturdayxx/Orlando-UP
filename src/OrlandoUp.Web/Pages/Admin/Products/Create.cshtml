@@ -1,0 +1,53 @@
+@page "/admin/products/create"
+@model OrlandoUp.Pages.Admin.Products.CreateModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_ProductCreateTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_ProductCreateTitle"]</h1>
+        <p class="section__lead">@L["Admin_ProductCreateLead"]</p>
+
+        @if (Model.Problem is not null)
+        {
+            <p class="error-summary" role="alert">@Model.Problem</p>
+        }
+
+        <form method="post">
+            <div class="field">
+                <label for="englishName">@L["Admin_FieldEnglishName"]</label>
+                <input id="englishName" name="EnglishName" type="text" maxlength="120"
+                       value="@Model.EnglishName" required />
+            </div>
+
+            <div class="field">
+                <label for="slug">@L["Admin_FieldSlug"]</label>
+                <input id="slug" name="Slug" type="text" maxlength="80" value="@Model.Slug"
+                       aria-describedby="slug-help" required />
+                <p class="field__help" id="slug-help">@L["Admin_FieldSlugHelp"]</p>
+            </div>
+
+            <div class="field">
+                <label for="category">@L["Admin_FieldCategory"]</label>
+                <select id="category" name="Category">
+                    @foreach (ProductCategory category in Enum.GetValues<ProductCategory>())
+                    {
+                        <option value="@category" selected="@(category == Model.Category)">
+                            @L[CategoryArt.NameKey(category)]
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="sortOrder">@L["Admin_FieldSortOrder"]</label>
+                <input id="sortOrder" name="SortOrder" type="number" step="1" value="@Model.SortOrder" />
+            </div>
+
+            <button type="submit" class="button button--primary">@L["Admin_SaveAndContinue"]</button>
+            <a class="button button--quiet" asp-page="/Admin/Products/Index">@L["Admin_Cancel"]</a>
+        </form>
+    </div>
+</section>

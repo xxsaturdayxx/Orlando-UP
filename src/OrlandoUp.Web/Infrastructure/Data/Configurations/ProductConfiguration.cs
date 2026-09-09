@@ -25,13 +25,17 @@ public sealed class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(p => p.TurnaroundDays).HasDefaultValue(0).IsRequired();
         builder.Property(p => p.IsActive).IsRequired();
 
-        // No store default on this one, on purpose, and the reason is a trap rather than a taste.
-        // A store default on a non-nullable bool makes the provider unable to tell "the caller said
-        // false" from "the caller said nothing": the false is dropped and the row is written with
-        // the default. For this column that would insert a product as purchasable precisely when
-        // the code asked for the opposite, which is the whole defect D32 exists to prevent. The
-        // rows that already exist are filled by an explicit statement in the migration instead,
-        // where a reviewer can read it.
+        // No store default here, and none on IsActive either since leva 04 (D34, D35). The
+        // mechanism is worth stating correctly, because the note this replaces stated it backwards
+        // and the correct version is what makes the rule readable: EF decides whether to send a
+        // column by comparing the property against its SENTINEL. Declaring the default by VALUE
+        // moves the sentinel to that value, so an explicit false still differs from it and is
+        // sent. Declaring it in SQL leaves the sentinel at the language default, so an explicit
+        // false looks like silence, the column is omitted, and the database writes the default
+        // over it — on a non-nullable bool that is how a product gets published when the code
+        // asked for the opposite. Measured on EF Core 10.0.11 and recorded in
+        // Docs/relatorio-leva-04-etapa-1.md. The rule that closes the door on the biting form is
+        // simply: a boolean column is IsRequired() and nothing else.
         builder.Property(p => p.IsBookable).IsRequired();
         builder.Property(p => p.SortOrder).IsRequired();
 

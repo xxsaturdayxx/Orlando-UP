@@ -1,0 +1,51 @@
+@page "/admin/units"
+@model OrlandoUp.Pages.Admin.Units.IndexModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_UnitsTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_UnitsTitle"]</h1>
+
+        <p><a class="button button--primary" asp-page="/Admin/Units/Create">@L["Admin_NewUnit"]</a></p>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Admin_ColAssetTag"]</th>
+                        <th scope="col">@L["Admin_ColProduct"]</th>
+                        <th scope="col">@L["Admin_ColStatus"]</th>
+                        <th scope="col">@L["Admin_ColSerial"]</th>
+                        <th scope="col">@L["Admin_ColPurchasedOn"]</th>
+                        <th scope="col">@L["Admin_ColAction"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>@row.AssetTag</td>
+                            <td>@row.ProductSlug</td>
+                            <td>
+                                @if (row.Status == UnitStatus.Retired)
+                                {
+                                    <em class="todo">@L[$"Admin_Status{row.Status}"]</em>
+                                }
+                                else
+                                {
+                                    @L[$"Admin_Status{row.Status}"]
+                                }
+                            </td>
+                            <td>@row.SerialNumber</td>
+                            <td>@(row.PurchasedOn is DateOnly bought ? bought.ToString("yyyy-MM-dd") : string.Empty)</td>
+                            <td><a asp-page="/Admin/Units/Edit" asp-route-id="@row.Id">@L["Admin_Edit"]</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

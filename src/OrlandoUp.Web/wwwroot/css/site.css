@@ -780,3 +780,88 @@ th {
     padding: var(--space-4) var(--space-5);
     margin-bottom: var(--space-5);
 }
+
+/* Form controls the administration needed and the public site never did. They inherit the shape of
+   .field input on purpose: one visual language for every control on one screen. */
+
+.field select,
+.field textarea {
+    width: 100%;
+    min-height: var(--tap);
+    padding: var(--space-3) var(--space-4);
+    border: 2px solid var(--color-card-border);
+    border-radius: var(--radius-card);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    background: var(--color-card);
+    color: var(--color-ink);
+}
+
+.field textarea {
+    line-height: 1.5;
+    resize: vertical;
+}
+
+/* A checkbox is one control and one label on one line, and the label is still a label: the tap
+   target stays big enough to hit without aiming (D9). */
+.field--check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: none;
+}
+
+.field--check input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    min-height: 0;
+    accent-color: var(--color-link);
+}
+
+.field--check label {
+    margin-bottom: 0;
+    font-weight: 400;
+}
+
+.field__help {
+    color: var(--color-muted);
+    font-size: 0.9375rem;
+    margin: var(--space-2) 0 0;
+    max-width: 42rem;
+}
+
+/* The repeating row of the price editor: four narrow fields that must not stretch to the width of
+   the table cell they sit in. */
+.tier-row input,
+.tier-row select {
+    width: 100%;
+    min-width: 6rem;
+    min-height: var(--tap);
+    padding: var(--space-2) var(--space-3);
+    border: 2px solid var(--color-card-border);
+    border-radius: var(--radius-card);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    background: var(--color-card);
+    color: var(--color-ink);
+}
+
+.notice {
+    background: var(--color-card);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-card);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
+}
+
+.admin-nav {
+    border-bottom: 1px solid var(--color-card-border);
+}
+
+.admin-nav__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-5);
+    padding-top: var(--space-4);
+    padding-bottom: var(--space-4);
+}

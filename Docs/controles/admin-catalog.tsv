@@ -1,0 +1,24 @@
+# Controles da leva 04 -- catalog administration. Spec: Docs/spec-04-admin-catalog.md 11.2,
+# com a nota EMENDA-04-01 no topo, que vence o corpo onde discordarem (A6, A7 e A8 moram aqui).
+# Um controle por linha, campos separados por TAB. Nenhum comando contem TAB.
+# Nenhum comando usa git grep (regra 11): o portao de fim de frente roda ANTES do commit,
+# e todo arquivo que a frente cria seria invisivel para ele naquele momento.
+# Todo operando de contagem sai com "; true" e valor-padrao na expansao (regra 10):
+# grep -c imprime 0 e ainda assim sai com codigo 1 quando o padrao nao casa.
+# Os invariantes 2, 3, 5, 6, 7 e 9 da 11.2 da spec JA sao controle permanente em
+# foundation.tsv e public-site.tsv (C17, C16, C06, C11, C09, C12) e NAO sao duplicados aqui;
+# sao remedidos no passo 0 e em toda parada, e o valor vai no relatorio.
+# O negativo de escopo da A2 -- Program.cs com exatamente 2 linhas acrescentadas e 0 removidas --
+# e medido contra a FAIXA de commits, nunca contra a arvore, e por isso mora no relatorio da P3.
+cmd	src/OrlandoUp.Web/Infrastructure/Data/Configurations	n=$(grep -rhoE "HasDefaultValue[(](true|false)[)]" src/OrlandoUp.Web/Infrastructure/Data/Configurations | wc -l; true); echo ${n:-0}	C01 D34 nenhuma coluna booleana declara padrao de banco nas duas direcoes	0
+cmd	src/OrlandoUp.Web/Infrastructure/Data/Configurations	test $(ls -1 src/OrlandoUp.Web/Infrastructure/Data/Configurations | grep -c "[.]cs$"; true) -ge 8 && echo sim || echo nao	C02 ALCANCE de C01 a varredura chega a pelo menos oito arquivos de configuracao	sim
+cmd	src/OrlandoUp.Web/Domain	a=$(grep -rhoE "public bool IsActive" src/OrlandoUp.Web/Domain | wc -l; true); b=$(grep -rhoF "public bool IsActive { get; set; } = true;" src/OrlandoUp.Web/Domain | wc -l; true); echo $(( ${a:-0} - ${b:-0} ))	C03 D34 RELACAO toda bandeira de visibilidade mantem o inicializador do C#	0
+cmd	src/OrlandoUp.Web/Domain	test $(grep -rhoE "public bool IsActive" src/OrlandoUp.Web/Domain | wc -l; true) -ge 4 && echo sim || echo nao	C04 ALCANCE de C03 o operando maior e maior ou igual a quatro	sim
+cmd	src/OrlandoUp.Web/Pages/Admin	a=$(grep -rhoE "OnPost[A-Za-z]*Async" --include=*.cs src/OrlandoUp.Web/Pages/Admin | wc -l; true); c=$(grep -rhoE "[.]Record[(]" --include=*.cs src/OrlandoUp.Web/Pages/Admin | wc -l; true); echo $(( ${a:-0} - ${c:-0} ))	C05 D7-04 RELACAO handler de POST menos registro de auditoria e a permissao dos dois de sessao	2
+cmd	src/OrlandoUp.Web/Pages/Admin	test $(grep -rhoE "OnPost[A-Za-z]*Async" --include=*.cs src/OrlandoUp.Web/Pages/Admin | wc -l; true) -ge 6 && echo sim || echo nao	C06 ALCANCE de C05 o operando maior e maior ou igual a seis	sim
+cmd	src	n=$(grep -rloF --exclude-dir=bin --exclude-dir=obj "Admin_ProductsReadOnly" src | wc -l; true); echo ${n:-0}	C07 a chave que dizia que a tela so le sumiu de src	0
+cmd	src/OrlandoUp.Web/Resources/SharedResource.resx	test $(grep -oE "name=.Admin_[^\"]*." src/OrlandoUp.Web/Resources/SharedResource.resx | wc -l; true) -ge 30 && echo sim || echo nao	C08 ALCANCE de C07 o prefixo de administracao continua alcancado e passou de trinta chaves	sim
+cmd	tests/OrlandoUp.Tests/SiteBehaviourTests.cs	n=$(awk "/PublicPathList *=/{f=1} f{print} f&&/\];/{exit}" tests/OrlandoUp.Tests/SiteBehaviourTests.cs | grep -oF "/admin" | wc -l; true); echo ${n:-0}	C09 nenhum endereco de administracao entra na lista publica digitada	0
+cmd	tests/OrlandoUp.Tests/SiteBehaviourTests.cs	test $(awk "/PublicPathList *=/{f=1} f{print} f&&/\];/{exit}" tests/OrlandoUp.Tests/SiteBehaviourTests.cs | grep -oE '"/[^"]*"' | wc -l; true) -ge 20 && echo sim || echo nao	C10 ALCANCE de C09 o bloco extraido carrega pelo menos vinte enderecos	sim
+cmd	src	n=$(grep -rIloE --exclude-dir=bin --exclude-dir=obj -e "TestAuthHandler|FormPoster" src | wc -l; true); echo ${n:-0}	C11 D1-04 a costura de autenticacao de teste nao existe em nenhum arquivo do produto	0
+cmd	tests	test $(grep -rIloE --exclude-dir=bin --exclude-dir=obj -e "TestAuthHandler|FormPoster" tests | wc -l; true) -ge 1 && echo sim || echo nao	C12 ALCANCE de C11 os mesmos identificadores existem em pelo menos um arquivo de teste	sim

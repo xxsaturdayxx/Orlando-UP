@@ -1,0 +1,47 @@
+@page "/admin/audit"
+@model OrlandoUp.Pages.Admin.Audit.IndexModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_AuditTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_AuditTitle"]</h1>
+        <p class="section__lead">@L["Admin_AuditLead"]</p>
+
+        @if (Model.Entries.Count == 0)
+        {
+            <p class="todo">@L["Admin_AuditEmpty"]</p>
+        }
+        else
+        {
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Admin_ColWhen"]</th>
+                            <th scope="col">@L["Admin_ColActor"]</th>
+                            <th scope="col">@L["Admin_ColEntity"]</th>
+                            <th scope="col">@L["Admin_ColAction"]</th>
+                            <th scope="col">@L["Admin_ColSummary"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (AuditEntry entry in Model.Entries)
+                        {
+                            <tr>
+                                @* An instant, shown as one: the column stores UTC and says so. *@
+                                <td>@entry.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm") UTC</td>
+                                <td>@entry.ActorEmail</td>
+                                <td>@entry.EntityType @entry.EntityId</td>
+                                <td>@L[$"Admin_Action{entry.Action}"]</td>
+                                <td>@entry.Summary</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>

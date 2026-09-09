@@ -457,9 +457,6 @@
   <data name="Admin_ProductsTitle" xml:space="preserve">
     <value>Produtos</value>
   </data>
-  <data name="Admin_ProductsReadOnly" xml:space="preserve">
-    <value>Somente leitura nesta entrega; a edição chega na entrega de administração.</value>
-  </data>
   <data name="Admin_ColSlug" xml:space="preserve">
     <value>Slug</value>
   </data>
@@ -546,5 +543,305 @@
   </data>
   <data name="Faq_A10" xml:space="preserve">
     <value>Ainda não. A frota de carrinhos chega para a temporada de inverno. Os modelos já estão na página de aluguéis, marcados como "em breve", e vão trazer medidas e preços antes de a reserva abrir.</value>
+  </data>
+  <data name="Admin_NavLabel" xml:space="preserve">
+    <value>Administração</value>
+  </data>
+  <data name="Admin_Edit" xml:space="preserve">
+    <value>Editar</value>
+  </data>
+  <data name="Admin_Save" xml:space="preserve">
+    <value>Salvar</value>
+  </data>
+  <data name="Admin_SaveAndContinue" xml:space="preserve">
+    <value>Salvar e continuar</value>
+  </data>
+  <data name="Admin_Cancel" xml:space="preserve">
+    <value>Cancelar</value>
+  </data>
+  <data name="Admin_Saved" xml:space="preserve">
+    <value>Salvo.</value>
+  </data>
+  <data name="Admin_NotSet" xml:space="preserve">
+    <value>Não definido</value>
+  </data>
+  <data name="Admin_BackToProducts" xml:space="preserve">
+    <value>Voltar para a lista de produtos</value>
+  </data>
+  <data name="Admin_NewProduct" xml:space="preserve">
+    <value>Novo produto</value>
+  </data>
+  <data name="Admin_ColAction" xml:space="preserve">
+    <value>Ação</value>
+  </data>
+  <data name="Admin_ProductCreateTitle" xml:space="preserve">
+    <value>Novo produto</value>
+  </data>
+  <data name="Admin_ProductCreateLead" xml:space="preserve">
+    <value>Só o que o produto precisa para existir. Ele nasce oculto, e o editor abre em seguida para você preencher o resto e publicar de propósito.</value>
+  </data>
+  <data name="Admin_ProductEditTitle" xml:space="preserve">
+    <value>Editar produto</value>
+  </data>
+  <data name="Admin_BlockProduct" xml:space="preserve">
+    <value>O produto</value>
+  </data>
+  <data name="Admin_BlockEnglish" xml:space="preserve">
+    <value>Texto em inglês</value>
+  </data>
+  <data name="Admin_BlockPortuguese" xml:space="preserve">
+    <value>Texto em português</value>
+  </data>
+  <data name="Admin_BlockPortugueseHelp" xml:space="preserve">
+    <value>Deixe todos os campos deste bloco vazios para remover o texto em português por completo. A lista de produtos passa a mostrá-lo como ausente.</value>
+  </data>
+  <data name="Admin_BlockPricing" xml:space="preserve">
+    <value>Faixas de preço</value>
+  </data>
+  <data name="Admin_BlockPricingHelp" xml:space="preserve">
+    <value>As faixas começam em um dia, nunca cobrem a mesma duração duas vezes, e a mais longa não tem limite superior. Deixe o máximo vazio na faixa aberta. Linha em branco não é faixa.</value>
+  </data>
+  <data name="Admin_BlockAddOns" xml:space="preserve">
+    <value>Adicionais oferecidos</value>
+  </data>
+  <data name="Admin_NoAddOns" xml:space="preserve">
+    <value>Não há adicional ativo para vincular.</value>
+  </data>
+  <data name="Admin_FieldSlug" xml:space="preserve">
+    <value>Endereço (slug)</value>
+  </data>
+  <data name="Admin_FieldSlugHelp" xml:space="preserve">
+    <value>O segmento de URL em inglês. Estável depois de publicado: mudá-lo quebra todo link já compartilhado.</value>
+  </data>
+  <data name="Admin_FieldCategory" xml:space="preserve">
+    <value>Categoria</value>
+  </data>
+  <data name="Admin_FieldConfiguration" xml:space="preserve">
+    <value>Assentos</value>
+  </data>
+  <data name="Admin_FieldConfigurationHelp" xml:space="preserve">
+    <value>Só os carrinhos têm.</value>
+  </data>
+  <data name="Admin_MeasurementsHelp" xml:space="preserve">
+    <value>Medida que ninguém tirou é campo vazio, não zero. Os números usam o formato inglês: ponto como separador decimal.</value>
+  </data>
+  <data name="Admin_FieldMaxRiderWeight" xml:space="preserve">
+    <value>Peso máximo do usuário (lb)</value>
+  </data>
+  <data name="Admin_FieldWidth" xml:space="preserve">
+    <value>Largura (pol)</value>
+  </data>
+  <data name="Admin_FieldLength" xml:space="preserve">
+    <value>Comprimento (pol)</value>
+  </data>
+  <data name="Admin_FieldSeatWidth" xml:space="preserve">
+    <value>Largura do assento (pol)</value>
+  </data>
+  <data name="Admin_FieldRange" xml:space="preserve">
+    <value>Autonomia por carga (milhas)</value>
+  </data>
+  <data name="Admin_FieldTurnaround" xml:space="preserve">
+    <value>Dias de intervalo</value>
+  </data>
+  <data name="Admin_FieldSortOrder" xml:space="preserve">
+    <value>Ordem de exibição</value>
+  </data>
+  <data name="Admin_FieldImagePath" xml:space="preserve">
+    <value>Caminho da imagem</value>
+  </data>
+  <data name="Admin_FieldIsActive" xml:space="preserve">
+    <value>Visível no site público</value>
+  </data>
+  <data name="Admin_FieldIsBookable" xml:space="preserve">
+    <value>À venda</value>
+  </data>
+  <data name="Admin_FieldIsBookableHelp" xml:space="preserve">
+    <value>Um produto só entra à venda com a lista de preços completa. Produto fora de venda não carrega faixa de preço nem adicional.</value>
+  </data>
+  <data name="Admin_FieldEnglishName" xml:space="preserve">
+    <value>Nome em inglês</value>
+  </data>
+  <data name="Admin_FieldName" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="Admin_FieldTagline" xml:space="preserve">
+    <value>Chamada</value>
+  </data>
+  <data name="Admin_FieldDescription" xml:space="preserve">
+    <value>Descrição</value>
+  </data>
+  <data name="Admin_FieldDescriptionHelp" xml:space="preserve">
+    <value>Markdown. A página pública renderiza; esta tela não pré-visualiza.</value>
+  </data>
+  <data name="Admin_FieldHighlights" xml:space="preserve">
+    <value>Destaques</value>
+  </data>
+  <data name="Admin_FieldHighlightsHelp" xml:space="preserve">
+    <value>Um por linha. Linha em branco não é destaque.</value>
+  </data>
+  <data name="Admin_ColMinDays" xml:space="preserve">
+    <value>De (dias)</value>
+  </data>
+  <data name="Admin_ColMaxDays" xml:space="preserve">
+    <value>Até (dias)</value>
+  </data>
+  <data name="Admin_ColMode" xml:space="preserve">
+    <value>Modo</value>
+  </data>
+  <data name="Admin_ColAmount" xml:space="preserve">
+    <value>Valor (USD)</value>
+  </data>
+  <data name="Admin_TierFlatPerRental" xml:space="preserve">
+    <value>Fixo por aluguel</value>
+  </data>
+  <data name="Admin_TierPerDay" xml:space="preserve">
+    <value>Por dia</value>
+  </data>
+  <data name="Admin_SeatSingle" xml:space="preserve">
+    <value>Simples</value>
+  </data>
+  <data name="Admin_SeatDouble" xml:space="preserve">
+    <value>Duplo</value>
+  </data>
+  <data name="Admin_SeatTriple" xml:space="preserve">
+    <value>Triplo</value>
+  </data>
+  <data name="Admin_SeatInfant" xml:space="preserve">
+    <value>Bebê</value>
+  </data>
+  <data name="Admin_UnitsTitle" xml:space="preserve">
+    <value>Frota</value>
+  </data>
+  <data name="Admin_UnitCreateTitle" xml:space="preserve">
+    <value>Nova unidade</value>
+  </data>
+  <data name="Admin_UnitEditTitle" xml:space="preserve">
+    <value>Editar unidade</value>
+  </data>
+  <data name="Admin_NewUnit" xml:space="preserve">
+    <value>Nova unidade</value>
+  </data>
+  <data name="Admin_ColAssetTag" xml:space="preserve">
+    <value>Etiqueta</value>
+  </data>
+  <data name="Admin_ColProduct" xml:space="preserve">
+    <value>Produto</value>
+  </data>
+  <data name="Admin_ColStatus" xml:space="preserve">
+    <value>Situação</value>
+  </data>
+  <data name="Admin_ColSerial" xml:space="preserve">
+    <value>Número de série</value>
+  </data>
+  <data name="Admin_ColPurchasedOn" xml:space="preserve">
+    <value>Comprada em</value>
+  </data>
+  <data name="Admin_FieldAssetTag" xml:space="preserve">
+    <value>Etiqueta</value>
+  </data>
+  <data name="Admin_FieldAssetTagHelp" xml:space="preserve">
+    <value>Única em toda a frota, como está escrita na máquina.</value>
+  </data>
+  <data name="Admin_FieldProduct" xml:space="preserve">
+    <value>Produto</value>
+  </data>
+  <data name="Admin_FieldStatus" xml:space="preserve">
+    <value>Situação</value>
+  </data>
+  <data name="Admin_FieldSerial" xml:space="preserve">
+    <value>Número de série</value>
+  </data>
+  <data name="Admin_FieldPurchasedOn" xml:space="preserve">
+    <value>Comprada em</value>
+  </data>
+  <data name="Admin_FieldNotes" xml:space="preserve">
+    <value>Observações</value>
+  </data>
+  <data name="Admin_StatusAvailable" xml:space="preserve">
+    <value>Disponível</value>
+  </data>
+  <data name="Admin_StatusMaintenance" xml:space="preserve">
+    <value>Em manutenção</value>
+  </data>
+  <data name="Admin_StatusRetired" xml:space="preserve">
+    <value>Baixada</value>
+  </data>
+  <data name="Admin_AuditTitle" xml:space="preserve">
+    <value>Registro</value>
+  </data>
+  <data name="Admin_AuditLead" xml:space="preserve">
+    <value>As cem alterações mais recentes, da mais nova para a mais antiga.</value>
+  </data>
+  <data name="Admin_AuditEmpty" xml:space="preserve">
+    <value>Nada foi registrado ainda.</value>
+  </data>
+  <data name="Admin_ColWhen" xml:space="preserve">
+    <value>Quando (UTC)</value>
+  </data>
+  <data name="Admin_ColActor" xml:space="preserve">
+    <value>Quem</value>
+  </data>
+  <data name="Admin_ColEntity" xml:space="preserve">
+    <value>O quê</value>
+  </data>
+  <data name="Admin_ColSummary" xml:space="preserve">
+    <value>Alteração</value>
+  </data>
+  <data name="Admin_ActionCreated" xml:space="preserve">
+    <value>Criado</value>
+  </data>
+  <data name="Admin_ActionUpdated" xml:space="preserve">
+    <value>Alterado</value>
+  </data>
+  <data name="Admin_ActionDeactivated" xml:space="preserve">
+    <value>Ocultado</value>
+  </data>
+  <data name="Admin_ActionReactivated" xml:space="preserve">
+    <value>Exibido de novo</value>
+  </data>
+  <data name="Admin_ErrorNumberFormat" xml:space="preserve">
+    <value>Não foi possível ler um valor. Os números usam o formato inglês: ponto como separador decimal e sem separador de milhar.</value>
+  </data>
+  <data name="Admin_ErrorEnglishNameRequired" xml:space="preserve">
+    <value>O nome em inglês é obrigatório.</value>
+  </data>
+  <data name="Admin_ErrorSlugRequired" xml:space="preserve">
+    <value>O endereço é obrigatório e tem no máximo 80 caracteres.</value>
+  </data>
+  <data name="Admin_ErrorSlugTaken" xml:space="preserve">
+    <value>Outro produto já usa este endereço.</value>
+  </data>
+  <data name="Admin_ErrorNotBookableCarriesPrice" xml:space="preserve">
+    <value>Produto fora de venda não carrega faixa de preço. Preço que ninguém pode pagar é o número que o visitante guarda.</value>
+  </data>
+  <data name="Admin_ErrorNotBookableCarriesAddOn" xml:space="preserve">
+    <value>Produto fora de venda não carrega vínculo de adicional.</value>
+  </data>
+  <data name="Admin_ErrorTierEmpty" xml:space="preserve">
+    <value>Produto à venda precisa de ao menos uma faixa de preço.</value>
+  </data>
+  <data name="Admin_ErrorTierInvalidBand" xml:space="preserve">
+    <value>Uma faixa começa abaixo de um dia, termina antes de começar, pede valor zero ou menor, ou está sem os dias ou sem o valor.</value>
+  </data>
+  <data name="Admin_ErrorTierDoesNotStartAtOneDay" xml:space="preserve">
+    <value>A faixa mais curta não começa em um dia.</value>
+  </data>
+  <data name="Admin_ErrorTierOverlap" xml:space="preserve">
+    <value>Duas faixas cobrem a mesma duração de aluguel.</value>
+  </data>
+  <data name="Admin_ErrorTierGap" xml:space="preserve">
+    <value>Uma duração entre a faixa mais curta e a mais longa ficou sem preço.</value>
+  </data>
+  <data name="Admin_ErrorTierNoOpenEndedBand" xml:space="preserve">
+    <value>Todas as faixas têm limite superior, então um aluguel longo ficaria sem preço. Deixe o máximo da faixa mais longa vazio.</value>
+  </data>
+  <data name="Admin_ErrorAssetTagRequired" xml:space="preserve">
+    <value>A etiqueta é obrigatória e tem no máximo 40 caracteres.</value>
+  </data>
+  <data name="Admin_ErrorAssetTagTaken" xml:space="preserve">
+    <value>Outra unidade já carrega esta etiqueta.</value>
+  </data>
+  <data name="Admin_ErrorProductRequired" xml:space="preserve">
+    <value>Escolha o produto ao qual esta unidade pertence.</value>
   </data>
 </root>

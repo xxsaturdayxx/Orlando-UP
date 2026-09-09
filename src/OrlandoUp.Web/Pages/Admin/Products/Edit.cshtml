@@ -1,0 +1,242 @@
+@page "/admin/products/edit/{id:int}"
+@model OrlandoUp.Pages.Admin.Products.EditModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_ProductEditTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_ProductEditTitle"]</h1>
+        <p class="section__lead">@Model.Slug</p>
+
+        @if (Model.Problem is not null)
+        {
+            <p class="error-summary" role="alert">@Model.Problem</p>
+        }
+        else if (Model.Saved)
+        {
+            <p class="notice" role="status">@L["Admin_Saved"]</p>
+        }
+
+        <form method="post">
+            <h2>@L["Admin_BlockProduct"]</h2>
+
+            <div class="field">
+                <label for="slug">@L["Admin_FieldSlug"]</label>
+                <input id="slug" name="Slug" type="text" maxlength="80" value="@Model.Slug"
+                       aria-describedby="slug-help" required />
+                <p class="field__help" id="slug-help">@L["Admin_FieldSlugHelp"]</p>
+            </div>
+
+            <div class="field">
+                <label for="category">@L["Admin_FieldCategory"]</label>
+                <select id="category" name="Category">
+                    @foreach (ProductCategory category in Enum.GetValues<ProductCategory>())
+                    {
+                        <option value="@category" selected="@(category == Model.Category)">
+                            @L[CategoryArt.NameKey(category)]
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="configuration">@L["Admin_FieldConfiguration"]</label>
+                <select id="configuration" name="Configuration" aria-describedby="configuration-help">
+                    <option value="" selected="@(Model.Configuration is null)">@L["Admin_NotSet"]</option>
+                    @foreach (SeatConfiguration seats in Enum.GetValues<SeatConfiguration>())
+                    {
+                        <option value="@seats" selected="@(seats == Model.Configuration)">@L[$"Admin_Seat{seats}"]</option>
+                    }
+                </select>
+                <p class="field__help" id="configuration-help">@L["Admin_FieldConfigurationHelp"]</p>
+            </div>
+
+            <p class="field__help">@L["Admin_MeasurementsHelp"]</p>
+
+            <div class="field">
+                <label for="maxRiderWeightLb">@L["Admin_FieldMaxRiderWeight"]</label>
+                <input id="maxRiderWeightLb" name="MaxRiderWeightLb" type="number" step="1"
+                       value="@Model.MaxRiderWeightLb" />
+            </div>
+
+            <div class="field">
+                <label for="widthIn">@L["Admin_FieldWidth"]</label>
+                <input id="widthIn" name="WidthIn" type="number" step="0.1" value="@Model.WidthIn" />
+            </div>
+
+            <div class="field">
+                <label for="lengthIn">@L["Admin_FieldLength"]</label>
+                <input id="lengthIn" name="LengthIn" type="number" step="0.1" value="@Model.LengthIn" />
+            </div>
+
+            <div class="field">
+                <label for="seatWidthIn">@L["Admin_FieldSeatWidth"]</label>
+                <input id="seatWidthIn" name="SeatWidthIn" type="number" step="0.1" value="@Model.SeatWidthIn" />
+            </div>
+
+            <div class="field">
+                <label for="rangeMiles">@L["Admin_FieldRange"]</label>
+                <input id="rangeMiles" name="RangeMiles" type="number" step="0.1" value="@Model.RangeMiles" />
+            </div>
+
+            <div class="field">
+                <label for="turnaroundDays">@L["Admin_FieldTurnaround"]</label>
+                <input id="turnaroundDays" name="TurnaroundDays" type="number" step="1"
+                       value="@Model.TurnaroundDays" />
+            </div>
+
+            <div class="field">
+                <label for="sortOrder">@L["Admin_FieldSortOrder"]</label>
+                <input id="sortOrder" name="SortOrder" type="number" step="1" value="@Model.SortOrder" />
+            </div>
+
+            <div class="field">
+                <label for="imagePath">@L["Admin_FieldImagePath"]</label>
+                <input id="imagePath" name="ImagePath" type="text" maxlength="260" value="@Model.ImagePath" />
+            </div>
+
+            @* The checkbox comes FIRST and the hidden fallback after it, which is the order the
+               framework's own tag helper uses and the order the binder depends on: it reads the
+               first value for a bool, so a checked box must be the first thing posted. Reversed,
+               every ticked box would arrive as false and the screen would quietly unpublish. *@
+            <div class="field field--check">
+                <input id="isActive" name="IsActive" type="checkbox" value="true" checked="@Model.IsActive" />
+                <input type="hidden" name="IsActive" value="false" />
+                <label for="isActive">@L["Admin_FieldIsActive"]</label>
+            </div>
+
+            <div class="field field--check">
+                <input id="isBookable" name="IsBookable" type="checkbox" value="true" checked="@Model.IsBookable"
+                       aria-describedby="bookable-help" />
+                <input type="hidden" name="IsBookable" value="false" />
+                <label for="isBookable">@L["Admin_FieldIsBookable"]</label>
+            </div>
+            <p class="field__help" id="bookable-help">@L["Admin_FieldIsBookableHelp"]</p>
+
+            <h2>@L["Admin_BlockEnglish"]</h2>
+
+            <div class="field">
+                <label for="englishName">@L["Admin_FieldName"]</label>
+                <input id="englishName" name="EnglishName" type="text" maxlength="120"
+                       value="@Model.EnglishName" required />
+            </div>
+
+            <div class="field">
+                <label for="englishTagline">@L["Admin_FieldTagline"]</label>
+                <input id="englishTagline" name="EnglishTagline" type="text" maxlength="200"
+                       value="@Model.EnglishTagline" />
+            </div>
+
+            <div class="field">
+                <label for="englishDescription">@L["Admin_FieldDescription"]</label>
+                <textarea id="englishDescription" name="EnglishDescription" rows="10"
+                          aria-describedby="description-help">@Model.EnglishDescription</textarea>
+                <p class="field__help" id="description-help">@L["Admin_FieldDescriptionHelp"]</p>
+            </div>
+
+            <div class="field">
+                <label for="englishHighlights">@L["Admin_FieldHighlights"]</label>
+                <textarea id="englishHighlights" name="EnglishHighlights" rows="5"
+                          aria-describedby="highlights-help">@Model.EnglishHighlights</textarea>
+                <p class="field__help" id="highlights-help">@L["Admin_FieldHighlightsHelp"]</p>
+            </div>
+
+            <h2>@L["Admin_BlockPortuguese"]</h2>
+            <p class="field__help">@L["Admin_BlockPortugueseHelp"]</p>
+
+            <div class="field">
+                <label for="portugueseName">@L["Admin_FieldName"]</label>
+                <input id="portugueseName" name="PortugueseName" type="text" maxlength="120"
+                       value="@Model.PortugueseName" />
+            </div>
+
+            <div class="field">
+                <label for="portugueseTagline">@L["Admin_FieldTagline"]</label>
+                <input id="portugueseTagline" name="PortugueseTagline" type="text" maxlength="200"
+                       value="@Model.PortugueseTagline" />
+            </div>
+
+            <div class="field">
+                <label for="portugueseDescription">@L["Admin_FieldDescription"]</label>
+                <textarea id="portugueseDescription" name="PortugueseDescription" rows="10">@Model.PortugueseDescription</textarea>
+            </div>
+
+            <div class="field">
+                <label for="portugueseHighlights">@L["Admin_FieldHighlights"]</label>
+                <textarea id="portugueseHighlights" name="PortugueseHighlights" rows="5">@Model.PortugueseHighlights</textarea>
+            </div>
+
+            <h2>@L["Admin_BlockPricing"]</h2>
+            <p class="field__help">@L["Admin_BlockPricingHelp"]</p>
+
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Admin_ColMinDays"]</th>
+                            <th scope="col">@L["Admin_ColMaxDays"]</th>
+                            <th scope="col">@L["Admin_ColMode"]</th>
+                            <th scope="col">@L["Admin_ColAmount"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (int row = 0; row < Model.Tiers.Count; row++)
+                        {
+                            <tr class="tier-row">
+                                <td>
+                                    <label class="visually-hidden" for="tier-min-@row">@L["Admin_ColMinDays"]</label>
+                                    <input id="tier-min-@row" name="Tiers[@row].MinDays" type="number" step="1"
+                                           value="@Model.Tiers[row].MinDays" />
+                                </td>
+                                <td>
+                                    <label class="visually-hidden" for="tier-max-@row">@L["Admin_ColMaxDays"]</label>
+                                    <input id="tier-max-@row" name="Tiers[@row].MaxDays" type="number" step="1"
+                                           value="@Model.Tiers[row].MaxDays" />
+                                </td>
+                                <td>
+                                    <label class="visually-hidden" for="tier-mode-@row">@L["Admin_ColMode"]</label>
+                                    <select id="tier-mode-@row" name="Tiers[@row].Mode">
+                                        @foreach (TierMode mode in Enum.GetValues<TierMode>())
+                                        {
+                                            <option value="@mode" selected="@(mode == Model.Tiers[row].Mode)">@L[$"Admin_Tier{mode}"]</option>
+                                        }
+                                    </select>
+                                </td>
+                                <td>
+                                    <label class="visually-hidden" for="tier-amount-@row">@L["Admin_ColAmount"]</label>
+                                    <input id="tier-amount-@row" name="Tiers[@row].Amount" type="number" step="0.01"
+                                           value="@Model.Tiers[row].Amount" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <h2>@L["Admin_BlockAddOns"]</h2>
+
+            @if (Model.AvailableAddOns.Count == 0)
+            {
+                <p class="todo">@L["Admin_NoAddOns"]</p>
+            }
+            else
+            {
+                @foreach (AddOn addOn in Model.AvailableAddOns)
+                {
+                    <div class="field field--check">
+                        <input id="addon-@addOn.Id" name="AddOnIds" type="checkbox" value="@addOn.Id"
+                               checked="@Model.AddOnIds.Contains(addOn.Id)" />
+                        <label for="addon-@addOn.Id">@addOn.Code</label>
+                    </div>
+                }
+            }
+
+            <p style="margin-top: 2rem;">
+                <button type="submit" class="button button--primary">@L["Admin_Save"]</button>
+                <a class="button button--quiet" asp-page="/Admin/Products/Index">@L["Admin_BackToProducts"]</a>
+            </p>
+        </form>
+    </div>
+</section>

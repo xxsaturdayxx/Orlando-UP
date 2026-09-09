@@ -41,9 +41,13 @@ public class ProductTests
     [Fact]
     public void A_product_nobody_decided_about_is_not_on_sale()
     {
-        // Fail closed (D32). The store default fills the rows that existed when the column was
-        // added; this is the rule for every row born after it, and it is the opposite of IsActive,
-        // whose default is true because a product is written to be shown.
+        // Fail closed (D32), and both assertions are about the C# INITIALISERS on Product, not
+        // about the database: since leva 04 no boolean column carries a store default at all
+        // (D34), so there is nothing in the schema left to confuse these two answers with.
+        // IsBookable is left at the type's own default because a product nobody decided about must
+        // not be on sale; IsActive is initialised true because a product is written to be shown.
+        // The admin's create handler overrides that true and writes false, so a half-filled form
+        // cannot publish anything — which is a decision of the handler, not of this class.
         Product product = new();
 
         Assert.False(product.IsBookable);

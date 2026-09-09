@@ -69,6 +69,33 @@ public static class FormPoster
     }
 
     /// <summary>
+    /// Reads a page, gathers the fields its form actually rendered, and hands them back with the
+    /// antiforgery token already in place, for a test to adjust and post.
+    /// </summary>
+    public static async Task<FormFields> ReadFormAsync(HttpClient client, string pagePath)
+    {
+        HttpResponseMessage page = await client.GetAsync(pagePath);
+
+        page.EnsureSuccessStatusCode();
+
+        string html = await page.Content.ReadAsStringAsync();
+        FormFields fields = FormFields.ReadFrom(html);
+
+        if (fields.Value(TokenFieldName) is null)
+        {
+            throw new InvalidOperationException(
+                $"No {TokenFieldName} was rendered by {pagePath}. Either the page has no form with " +
+                "method=\"post\", or it was not reached.");
+        }
+
+        return fields;
+    }
+
+    /// <summary>Posts fields gathered by <see cref="ReadFormAsync"/>, token included.</summary>
+    public static Task<HttpResponseMessage> PostAsync(HttpClient client, string formPath, FormFields fields) =>
+        client.PostAsync(formPath, fields.AsContent());
+
+    /// <summary>
     /// The same post with no token in the body. It exists so a test can show that the accepted post
     /// was accepted BECAUSE of the token, which a single green post never shows on its own.
     /// </summary>
