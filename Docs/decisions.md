@@ -374,3 +374,51 @@ between Normal and XL; which of the two the package includes; whether the second
 XL and at what price; what makes the US$ 8 an average rather than a number; whether the charger has
 a tag of its own or only a count; whether the US$ 30 is per charger or per reservation; and how long
 a battery is unavailable after coming back. Q14 stays open with exactly those points.
+
+**D37 — 2026-09-09 (conversation 5, closing Q14) — The XL battery is an ATTRIBUTE of a battery, never
+a product option; the second battery is priced per reservation by the administrator; chargers are
+fungible and counted, not identified.** **[operator]**, answering the seven remaining points of Q14
+and correcting two things D36 left open. Where this and D36 disagree, **this one wins**.
+
+**The XL is not for sale, and must not become a catalog option.** Ronatrip owned two Drive Scout XL;
+a customer broke one, so **one remains**. Rod raised the XL so the model would be able to hold it,
+not because it is offered: **today he charges nothing extra for it and the site says nothing about
+it**, and a customer who happens to receive it simply gets more range. He does not expect to own
+many — an XL costs more than two Normals and is hard to find. **And even with plenty of them he
+would not charge extra.** So the XL is a property of a physical battery, like a serial number, and
+**the catalog gets no XL product, no XL variant and no XL add-on.** The site keeps publishing the
+Normal figure, which is what the package promises.
+
+**The consequence that simplifies the whole model:** since an XL satisfies every promise a Normal
+satisfies and costs the customer nothing more, **availability treats all batteries of a model as one
+pool**. The type is a label for the operation, not an allocation constraint — nothing has to reserve
+"a Normal" rather than "a battery". A model that made the type an allocation dimension would be
+inventing scarcity the business does not have.
+
+**The second battery is an amount typed per reservation, not a price band.** Rod sometimes gives it
+as a courtesy and sometimes charges **between US$ 5 and US$ 10 per day** — that is what "about US$ 8"
+meant. He wants to **edit these values in the administration, the way the package prices are edited
+now**. So the reservation carries the amount it was actually sold for, and zero is a legitimate
+value that still consumes a battery from the pool.
+
+**Chargers are fungible and counted; they are not identified units.** They carry no tag today, and
+**any charger fits any battery — including across both scooter models**. That settles the shape by
+itself: a piece with no identity of its own needs a **count**, not a row per item. Rod has
+considered tagging them for tidiness; the model does not depend on it either way.
+
+**The lost-charger penalty is US$ 30 PER CHARGER, and the amount is administration-editable.** It is
+the cost of buying a replacement, so it changes when that cost changes. It joins the second-battery
+amount as the second value that wants an editable settings surface — the same need that is already
+waiting for the company data currently sitting in `appsettings.json`.
+
+**There is no recovery interval to model for the customer's sake.** The customer is never asked to
+return a charged battery: **Ronatrip charges every battery before the next rental.** Whether that
+window has to be represented at all, or is absorbed by the delivery schedule and by the
+`Products.TurnaroundDays` buffer that already exists, is a decision for the leva 03 spec rather than
+a fact Rod has to supply.
+
+**Two facts D36 recorded that this decision narrows:** the four battery *types* are real, but only
+the Drive Scout XL is confirmed to exist in the fleet, and there is exactly one of it; whether a
+Drive Spitfire XL was ever owned is not stated. And **a customer broke a battery**, which is the
+first damage event this project has recorded — there is no stated policy for a battery that comes
+back broken or does not come back at all, unlike the charger, which now has one.
