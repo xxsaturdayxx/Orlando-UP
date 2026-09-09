@@ -473,6 +473,64 @@ inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and c
 
 ---
 
+> **AMENDMENT EMENDA-04-07 — 2026-09-09, two findings from the visual check (Claude Web).** Seventh
+> round. Items are numbered `G`. `EMENDA-04-06` F3 step 2 already authorises the final content commit
+> to carry what the visual check turns up; this note fixes the shape of the one code change, so it is
+> not improvised.
+>
+> **What the check has confirmed so far, by hand, on the real `OrlandoUpDb`:** the four blocks of the
+> editor render; both translations are visible at once without switching the administration's
+> language; a description edited in either culture reaches the public page on the next request, in
+> both cultures — which is the leva's whole point, measured end to end rather than only by the
+> automated test; a dimension cleared saves as absent and comes back **empty, not zero**, which is
+> D15 proved against the real database; and a product marked *À venda* with no price list is refused
+> with *"Produto à venda precisa de ao menos uma faixa de preço"*, which is
+> `PricingTierSetProblem.Empty` reaching the operator in words.
+>
+> **G1 — DEFECT, fixed in the final content commit: the add-on picker renders the internal code
+> instead of the translated name.** Measured: `Products/Edit.cshtml` renders
+> `<label …>@addOn.Code</label>`, and `CatalogWriter.ActiveAddOnsAsync` loads `AddOns` **without**
+> `.Include(a => a.Translations)`. So the operator sees `cup-holder`, `cane-holder`, `sunshade`,
+> `rear-basket`, `rain-cover`, `damage-waiver` while the database holds *Porta-copos*,
+> *Porta-bengala*, *Proteção de sol*, *Cesto traseiro*, *Capa de chuva* and *Isenção de danos*.
+> `Domain/AddOn.cs:8-9` says of that column, in the code itself, that it is *never shown to the
+> customer*; the administrator is not the customer, but this is the **only** screen in the whole
+> administration that puts an identifier where a human reads text — every other one goes through
+> `@L[…]` or a translated column. **No automated test could have caught it**: an assertion that the
+> checkbox exists passes either way, which is why the visual check exists.
+> **The shape of the fix, so it is not improvised:** the query includes the translations; the page
+> model projects them through `Application/Catalog/TranslationPicker`, which already answers *the
+> requested culture, else English, else null*; and the page receives a small record declared beside
+> the page model or in `CatalogWriter`, **never** a new member of `Application/Catalog/CatalogViews.cs`,
+> which D13/04 keeps closed because `SeoTests.cs:261-273` builds `ProductDetail` with 17 positional
+> arguments. The label shows the **name only** — putting the code back beside it is a decision for
+> whoever finds they need it, not a hedge to take now. An add-on whose translation is missing in both
+> cultures falls back to the code rather than rendering blank, and that fallback carries a test, as
+> every absence in this leva does.
+>
+> **G2 — CONTENT, and it is the operator's to change on the screen, not the agent's to change in
+> code.** Rod reads *"Carrinho simples"* as *cheap or featureless* rather than *for one child*.
+> Measured: that string is the `pt-BR` `ProductTranslation.Name` of the single stroller, seeded from
+> `CatalogSeedData.cs:124`, and it now lives in a database column the product editor writes. **This
+> is the first content correction the platform makes possible, and making it through the screen is
+> the leva proving itself.** The English *"Single stroller"* is standard US rental vocabulary and is
+> not changed — a claim that is not a differentiator for the reader of that culture does not travel
+> to the other, which is D31 working as designed rather than an inconsistency.
+> **One consequence to record rather than fix here:** `CatalogSeedData.cs` still carries the old
+> wording, and it is on this front's negative list. The seeder only inserts into emptiness
+> (`CatalogSeeder.cs:31-37`), so it will never overwrite the edit — but a database created from
+> scratch would be born with the old name again. The seed file is history from the moment an
+> administrator touches a row, which `CatalogSeeder.cs:13-16` already states; correcting it is a
+> separate small front, and the reviewer files it as backlog after the leva closes.
+>
+> **Neither finding reopens a stop.** G1 rides in the final content commit of F3 step 2 together with
+> the conference document and the orphaned key; G2 needs no commit at all.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04-07` in `Docs/conferencia-leva-04.md`, expected `>= 1`, with the count reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
