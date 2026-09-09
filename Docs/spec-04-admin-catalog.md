@@ -396,6 +396,83 @@ inversion is recorded as `Docs/decisions.md` D33; leva 03 keeps its number and c
 
 ---
 
+> **AMENDMENT EMENDA-04-06 — 2026-09-09, P3 accepted (Claude Web).** Sixth round. Items are
+> numbered `F`. The five earlier notes stay in force.
+>
+> **P3 is accepted.** Verified at `7b94393` by opening the code and re-running the gate, not by
+> reading the report. **47 controls, 45 on target**; the two exceptions are C14 and C15 of
+> `foundation.tsv`, which answer `127` to the reviewer's shell for want of `dotnet`, and which the
+> agent measured green. The twelve of `admin-catalog.tsv` are on target with the expected column
+> filled, and the file landed in `Docs/controles/` as `EMENDA-04-03` C4 required. Six of the twelve
+> measured, at some point, a value different from their target — none was green by construction.
+>
+> **The scope negatives hold.** `git diff --numstat` over the range shows `Program.cs` with
+> **exactly 2 added lines and 0 removed**, both `AddScoped`, as A2 authorised; the two existing
+> `.tsv` files appear in **zero** lines; and the only two negative-list files that appear in the
+> range are `Docs/decisions.md` and this spec, touched by three commits that are all the reviewer's.
+> The rewrite of `ProductConfiguration.cs` is the comment block and nothing else, and the new text
+> states the mechanism the way D35 measured it **without transcribing the form control C01 counts**,
+> which is rule 3 of `Docs/regras-de-controle.md` observed rather than cited. The rewrite of
+> `DomainTests.cs` is likewise the comment alone.
+>
+> **The assertion the reviewer most wanted to open, opened:** the A1 form test reads
+> `RelationalAnnotationNames.DefaultValue` and `DefaultValueSql` from the model rather than calling
+> `GetDefaultValue()`, and says in a comment why — the latter answers the CLR default for a property
+> that declares nothing and would have made the test pass either way. It then asserts
+> `Sentinel == false` and `ValueGenerated == Never`, which are precisely the two things the removed
+> default was moving. That is the half that was red before the migration, and it is red for the right
+> reason.
+>
+> **The self-reported defect of §2.4 is the most valuable paragraph in the report.** The
+> checkbox-plus-hidden pair that carries a `bool` has an order, it was written inverted, and the
+> model binder reads the **first** value of a repeated name — so every ticked box would have arrived
+> as `false` and the editor would have quietly unpublished every product it saved. No screen
+> complains about that. Verified in `Products/Edit.cshtml`: checkbox first, hidden second, with the
+> reason beside the two fields. Writing down a defect one wrote oneself, with the mechanism, is what
+> keeps the next person from writing it again.
+>
+> **F1 — `tests/OrlandoUp.Tests/FormFields.cs` is regularised, not folded away. §11.1 names it.**
+> The agent declared it instead of hiding it, which is the behaviour the stop exists for, and he
+> offered to merge it into `FormPoster.cs`. Refused, for the reason A2 already settled: this
+> repository writes one type per file, and merging two types to satisfy a literal list is bending
+> the design to fit the list rather than revising the list. It is the other half of piece 2 of §8.1 —
+> it reads the fields the form **actually rendered** instead of letting each test type the names, so
+> a field a page stops rendering disappears from the POST and the test that depended on it falls,
+> which is what makes "the editor saved what it was given" mean anything.
+>
+> **F2 — one resource key is genuinely orphaned and comes out of both `.resx` in the final content
+> commit: `Admin_BackToDashboard`**, left behind when the per-page back-links gave way to the
+> navigation bar of D9/04. Removal is symmetric or the parity test falls. **And the measurement that
+> found it carries a warning for whoever repeats it:** a literal sweep for unused `Admin_` keys
+> reports **fourteen** orphans, and **thirteen are false** — `Admin_Tier…`, `Admin_Seat…`,
+> `Admin_Status…` and `Admin_Action…` are built by interpolating an enum member name, so no grep
+> can see them used. That is exactly the gap §2.5 identified and closed with
+> `Every_enum_member_a_screen_names_has_a_key_in_both_cultures`, and it is worth knowing that the
+> naive sweep will keep reporting those thirteen forever.
+>
+> **F3 — the closing sequence, in order, and each step has one owner.**
+> 1. **Operator:** the visual check of §9 of this spec, on his machine, at `https://localhost:7420`,
+>    with the migration applied — including the keyboard pass and the 375 px pass, and including
+>    whatever the check cannot reach, with the measured reason.
+> 2. **Agent:** `Docs/conferencia-leva-04.md` written from that result, plus F2, plus anything the
+>    visual check turns up, in **one final content commit**. That commit — not `7b94393` — is the
+>    content hash, because the content of this leva is not complete until the conference document
+>    exists, which §13 of this spec already says.
+> 3. **Agent:** the closing commit, writing that hash into the Commit column of this leva's line in
+>    `Docs/fila-cc.md` and moving Estado to `concluido`. Balance: 1 `aguardando` → 0, and the number
+>    of rows does not change.
+> 4. **Operator:** the push.
+>
+> **Two leftovers are recorded here rather than in `Docs/backlog-conhecido.md`**, which is on this
+> front's negative list: `TurnaroundDays` and `SalesTaxRate` still carry store defaults of the same
+> shape on non-boolean columns (§12 of this spec), and the write policy that would distinguish
+> `Admin` from `Staff` does not exist (D10/04). The reviewer files both after the leva closes.
+>
+> **Proof of reading, required in the next artifact the agent produces:** a search for the string
+> `EMENDA-04-06` in `Docs/conferencia-leva-04.md`, expected `>= 1`, with the count reported.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-07`
