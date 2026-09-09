@@ -328,3 +328,49 @@ never carries, so no later migration removes it and no model-level control can s
 `valueGenerated=Never` and EF names it in every `INSERT`; it is removed anyway, in the same
 migration, by `EMENDA-04-03` C1. Rule from here on: after a migration that adds a column with a
 `defaultValue`, read `sys.default_constraints` — the model will not tell you.
+
+**D36 — 2026-09-09 (conversation 5, answering Q14) — Batteries are inventory of their own, tied to
+the scooter MODEL and not to a unit; the first goes out with the package and a second is a paid
+extra; every battery carries a charger, and both are named on the reservation.** **[operator]**,
+answering four of the five points of Q14. What Rod stated, verbatim in substance:
+
+- **There are four battery types, two per scooter model.** *Drive Scout Normal* — **9 miles**;
+  *Drive Scout XL* — **14 miles**; *Drive Spitfire Normal* — **9 miles**; *Drive Spitfire XL* —
+  **14 miles**. A battery therefore belongs to a **model**, not to a scooter: any Drive Scout
+  battery fits any Drive Scout. That is the fact `Unit` as it stands cannot express, because a unit
+  points at one product row.
+- **Stock: 6 Drive Scout batteries and 6 Drive Spitfire**, twelve in total. **Each battery carries
+  an identification tag**, and at the moment of booking **the administrator records which battery
+  ids go out with the scooter** — the count alone is not enough.
+- **The first battery is part of the package. A second costs about US$ 8 per day**, and may be
+  given as a courtesy in some situations. A courtesy battery still leaves the shelf, so it is
+  recorded on the reservation even when it is not charged for.
+- **Every battery goes out with a charger**, and the charger is not priced separately — it is part
+  of the battery. The administrator also records **how many chargers** the reservation carries.
+  **A charger that is not returned carries a US$ 30 penalty.**
+- **The rental shape, in Rod's own scene:** ten days with a second battery means the customer
+  receives the scooter, **two batteries and two chargers**; he is instructed to charge both every
+  night even if he barely rode; at the end all five pieces come back.
+
+**Consequence computed by the reviewer, not stated by Rod, and it is the reason this decision exists
+before the leva 03 spec:** with **4 scooters and 6 batteries per model**, four scooters on rent
+commit four batteries and leave two — so **at most two of those four customers can take a second
+battery**. The battery, not the scooter, is what runs out first, and a system that counts only
+scooters would sell a third one. Availability counts batteries per model, per day.
+
+**What the public site says today, and what it means now:** `RangeMiles` is seeded at **9** for both
+scooter models, which is the **Normal** battery — the package as sold. The XL exists in the fleet
+and is advertised nowhere. Whether it becomes a published option is a content decision that rides
+with leva 03, not a defect of leva 02.
+
+**Two facts that are content and not schema, recorded so they are not lost:** the customer only has
+to take **the battery** out of the car at the end of the day to charge it, never the whole scooter —
+which is a genuine selling point for a rental in a hotel garage; and the reminder to return the
+chargers belongs in the FAQ and in the terms, alongside the penalty. Both go to the copy of leva 03,
+not to its schema.
+
+**What Q14 still does not answer, and what leva 03 cannot invent:** how the six per model split
+between Normal and XL; which of the two the package includes; whether the second battery may be an
+XL and at what price; what makes the US$ 8 an average rather than a number; whether the charger has
+a tag of its own or only a count; whether the US$ 30 is per charger or per reservation; and how long
+a battery is unavailable after coming back. Q14 stays open with exactly those points.
