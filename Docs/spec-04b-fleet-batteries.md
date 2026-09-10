@@ -136,6 +136,63 @@ phase 4, so it is **04b**; leva 03 keeps its number and remains the next booking
 
 ---
 
+> **AMENDMENT EMENDA-04B-03 — 2026-09-10, the P1 report reviewed against the code (Claude Web).**
+> Where this note and the body disagree, **the note wins**. P1 is approved; this note carries one
+> defect found by reading the seeder rather than the report, and it is the kind that produces
+> physical labels on the wrong machines.
+>
+> **C1 — the seed resolves the model by POSITION, and nothing in the tree fixes that position.**
+> `BatterySeeder.cs` orders the two scooters by `SortOrder` and hands `BSC` to index 0 and `BSP` to
+> index 1. Measured: `SortOrder` is **editable through the product editor leva 04 built**
+> (`Pages/Admin/Products/Edit.cshtml.cs:188` assigns it from the form), so what is at position 0 is a
+> fact about the **database**, not about `CatalogSeedData.cs` — and the P0 report measured the two
+> scooter ids, never their order. Two products may also carry the **same** `SortOrder`: nothing
+> forbids it, and then the order is undefined and can differ between two queries.
+>
+> **Two things follow, and neither blocks applying the migration:**
+> - **Before running `seed-batteries`, the operator reads the order off a screen that already
+>   exists:** `/admin/products` lists products ordered by `SortOrder`
+>   (`Pages/Admin/Products/Index.cshtml.cs:32`). **Drive Scout must appear above Drive Spitfire.** If
+>   it does not, the seed would write `BSC-01…06` onto the Spitfire, and the labels would be printed
+>   from that. No command, no query.
+> - **Step 3 hardens the ordering:** `BatterySeeder.cs` gets a deterministic tie-break —
+>   `.OrderBy(SortOrder).ThenBy(product => product.Id)` — so equal `SortOrder` cannot silently flip
+>   which model is "first". One line, in a file the front already owns.
+>
+> **Why this is not a stop:** item 2 of `Docs/conferencia-leva-04b.md` already asserts that the
+> Extended Range battery is a **Drive Scout**, so an inversion shows up in the visual check — and the
+> physical labels have not been printed yet. The order matters *before* the tags leave the screen for
+> the sticker, which is why the reading above happens before the seed and not after it.
+>
+> **C2 — `SecondBatteryPerDay = 8.00` is the agent's choice, and it stands unless Rod says
+> otherwise.** D37 records "about US$ 8" inside a US$ 5–10 band and the spec left the number unstated.
+> It is editable on the settings screen from the first day, so a wrong default costs one edit, not a
+> migration. Nothing in the migration changes on account of this.
+>
+> **What this review confirmed against the code, so nobody re-derives it:** the generated SQL carries
+> **zero** `DEFAULT` constraints (D34/D35 held); the settings row is written with a hand-written
+> `InsertData`, and **`HasData` appears nowhere in the repository**, so no future migration will
+> generate a reconciliation `UPDATE` over an amount Rod edited on the screen; `Restrict` renders as
+> `ON DELETE NO ACTION` and there is no cascade cycle; `OperationalSettings.Id` is `ValueGeneratedNever`
+> and `Batteries.Id` is `IDENTITY`, each as intended; `PurchasedOn` is `date` and `CreatedAtUtc` /
+> `UpdatedAtUtc` are `datetime2`, so the calendar-versus-instant split is right; `BatteryKind` is
+> appended at the end of `Domain/Enums.cs` with the numbers written; the unique index is unfiltered
+> and is created on an empty table; the whole script is one transaction, each statement guarded
+> against re-run. The seven corrections of `EMENDA-04B-02` were applied — the `.tsv` carries **seven**
+> controls, C06 measures **5** on `public bool Is[A-Za-z]+`, C05 is now the reach sibling of C16, and
+> `Program.cs:119` reads **three**. The diff over `13a574c..cd5cb90` touches **14** files, every one
+> of them on the §11.1 list.
+>
+> **Inherited, not measured by the reviewer:** the build and suite numbers (C14/C15), which need
+> `dotnet`, and every row count, which needs the database. Neither is reachable from the reviewer's
+> shell — the standing access gap the atrito document of conversation 4 named.
+>
+> **Proof of reading:** occurrences of the chain `EMENDA-04B-03` in the next artifact the agent
+> commits — the etapa 2 report — counted with
+> `grep -c "EMENDA-04B-03" Docs/relatorio-leva-04b-etapa-2.md`, **expected greater than zero**.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-09` whose
