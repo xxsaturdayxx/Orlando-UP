@@ -43,6 +43,10 @@ public class AppDbContext : IdentityDbContext<IdentityUser, IdentityRole, string
 
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
+    public DbSet<Battery> Batteries => Set<Battery>();
+
+    public DbSet<OperationalSettings> OperationalSettings => Set<OperationalSettings>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

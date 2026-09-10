@@ -116,7 +116,7 @@ builder.Services.AddScoped<PublicPages>();
 WebApplication app = builder.Build();
 
 // ---------------------------------------------------------------------------------------------
-// The two seeding commands run and exit without ever opening a port (D5/01).
+// The three seeding commands run and exit without ever opening a port (D5/01).
 // ---------------------------------------------------------------------------------------------
 if (args.Length > 0 && SeedCommands.IsSeedCommand(args[0]))
 {

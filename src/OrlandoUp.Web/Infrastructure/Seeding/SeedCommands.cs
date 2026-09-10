@@ -5,8 +5,8 @@ using OrlandoUp.Infrastructure.Data;
 namespace OrlandoUp.Infrastructure.Seeding;
 
 /// <summary>
-/// The two commands the application answers on the command line instead of serving requests.
-/// Both build the same services the site uses, run, and return an exit code: 0 done, 1 refused.
+/// The three commands the application answers on the command line instead of serving requests.
+/// Each builds the same services the site uses, runs, and returns an exit code: 0 done, 1 refused.
 /// </summary>
 public static class SeedCommands
 {
@@ -14,8 +14,10 @@ public static class SeedCommands
 
     public const string Admin = "seed-admin";
 
+    public const string Batteries = "seed-batteries";
+
     public static bool IsSeedCommand(string argument) =>
-        argument is Catalog or Admin;
+        argument is Catalog or Admin or Batteries;
 
     public static async Task<int> RunAsync(IServiceProvider services, string command)
     {
@@ -24,12 +26,14 @@ public static class SeedCommands
         ILoggerFactory factory = scope.ServiceProvider.GetRequiredService<ILoggerFactory>();
         ILogger logger = factory.CreateLogger("OrlandoUp.Seeding");
 
-        if (command == Catalog)
+        if (command == Catalog || command == Batteries)
         {
             AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             IClock clock = scope.ServiceProvider.GetRequiredService<IClock>();
 
-            return await CatalogSeeder.RunAsync(db, clock, logger, CancellationToken.None);
+            return command == Catalog
+                ? await CatalogSeeder.RunAsync(db, clock, logger, CancellationToken.None)
+                : await BatterySeeder.RunAsync(db, clock, logger, CancellationToken.None);
         }
 
         UserManager<IdentityUser> users = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();

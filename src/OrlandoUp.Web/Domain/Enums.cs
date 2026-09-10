@@ -72,3 +72,10 @@ public enum AuditAction
     Deactivated = 3,
     Reactivated = 4,
 }
+
+/// <summary>What grade of battery this is — an attribute, never an allocation dimension (D2/04b).</summary>
+public enum BatteryKind
+{
+    Normal = 1,
+    ExtendedRange = 2,
+}
