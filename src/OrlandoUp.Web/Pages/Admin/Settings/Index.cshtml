@@ -1,0 +1,60 @@
+@page "/admin/settings"
+@model OrlandoUp.Pages.Admin.Settings.IndexModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_SettingsTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_SettingsTitle"]</h1>
+        <p class="section__lead">@L["Admin_SettingsLead"]</p>
+
+        @if (Model.Problem is not null)
+        {
+            <p class="error-summary" role="alert">@Model.Problem</p>
+        }
+        else if (Model.Saved)
+        {
+            <p class="notice" role="status">@L["Admin_Saved"]</p>
+        }
+
+        @if (!Model.RowExists)
+        {
+            <p class="todo">@L["Admin_ErrorSettingsMissing"]</p>
+        }
+        else
+        {
+            <form method="post">
+                <div class="field">
+                    <label for="chargerCount">@L["Admin_FieldChargerCount"]</label>
+                    <input id="chargerCount" name="ChargerCount" type="number" step="1" min="0"
+                           value="@Model.ChargerCount" aria-describedby="charger-help" required />
+                    <p class="field__help" id="charger-help">@L["Admin_FieldChargerCountHelp"]</p>
+                </div>
+
+                <div class="field">
+                    <label for="secondBatteryPerDay">@L["Admin_FieldSecondBattery"]</label>
+                    <input id="secondBatteryPerDay" name="SecondBatteryPerDay" type="number" step="0.01" min="0"
+                           value="@Model.SecondBatteryPerDay" aria-describedby="second-help" required />
+                    <p class="field__help" id="second-help">@L["Admin_FieldSecondBatteryHelp"]</p>
+                </div>
+
+                <div class="field">
+                    <label for="lostChargerFee">@L["Admin_FieldLostCharger"]</label>
+                    <input id="lostChargerFee" name="LostChargerFee" type="number" step="0.01" min="0"
+                           value="@Model.LostChargerFee" aria-describedby="lost-help" required />
+                    <p class="field__help" id="lost-help">@L["Admin_FieldLostChargerHelp"]</p>
+                </div>
+
+                <button type="submit" class="button button--primary">@L["Admin_Save"]</button>
+            </form>
+
+            @* An instant, shown as one: the column stores UTC and the label says so. *@
+            <p class="field__help">
+                @L["Admin_SettingsUpdatedAt"]
+                @(Model.UpdatedAtUtc is DateTime edited ? edited.ToString("yyyy-MM-dd HH:mm") + " UTC" : L["Admin_NotSet"].Value)
+            </p>
+        }
+    </div>
+</section>

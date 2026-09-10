@@ -1,0 +1,55 @@
+@page "/admin/batteries"
+@model OrlandoUp.Pages.Admin.Batteries.IndexModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_BatteriesTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_BatteriesTitle"]</h1>
+        <p class="section__lead">@L["Admin_BatteriesAvailable"] <strong>@Model.AvailableCount</strong></p>
+
+        <p><a class="button button--primary" asp-page="/Admin/Batteries/Create">@L["Admin_NewBattery"]</a></p>
+
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Admin_ColAssetTag"]</th>
+                        <th scope="col">@L["Admin_ColProduct"]</th>
+                        <th scope="col">@L["Admin_ColBatteryKind"]</th>
+                        <th scope="col">@L["Admin_ColRange"]</th>
+                        <th scope="col">@L["Admin_ColStatus"]</th>
+                        <th scope="col">@L["Admin_ColPurchasedOn"]</th>
+                        <th scope="col">@L["Admin_ColAction"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        <tr>
+                            <td>@row.AssetTag</td>
+                            <td>@row.ProductSlug</td>
+                            <td>@L[$"Admin_BatteryKind{row.Kind}"]</td>
+                            @* An unmeasured range is an empty cell, never a zero (D15). *@
+                            <td>@(row.RangeMiles is decimal miles ? miles.ToString("0.#") : string.Empty)</td>
+                            <td>
+                                @if (row.Status == UnitStatus.Retired)
+                                {
+                                    <em class="todo">@L[$"Admin_Status{row.Status}"]</em>
+                                }
+                                else
+                                {
+                                    @L[$"Admin_Status{row.Status}"]
+                                }
+                            </td>
+                            <td>@(row.PurchasedOn is DateOnly bought ? bought.ToString("yyyy-MM-dd") : string.Empty)</td>
+                            <td><a asp-page="/Admin/Batteries/Edit" asp-route-id="@row.Id">@L["Admin_Edit"]</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>

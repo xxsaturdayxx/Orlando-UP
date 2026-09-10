@@ -32,9 +32,16 @@ internal static class BatterySeeder
 
         // The models are resolved by category and display order, never by a typed slug: this file
         // is swept by C16 of public-site.tsv, which excludes one file by name and not this one.
+        // The tie-break is not decoration (EMENDA-04B-03 C1). SortOrder is editable through the
+        // product editor, and nothing forbids two products carrying the same one — with equal
+        // SortOrder the order is undefined and can differ between two queries, so which model is
+        // "first" could flip between a dry run and the real one. Id is stable and monotonic, so
+        // the pair is deterministic. What this cannot fix is a SortOrder somebody genuinely
+        // reordered: that is why the order is read off /admin/products before the seed runs.
         List<Product> scooters = await db.Products
             .Where(product => product.Category == ProductCategory.MobilityScooter)
             .OrderBy(product => product.SortOrder)
+            .ThenBy(product => product.Id)
             .ToListAsync(cancellation);
 
         if (scooters.Count != BatterySeedData.ExpectedScooterModels)

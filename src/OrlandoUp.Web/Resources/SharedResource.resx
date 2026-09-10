@@ -841,4 +841,100 @@
   <data name="Admin_ErrorProductRequired" xml:space="preserve">
     <value>Choose the product this unit belongs to.</value>
   </data>
+  <data name="Admin_BatteriesTitle" xml:space="preserve">
+    <value>Batteries</value>
+  </data>
+  <data name="Admin_BatteriesAvailable" xml:space="preserve">
+    <value>Available right now:</value>
+  </data>
+  <data name="Admin_NewBattery" xml:space="preserve">
+    <value>New battery</value>
+  </data>
+  <data name="Admin_BatteryCreateTitle" xml:space="preserve">
+    <value>New battery</value>
+  </data>
+  <data name="Admin_BatteryEditTitle" xml:space="preserve">
+    <value>Edit battery</value>
+  </data>
+  <data name="Admin_ColBatteryKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="Admin_ColRange" xml:space="preserve">
+    <value>Range (miles)</value>
+  </data>
+  <data name="Admin_BatteryKindNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Admin_BatteryKindExtendedRange" xml:space="preserve">
+    <value>Extended range</value>
+  </data>
+  <data name="Admin_FieldBatteryKind" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="Admin_FieldBatteryKindHelp" xml:space="preserve">
+    <value>What the battery is, not how it is allocated: an extended-range battery keeps every promise a normal one keeps, so availability counts them together.</value>
+  </data>
+  <data name="Admin_FieldBatteryRange" xml:space="preserve">
+    <value>Range on a charge (miles)</value>
+  </data>
+  <data name="Admin_FieldBatteryRangeHelp" xml:space="preserve">
+    <value>Leave it empty when nobody has measured this one. Empty is not zero.</value>
+  </data>
+  <data name="Admin_FieldBatteryTagHelp" xml:space="preserve">
+    <value>Unique across the whole fleet, as it is written on the battery.</value>
+  </data>
+  <data name="Admin_FieldBatteryProductHelp" xml:space="preserve">
+    <value>The scooter model. Only scooter models carry batteries.</value>
+  </data>
+  <data name="Admin_ErrorBatteryTagRequired" xml:space="preserve">
+    <value>The asset tag is required and is at most 40 characters.</value>
+  </data>
+  <data name="Admin_ErrorBatteryTagTaken" xml:space="preserve">
+    <value>Another battery already carries this asset tag.</value>
+  </data>
+  <data name="Admin_ErrorBatteryNeedsScooter" xml:space="preserve">
+    <value>A battery belongs to a scooter model.</value>
+  </data>
+  <data name="Admin_SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="Admin_SettingsLead" xml:space="preserve">
+    <value>The numbers the operation changes without a deploy.</value>
+  </data>
+  <data name="Admin_SettingsUpdatedAt" xml:space="preserve">
+    <value>Last edited:</value>
+  </data>
+  <data name="Admin_FieldChargerCount" xml:space="preserve">
+    <value>Chargers owned</value>
+  </data>
+  <data name="Admin_FieldChargerCountHelp" xml:space="preserve">
+    <value>A count and not a list: any charger fits any battery of either model.</value>
+  </data>
+  <data name="Admin_FieldSecondBattery" xml:space="preserve">
+    <value>Second battery, per day (USD)</value>
+  </data>
+  <data name="Admin_FieldSecondBatteryHelp" xml:space="preserve">
+    <value>The amount a reservation starts with. It can be changed on the reservation, and zero is a legitimate value.</value>
+  </data>
+  <data name="Admin_FieldLostCharger" xml:space="preserve">
+    <value>Lost charger, each (USD)</value>
+  </data>
+  <data name="Admin_FieldLostChargerHelp" xml:space="preserve">
+    <value>What a replacement costs, so it changes when that cost changes.</value>
+  </data>
+  <data name="Admin_ErrorSettingsMissing" xml:space="preserve">
+    <value>The settings row does not exist in this database. It is created by the migration, and this screen deliberately does not create one.</value>
+  </data>
+  <data name="Admin_ErrorChargerCountNegative" xml:space="preserve">
+    <value>The charger count cannot be negative.</value>
+  </data>
+  <data name="Admin_ErrorAmountNegative" xml:space="preserve">
+    <value>An amount cannot be negative. Zero is allowed.</value>
+  </data>
+  <data name="Admin_CountBatteries" xml:space="preserve">
+    <value>Batteries</value>
+  </data>
+  <data name="Admin_CountChargers" xml:space="preserve">
+    <value>Chargers</value>
+  </data>
 </root>

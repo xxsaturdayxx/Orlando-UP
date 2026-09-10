@@ -841,4 +841,100 @@
   <data name="Admin_ErrorProductRequired" xml:space="preserve">
     <value>Escolha o produto ao qual esta unidade pertence.</value>
   </data>
+  <data name="Admin_BatteriesTitle" xml:space="preserve">
+    <value>Baterias</value>
+  </data>
+  <data name="Admin_BatteriesAvailable" xml:space="preserve">
+    <value>Disponíveis agora:</value>
+  </data>
+  <data name="Admin_NewBattery" xml:space="preserve">
+    <value>Nova bateria</value>
+  </data>
+  <data name="Admin_BatteryCreateTitle" xml:space="preserve">
+    <value>Nova bateria</value>
+  </data>
+  <data name="Admin_BatteryEditTitle" xml:space="preserve">
+    <value>Editar bateria</value>
+  </data>
+  <data name="Admin_ColBatteryKind" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="Admin_ColRange" xml:space="preserve">
+    <value>Autonomia (milhas)</value>
+  </data>
+  <data name="Admin_BatteryKindNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="Admin_BatteryKindExtendedRange" xml:space="preserve">
+    <value>Autonomia estendida</value>
+  </data>
+  <data name="Admin_FieldBatteryKind" xml:space="preserve">
+    <value>Tipo</value>
+  </data>
+  <data name="Admin_FieldBatteryKindHelp" xml:space="preserve">
+    <value>O que a bateria é, não como ela é alocada: uma de autonomia estendida cumpre tudo o que uma normal cumpre, então a disponibilidade conta as duas juntas.</value>
+  </data>
+  <data name="Admin_FieldBatteryRange" xml:space="preserve">
+    <value>Autonomia por carga (milhas)</value>
+  </data>
+  <data name="Admin_FieldBatteryRangeHelp" xml:space="preserve">
+    <value>Deixe vazio quando ninguém mediu esta. Vazio não é zero.</value>
+  </data>
+  <data name="Admin_FieldBatteryTagHelp" xml:space="preserve">
+    <value>Única em toda a frota, como está escrita na bateria.</value>
+  </data>
+  <data name="Admin_FieldBatteryProductHelp" xml:space="preserve">
+    <value>O modelo de scooter. Só modelos de scooter carregam bateria.</value>
+  </data>
+  <data name="Admin_ErrorBatteryTagRequired" xml:space="preserve">
+    <value>A etiqueta é obrigatória e tem no máximo 40 caracteres.</value>
+  </data>
+  <data name="Admin_ErrorBatteryTagTaken" xml:space="preserve">
+    <value>Outra bateria já carrega esta etiqueta.</value>
+  </data>
+  <data name="Admin_ErrorBatteryNeedsScooter" xml:space="preserve">
+    <value>Uma bateria pertence a um modelo de scooter.</value>
+  </data>
+  <data name="Admin_SettingsTitle" xml:space="preserve">
+    <value>Configurações</value>
+  </data>
+  <data name="Admin_SettingsLead" xml:space="preserve">
+    <value>Os números que a operação muda sem precisar de nova versão.</value>
+  </data>
+  <data name="Admin_SettingsUpdatedAt" xml:space="preserve">
+    <value>Última edição:</value>
+  </data>
+  <data name="Admin_FieldChargerCount" xml:space="preserve">
+    <value>Carregadores em estoque</value>
+  </data>
+  <data name="Admin_FieldChargerCountHelp" xml:space="preserve">
+    <value>Uma contagem e não uma lista: qualquer carregador serve em qualquer bateria dos dois modelos.</value>
+  </data>
+  <data name="Admin_FieldSecondBattery" xml:space="preserve">
+    <value>Segunda bateria, por dia (USD)</value>
+  </data>
+  <data name="Admin_FieldSecondBatteryHelp" xml:space="preserve">
+    <value>O valor com que a reserva começa. Pode ser alterado na reserva, e zero é um valor legítimo.</value>
+  </data>
+  <data name="Admin_FieldLostCharger" xml:space="preserve">
+    <value>Carregador perdido, cada (USD)</value>
+  </data>
+  <data name="Admin_FieldLostChargerHelp" xml:space="preserve">
+    <value>O que custa repor, então muda quando esse custo muda.</value>
+  </data>
+  <data name="Admin_ErrorSettingsMissing" xml:space="preserve">
+    <value>A linha de configuração não existe neste banco. Ela é criada pela migration, e esta tela deliberadamente não cria nenhuma.</value>
+  </data>
+  <data name="Admin_ErrorChargerCountNegative" xml:space="preserve">
+    <value>A contagem de carregadores não pode ser negativa.</value>
+  </data>
+  <data name="Admin_ErrorAmountNegative" xml:space="preserve">
+    <value>Um valor não pode ser negativo. Zero é permitido.</value>
+  </data>
+  <data name="Admin_CountBatteries" xml:space="preserve">
+    <value>Baterias</value>
+  </data>
+  <data name="Admin_CountChargers" xml:space="preserve">
+    <value>Carregadores</value>
+  </data>
 </root>

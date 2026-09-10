@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
+using Microsoft.Extensions.Logging;
 using OrlandoUp;
 using OrlandoUp.Application;
 using OrlandoUp.Domain;
 using OrlandoUp.Infrastructure.Data;
+using OrlandoUp.Infrastructure.Seeding;
 
 namespace OrlandoUp.Tests;
 
@@ -634,6 +636,7 @@ public class AdminCrudTests : IAsyncLifetime
         keys.AddRange(Enum.GetNames<SeatConfiguration>().Select(name => $"Admin_Seat{name}"));
         keys.AddRange(Enum.GetNames<TierMode>().Select(name => $"Admin_Tier{name}"));
         keys.AddRange(Enum.GetNames<AuditAction>().Select(name => $"Admin_Action{name}"));
+        keys.AddRange(Enum.GetNames<BatteryKind>().Select(name => $"Admin_BatteryKind{name}"));
 
         // The screens build these key names with string interpolation, so LocalizationParityTests,
         // which compares the two files against each other, cannot notice one that nobody wrote:
@@ -641,7 +644,383 @@ public class AdminCrudTests : IAsyncLifetime
         List<string> missing = keys.Where(key => text[key].ResourceNotFound).ToList();
 
         Assert.Empty(missing);
-        Assert.Equal(13, keys.Count);
+        Assert.Equal(15, keys.Count);
+    }
+
+
+    // =======================================================================================
+    // The fleet's batteries and the operational settings (leva 04b).
+    //
+    // The settings row is ARRANGED here and never expected (EMENDA-04B-02 B1): the suite builds
+    // its schema from the model with EnsureCreatedAsync and never runs a migration, so the row the
+    // migration creates does not exist in this host. That the MIGRATION creates it is proved in
+    // the P1 report and again by item 8 of the conference roteiro, against the real database. What
+    // the suite can prove is the other half — that the screen edits and never creates or deletes.
+    // =======================================================================================
+
+    [Fact]
+    public async Task The_seed_writes_twelve_batteries_and_running_it_twice_changes_nothing()
+    {
+        await RunBatterySeedAsync();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Assert.Equal(12, await db.Batteries.CountAsync());
+        Assert.Equal(1, await db.Batteries.CountAsync(b => b.Kind == BatteryKind.ExtendedRange));
+        Assert.Equal(11, await db.Batteries.CountAsync(b => b.Kind == BatteryKind.Normal));
+
+        // Six per model, and the Extended Range one is on the FIRST scooter by display order —
+        // which is what EMENDA-04B-03 C1 is about, and the tie-break is what makes it repeatable.
+        List<Product> scooters = await db.Products
+            .Where(p => p.Category == ProductCategory.MobilityScooter)
+            .OrderBy(p => p.SortOrder)
+            .ThenBy(p => p.Id)
+            .ToListAsync();
+
+        Assert.Equal(6, await db.Batteries.CountAsync(b => b.ProductId == scooters[0].Id));
+        Assert.Equal(6, await db.Batteries.CountAsync(b => b.ProductId == scooters[1].Id));
+        Assert.Equal(
+            scooters[0].Id,
+            await db.Batteries.Where(b => b.Kind == BatteryKind.ExtendedRange).Select(b => b.ProductId).SingleAsync());
+
+        // Run twice, and the second run inserts into a table that is no longer empty.
+        await RunBatterySeedAsync();
+
+        Assert.Equal(12, await db.Batteries.CountAsync());
+    }
+
+    [Fact]
+    public async Task Every_seeded_tag_carries_the_shape_D38_fixed_and_the_grade_is_not_in_it()
+    {
+        await RunBatterySeedAsync();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        List<string> tags = await db.Batteries.Select(b => b.AssetTag).OrderBy(tag => tag).ToListAsync();
+
+        Assert.All(tags, tag => Assert.Matches("^B(SC|SP)-[0-9]{2}$", tag));
+
+        // The grade is NOT in the tag (D38): BSC-06 says nothing about being the extended-range
+        // one, and the Kind column is the only thing that does. This asserts both halves — that
+        // the tag is the expected one, and that nothing had to read the text to know the grade.
+        string extended = await db.Batteries
+            .Where(b => b.Kind == BatteryKind.ExtendedRange)
+            .Select(b => b.AssetTag)
+            .SingleAsync();
+
+        Assert.Equal("BSC-06", extended);
+        Assert.Equal(12, tags.Count);
+    }
+
+    [Fact]
+    public async Task A_duplicate_battery_tag_is_refused_as_validation_and_a_different_one_saves()
+    {
+        await RunBatterySeedAsync();
+
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+        int scooterId = await FirstScooterIdAsync();
+
+        HttpResponseMessage refused = await PostBatteryAsync(staff, "BSC-01", scooterId);
+
+        Assert.Equal(HttpStatusCode.OK, refused.StatusCode);
+        Assert.Contains("already carries this asset tag", await refused.Content.ReadAsStringAsync());
+
+        HttpResponseMessage accepted = await PostBatteryAsync(staff, "BSC-07", scooterId);
+
+        Assert.Equal(HttpStatusCode.Found, accepted.StatusCode);
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Assert.Equal(13, await db.Batteries.CountAsync());
+    }
+
+    [Fact]
+    public async Task A_battery_cannot_be_attached_to_a_product_that_is_not_a_scooter()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        int wheelchairId;
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            wheelchairId = await db.Products
+                .Where(p => p.Category != ProductCategory.MobilityScooter)
+                .OrderBy(p => p.SortOrder)
+                .Select(p => p.Id)
+                .FirstAsync();
+        }
+
+        HttpResponseMessage refused = await PostBatteryAsync(staff, "BSC-90", wheelchairId);
+
+        Assert.Equal(HttpStatusCode.OK, refused.StatusCode);
+        Assert.Contains("belongs to a scooter model", await refused.Content.ReadAsStringAsync());
+
+        // The presence half: the same post against a scooter saves, so the refusal is about the
+        // category and not about the form.
+        HttpResponseMessage accepted = await PostBatteryAsync(staff, "BSC-90", await FirstScooterIdAsync());
+
+        Assert.Equal(HttpStatusCode.Found, accepted.StatusCode);
+    }
+
+    [Fact]
+    public async Task An_absent_battery_range_survives_the_round_trip()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        FormFields form = await FormPoster.ReadFormAsync(staff, "/admin/batteries/create");
+
+        form.Set("AssetTag", "BSC-91")
+            .Set("ProductId", (await FirstScooterIdAsync()).ToString())
+            .Set("RangeMiles", string.Empty);
+
+        Assert.Equal(HttpStatusCode.Found, (await FormPoster.PostAsync(staff, "/admin/batteries/create", form)).StatusCode);
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Battery written = await db.Batteries.SingleAsync(b => b.AssetTag == "BSC-91");
+
+        Assert.Null(written.RangeMiles);
+
+        // The presence half: the row exists and carries what the form did give it, so the null is
+        // an emptied field and not a save that never happened.
+        Assert.Equal("BSC-91", written.AssetTag);
+
+        // And it comes BACK empty rather than as a zero.
+        string html = await _factory.CreateStaffClient().GetStringAsync($"/admin/batteries/edit/{written.Id}");
+        FormFields reopened = FormFields.ReadFrom(html);
+
+        Assert.Equal(string.Empty, reopened.Value("RangeMiles"));
+    }
+
+    [Fact]
+    public async Task Retiring_a_battery_keeps_it_on_the_list_and_drops_the_available_count()
+    {
+        await RunBatterySeedAsync();
+
+        HttpClient staff = _factory.CreateStaffClient();
+
+        int id;
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            id = await db.Batteries.Where(b => b.AssetTag == "BSC-01").Select(b => b.Id).SingleAsync();
+        }
+
+        string before = await staff.GetStringAsync("/admin/batteries");
+
+        Assert.Contains("<strong>12</strong>", before);
+
+        FormFields form = await FormPoster.ReadFormAsync(staff, $"/admin/batteries/edit/{id}");
+        form.Set("Status", nameof(UnitStatus.Retired));
+
+        Assert.Equal(HttpStatusCode.OK, (await FormPoster.PostAsync(staff, $"/admin/batteries/edit/{id}", form)).StatusCode);
+
+        string after = await staff.GetStringAsync("/admin/batteries");
+
+        // Still listed, and marked. A battery that vanished from the screen is a battery somebody
+        // buys twice.
+        Assert.Contains("BSC-01", after);
+        Assert.Contains("<strong>11</strong>", after);
+
+        using IServiceScope reading = _factory.Services.CreateScope();
+        AppDbContext fresh = reading.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Assert.Equal(UnitStatus.Retired, await fresh.Batteries.Where(b => b.Id == id).Select(b => b.Status).SingleAsync());
+    }
+
+    [Fact]
+    public async Task Creating_a_battery_leaves_exactly_one_audit_row()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        await PostBatteryAsync(staff, "BSC-92", await FirstScooterIdAsync());
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Battery battery = await db.Batteries.SingleAsync(b => b.AssetTag == "BSC-92");
+        AuditEntry line = await SingleAuditLineAsync(nameof(Battery), battery.Id);
+
+        Assert.Equal(AuditAction.Created, line.Action);
+        Assert.Equal(TestAuthHandler.ActorEmail, line.ActorEmail);
+        Assert.Contains("BSC-92", line.Summary);
+    }
+
+    [Fact]
+    public async Task Editing_a_battery_leaves_exactly_one_audit_row()
+    {
+        await RunBatterySeedAsync();
+
+        HttpClient staff = _factory.CreateStaffClient();
+
+        int id;
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            id = await db.Batteries.Where(b => b.AssetTag == "BSP-03").Select(b => b.Id).SingleAsync();
+        }
+
+        FormFields form = await FormPoster.ReadFormAsync(staff, $"/admin/batteries/edit/{id}");
+        form.Set("SerialNumber", "SN-EDITED");
+
+        await FormPoster.PostAsync(staff, $"/admin/batteries/edit/{id}", form);
+
+        AuditEntry line = await SingleAuditLineAsync(nameof(Battery), id);
+
+        Assert.Equal(AuditAction.Updated, line.Action);
+        Assert.Contains("BSP-03", line.Summary);
+    }
+
+    [Fact]
+    public async Task The_settings_screen_edits_the_row_and_leaves_exactly_one_audit_line()
+    {
+        await ArrangeSettingsRowAsync();
+
+        HttpClient staff = _factory.CreateStaffClient();
+
+        FormFields form = await FormPoster.ReadFormAsync(staff, "/admin/settings");
+        form.Set("LostChargerFee", "35.00");
+
+        Assert.Equal(HttpStatusCode.OK, (await FormPoster.PostAsync(staff, "/admin/settings", form)).StatusCode);
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Exactly one row before and after: the screen edits, and a second row is not reachable
+        // through it. Control C03 states the same thing statically over the pages folder.
+        OperationalSettings row = await db.OperationalSettings.SingleAsync();
+
+        Assert.Equal(35.00m, row.LostChargerFee);
+        Assert.Equal(14, row.ChargerCount);
+        Assert.NotNull(row.UpdatedAtUtc);
+
+        AuditEntry line = await SingleAuditLineAsync(nameof(OperationalSettings), OperationalSettings.SingletonId);
+
+        Assert.Equal(AuditAction.Updated, line.Action);
+    }
+
+    [Fact]
+    public async Task A_negative_charger_count_and_a_negative_amount_are_refused_and_zero_is_accepted()
+    {
+        await ArrangeSettingsRowAsync();
+
+        HttpClient staff = _factory.CreateStaffClient();
+
+        FormFields negativeCount = await FormPoster.ReadFormAsync(staff, "/admin/settings");
+        negativeCount.Set("ChargerCount", "-1");
+
+        Assert.Contains(
+            "charger count cannot be negative",
+            await (await FormPoster.PostAsync(staff, "/admin/settings", negativeCount)).Content.ReadAsStringAsync());
+
+        FormFields negativeAmount = await FormPoster.ReadFormAsync(staff, "/admin/settings");
+        negativeAmount.Set("SecondBatteryPerDay", "-5.00");
+
+        Assert.Contains(
+            "amount cannot be negative",
+            await (await FormPoster.PostAsync(staff, "/admin/settings", negativeAmount)).Content.ReadAsStringAsync());
+
+        // Zero is legitimate: a courtesy battery is zero, and it still consumes one from the pool.
+        FormFields zero = await FormPoster.ReadFormAsync(staff, "/admin/settings");
+        zero.Set("SecondBatteryPerDay", "0.00");
+
+        Assert.Equal(HttpStatusCode.OK, (await FormPoster.PostAsync(staff, "/admin/settings", zero)).StatusCode);
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Assert.Equal(0m, await db.OperationalSettings.Select(row => row.SecondBatteryPerDay).SingleAsync());
+    }
+
+    [Fact]
+    public void No_battery_column_declares_a_store_default()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        IEntityType battery = db.Model.FindEntityType(typeof(Battery))!;
+        IEntityType settings = db.Model.FindEntityType(typeof(OperationalSettings))!;
+
+        List<IProperty> columns = battery.GetProperties().Concat(settings.GetProperties()).ToList();
+
+        foreach (IProperty column in columns)
+        {
+            // Read from the annotations and never from GetDefaultValue(), which answers the CLR
+            // default for a property that declares nothing and would pass either way — the lesson
+            // of D35 and of the leva 04 A1 pair.
+            Assert.Null(column.FindAnnotation(RelationalAnnotationNames.DefaultValue));
+            Assert.Null(column.FindAnnotation(RelationalAnnotationNames.DefaultValueSql));
+        }
+
+        // The presence half: the loop really walked the two tables' columns.
+        Assert.Equal(15, columns.Count);
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Helpers for the battery assertions
+    // ---------------------------------------------------------------------------------------
+
+    private async Task RunBatterySeedAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        IClock clock = scope.ServiceProvider.GetRequiredService<IClock>();
+        ILogger logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Tests");
+
+        Assert.Equal(0, await BatterySeeder.RunAsync(db, clock, logger, CancellationToken.None));
+    }
+
+    /// <summary>
+    /// Puts the single settings row in place for the tests that edit it. The MIGRATION is what
+    /// creates it in a real database; this host never runs one, so the row is arranged rather than
+    /// expected (EMENDA-04B-02 B1). The values are the ones the migration writes.
+    /// </summary>
+    private async Task ArrangeSettingsRowAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        if (await db.OperationalSettings.AnyAsync())
+        {
+            return;
+        }
+
+        db.OperationalSettings.Add(new OperationalSettings
+        {
+            Id = OperationalSettings.SingletonId,
+            ChargerCount = 14,
+            SecondBatteryPerDay = 8.00m,
+            LostChargerFee = 30.00m,
+        });
+
+        await db.SaveChangesAsync();
+    }
+
+    private async Task<int> FirstScooterIdAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        return await db.Products
+            .Where(p => p.Category == ProductCategory.MobilityScooter)
+            .OrderBy(p => p.SortOrder)
+            .ThenBy(p => p.Id)
+            .Select(p => p.Id)
+            .FirstAsync();
+    }
+
+    private static async Task<HttpResponseMessage> PostBatteryAsync(HttpClient staff, string tag, int productId)
+    {
+        FormFields form = await FormPoster.ReadFormAsync(staff, "/admin/batteries/create");
+
+        form.Set("AssetTag", tag).Set("ProductId", productId.ToString());
+
+        return await FormPoster.PostAsync(staff, "/admin/batteries/create", form);
     }
 
     // ---------------------------------------------------------------------------------------

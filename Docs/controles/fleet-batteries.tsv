@@ -1,0 +1,27 @@
+# Controles da leva 04b -- fleet batteries. Spec: Docs/spec-04b-fleet-batteries.md 11.2,
+# com as notas EMENDA-04B-01 e EMENDA-04B-02 no topo, que vencem o corpo onde discordarem.
+# Um controle por linha, campos separados por TAB. Nenhum comando contem TAB.
+# Nenhum comando usa git grep (regra 11): o portao de fim de frente roda ANTES do commit.
+# Todo operando de contagem sai com "; true" e valor-padrao na expansao (regra 10).
+# Toda varredura leva -I e --exclude-dir=bin --exclude-dir=obj: sem isso a varredura le
+# binario sob bin/ e devolve verde antes de a coisa existir (EMENDA-04-02 B2 da leva 04).
+#
+# CONTROLES PERMANENTES QUE ESTA LEVA REMEDE E NAO DUPLICA, com o arquivo de cada um:
+#   C01 de admin-catalog  -- nenhuma coluna booleana declara padrao de banco;
+#   C05 e C06 de admin-catalog -- handler de POST menos auditoria; os DOIS SE MOVEM nesta
+#     leva e sao reeditados na linha existente daquele arquivo, nunca em linha paralela aqui;
+#   C11 e C12 de admin-catalog -- a costura de teste nao existe em src;
+#   C06, C16 e C17 de foundation -- relogio real num arquivo so; os quatro marcadores TODO-
+#     em appsettings.json; ausencia nunca coalesce para zero;
+#   C16 de public-site -- nenhum identificador de catalogo digitado em src fora do arquivo
+#     de nome CatalogSeedData.cs. O C05 deste arquivo foi RETIRADO por duplicar esse C16
+#     (EMENDA-04B-02 B4): o C16 varre src/ inteiro e cobre onze identificadores, e este
+#     varria uma pasta e cobria dois -- subconjunto estrito. O C05 abaixo e o IRMAO DE
+#     ALCANCE dele, que e o que faltava.
+cmd	src/OrlandoUp.Web	n=$(grep -rIoE --exclude-dir=bin --exclude-dir=obj --include=*.cs --include=*.cshtml -e "Where[(][^)]*[.]Kind|[.]Kind *== *BatteryKind|BatteryKind[.][A-Za-z]+ *== " src/OrlandoUp.Web | wc -l; true); echo ${n:-0}	C01 D2-04b nenhuma consulta filtra bateria por tipo	0
+cmd	src/OrlandoUp.Web/Pages/Admin	test $(grep -rIloE --exclude-dir=bin --exclude-dir=obj --include=*.cshtml -e "Admin_BatteryKind" src/OrlandoUp.Web/Pages/Admin | wc -l; true) -ge 1 && echo sim || echo nao	C02 ALCANCE de C01 o tipo e lido para exibicao em ao menos uma tela	sim
+cmd	src/OrlandoUp.Web/Pages/Admin	n=$(grep -rIoE --exclude-dir=bin --exclude-dir=obj --include=*.cs -e "OperationalSettings[^ ]*[.]Add[(]|OperationalSettings[^ ]*[.]Remove[(]|Add[(]new OperationalSettings" src/OrlandoUp.Web/Pages/Admin | wc -l; true); echo ${n:-0}	C03 D4-04b nenhuma tela cria nem apaga a linha de configuracao	0
+cmd	src/OrlandoUp.Web/Pages/Admin	test $(grep -rIloE --exclude-dir=bin --exclude-dir=obj --include=*.cs -e "OperationalSettings" src/OrlandoUp.Web/Pages/Admin | wc -l; true) -ge 1 && echo sim || echo nao	C04 ALCANCE de C03 a linha de configuracao e alcancada por ao menos uma tela	sim
+cmd	src/OrlandoUp.Web/Infrastructure/Seeding	test $(grep -rIloE --exclude-dir=bin --exclude-dir=obj --include=*.cs --exclude=CatalogSeedData.cs --exclude=CatalogSeeder.cs -e "MobilityScooter" src/OrlandoUp.Web/Infrastructure/Seeding | wc -l; true) -ge 1 && echo sim || echo nao	C05 ALCANCE do C16 de public-site o seed novo alcanca o modelo por consulta e nao por literal	sim
+cmd	src/OrlandoUp.Web/Domain	n=$(grep -rhoE "public bool Is[A-Za-z]+" src/OrlandoUp.Web/Domain | wc -l; true); echo ${n:-0}	C06 D5-04b nenhuma bandeira booleana de visibilidade nova nasce no dominio	5
+cmd	src/OrlandoUp.Web/Domain	test $(grep -rhoE "public UnitStatus Status" src/OrlandoUp.Web/Domain | wc -l; true) -ge 2 && echo sim || echo nao	C07 ALCANCE de C06 ha ao menos dois portadores de UnitStatus no dominio	sim

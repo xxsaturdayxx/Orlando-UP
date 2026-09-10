@@ -108,6 +108,59 @@ public sealed class CatalogWriter
         _db.Units.AnyAsync(unit => unit.AssetTag == tag && unit.Id != exceptUnitId, cancellation);
 
     // -----------------------------------------------------------------------------------------
+    // The fleet's batteries, and the handful of numbers the administration edits
+    // -----------------------------------------------------------------------------------------
+
+    public Task<Battery?> FindBatteryAsync(int id, CancellationToken cancellation) =>
+        _db.Batteries.FirstOrDefaultAsync(battery => battery.Id == id, cancellation);
+
+    /// <summary>
+    /// The scooter models a battery may belong to. Batteries belong to scooters and to nothing else
+    /// (D37), so the refusal on the screen is a consequence of this list rather than a second rule
+    /// written somewhere else.
+    /// </summary>
+    public async Task<IReadOnlyList<Product>> ScooterModelsAsync(CancellationToken cancellation) =>
+        await _db.Products
+            .AsNoTracking()
+            .Where(product => product.Category == ProductCategory.MobilityScooter)
+            .OrderBy(product => product.SortOrder)
+            .ThenBy(product => product.Id)
+            .ToListAsync(cancellation);
+
+    /// <summary>
+    /// Whether a tag is already on a battery. The unique index is what makes it true; this is what
+    /// lets the screen say so in words before the database says so by throwing.
+    /// </summary>
+    public Task<bool> BatteryTagIsTakenAsync(string tag, int exceptBatteryId, CancellationToken cancellation) =>
+        _db.Batteries.AnyAsync(battery => battery.AssetTag == tag && battery.Id != exceptBatteryId, cancellation);
+
+    public Battery AddBattery(Battery battery)
+    {
+        battery.CreatedAtUtc = _clock.UtcNow;
+
+        _db.Batteries.Add(battery);
+
+        return battery;
+    }
+
+    /// <summary>
+    /// The single settings row. It is read, never created here: the migration made it, and control
+    /// C03 of <c>fleet-batteries.tsv</c> states as a prohibition that no screen creates or deletes
+    /// one. A database that somehow has none answers <c>null</c>, and the caller shows that rather
+    /// than inventing a row nobody decided the values of.
+    /// </summary>
+    public Task<OperationalSettings?> FindSettingsAsync(CancellationToken cancellation) =>
+        _db.OperationalSettings.FirstOrDefaultAsync(
+            row => row.Id == OperationalSettings.SingletonId, cancellation);
+
+    /// <summary>Stamps the moment of the edit, from <c>IClock</c>.</summary>
+    public void TouchSettings(OperationalSettings settings) => settings.UpdatedAtUtc = _clock.UtcNow;
+
+    /// <summary>How many batteries the fleet holds, and how many of those are available.</summary>
+    public Task<int> BatteryCountAsync(CancellationToken cancellation) =>
+        _db.Batteries.CountAsync(cancellation);
+
+    // -----------------------------------------------------------------------------------------
     // Writing
     // -----------------------------------------------------------------------------------------
 
