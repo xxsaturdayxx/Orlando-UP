@@ -193,6 +193,74 @@ phase 4, so it is **04b**; leva 03 keeps its number and remains the next booking
 
 ---
 
+> **AMENDMENT EMENDA-04B-04 — 2026-09-10, the etapa 2 report reviewed against the code (Claude Web).**
+> Where this note and the body disagree, **the note wins**. Etapa 2 is approved with **one correction
+> to land before the visual check**, and it is the front's own founding rule broken in the one place
+> nobody looks: the dashboard.
+>
+> **D1 — the dashboard turns a missing settings row into `0` chargers, and D15 says absence is never
+> zero.** Measured, `Pages/Admin/Index.cshtml.cs:49`:
+> `.Where(row => row.Id == SingletonId).Select(row => row.ChargerCount).FirstOrDefaultAsync(...)`.
+> The projection lands on a **non-nullable `int`**, so an absent row returns `0`, and
+> `Index.cshtml` prints it as a stat value beside "batteries" — **"0 chargers" reads as an operation
+> that owns no chargers**, which is a claim about the fleet and not about a missing row. The comment
+> beside it states the trade out loud ("shows zero rather than throwing"), and the trade is the wrong
+> one: the third option is to show the absence.
+>
+> **The convention already exists in this front, one screen away.** `Pages/Admin/Settings/Index.cshtml:24`
+> reports the missing row with `Admin_ErrorSettingsMissing`, and `:56` renders an unset date with
+> `Admin_NotSet` under `class="todo"`. The dashboard uses the same vocabulary: **project onto `int?`,
+> and render `Admin_NotSet` with the `todo` class when it is null.** No new resource key, no new
+> style, two lines.
+>
+> **This is not caught by any control, and that is the second half of the finding.** C17 of
+> `foundation.tsv` is labelled *an absent price never coalesces to zero* and its operand names **two**
+> forms, `?? 0` and `GetValueOrDefault(`. `FirstOrDefault` projected onto a value type is a **third
+> member of the same class**, and C17 measures **0** with the defect present — the exact shape
+> `EMENDA-04B-02` B3 named for C07: the label names a class, the operand counts members of it.
+> **C17 is not widened here** — a grep that separates a value-type projection from a reference-type
+> one is the kind of clever formula that ends up false-green, and `FirstOrDefault` returning `null` on
+> an entity is correct and common: measured, **eleven** of the twelve `FirstOrDefault*` calls in
+> `src/` project onto entities or strings and are right as they stand.
+>
+> **The instrument is a test, and it is a type assertion, because a type is a barrier and a habit is
+> not:** in `AdminCrudTests.cs`,
+> `Assert.Equal(typeof(int?), typeof(OrlandoUp.Web.Pages.Admin.IndexModel).GetProperty("ChargerCount")!.PropertyType)`,
+> next to a behavioural test that renders `/admin` **with no settings row** and asserts the response
+> contains the not-set marker and **does not** contain a charger stat reading zero — an absence
+> assertion that states a presence in the same method, per §8. The test host is the natural place for
+> it: it is the one environment where the row genuinely is absent, which is the whole subject of
+> `EMENDA-04B-02` B1.
+>
+> **Order:** this correction lands **before** the visual check, in its own commit, and the etapa 2
+> report gains a closing line naming it. The roteiro is unchanged — item 0 already reads the five
+> counts off the dashboard, and on Rod's database the row exists, so the item passes either way. That
+> is precisely why the test carries this and not the eye.
+>
+> **What this review confirmed against the code, so nobody re-derives it:** the diff over
+> `772f3b5..8c98d26` touches **19** files, every one on the §11.1 list, and
+> `Docs/conferencia-leva-04b.md` is **not** among them. The four control files verify green and I
+> re-measured three of them myself — `fleet-batteries` **7 on target**, with C02 and C04 moving from
+> `nao` to `sim`, so the reach halves actually moved; `admin-catalog` **12**; `public-site` **17**.
+> C05 of `admin-catalog` measures `9 - 7 = 2` with the operand at **nine**, which is
+> `EMENDA-04B-02` B5 exactly, in the existing line and not a parallel one. `Assert.Equal(15, keys.Count)`
+> is in place (B6). `ArrangeSettingsRowAsync` lives in `AdminCrudTests.cs` and the settings test asserts
+> `SingleAsync()` on the row, which is B1 option (d) as written. `SingleAuditLineAsync` is new and
+> closes on `Assert.Single`, called **seven** times — "exactly one", not "at least one", as §8 item 6
+> demands. `Assert.Contains("<strong>12</strong>")` is anchored on a string that appears **once** in
+> the whole tree, on the battery list, and **not** in `_AdminLayout` — I checked, because a `<strong>`
+> in a shared layout is how that assertion would have passed measuring nothing. The C1 tie-break of
+> `EMENDA-04B-03` is applied, with `.ThenBy(product => product.Id)` and the reason written beside it.
+>
+> **Inherited, not measured by the reviewer:** C14 and C15 of `foundation.tsv` (they need `dotnet`)
+> and every row count (it needs the database) — the standing access gap.
+>
+> **Proof of reading:** occurrences of the chain `EMENDA-04B-04` in the next artifact the agent
+> commits, counted with
+> `grep -rc "EMENDA-04B-04" Docs/relatorio-leva-04b-etapa-2.md`, **expected greater than zero**.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-09` whose
