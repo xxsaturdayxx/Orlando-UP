@@ -53,6 +53,89 @@ phase 4, so it is **04b**; leva 03 keeps its number and remains the next booking
 
 ---
 
+> **AMENDMENT EMENDA-04B-02 — 2026-09-10, the P0 plan reviewed on its second round (Claude Web).**
+> Where this note and the body disagree, **the note wins**. It answers the two open questions of the
+> plan, corrects one control that was green measuring the wrong thing, removes one that duplicates a
+> permanent control, and repairs a count in §11.2 that the agent himself caught.
+>
+> **B1 — §6.2 is answered, and the answer is NEITHER (a), (b) nor (c).** The agent recommended (a),
+> the seed command guaranteeing the row. Measured, it does not reach the problem: the suite creates
+> its schema with `EnsureCreatedAsync` at `tests/OrlandoUp.Tests/SiteFactory.cs:118` and `:133` (not
+> `:83`/`:98`, as the plan says), and `SeedAsync` calls **`CatalogSeeder.RunAsync`, never
+> `SeedCommands`**. A guard placed inside the battery seed command is never executed by the test
+> host, and test 7 still has nothing to assert. It is also a guard for a state that cannot occur:
+> C09 of `foundation.tsv` asserts the application never builds schema from the model, so every
+> deployed database got the row from the migration.
+>
+> **(d) is the answer: `AdminCrudTests.cs` arranges the row in the test that needs it.** That file is
+> already named in §11.1, so nothing opens. **And §8 test 7 splits in two, because one instrument
+> cannot prove both halves:**
+> - *the screen edits, and never creates nor deletes* — the suite, plus C03 of the new `.tsv`, which
+>   is a static prohibition over `Pages/Admin/`;
+> - *the migration creates the row* — proved in the **P1 report**, by reading the `InsertData`
+>   operation out of the written migration, and again by **item 8 of the conference roteiro**, which
+>   reads the three values off the real database. The suite never sees a migration and must not be
+>   written as though it did.
+>
+> **B2 — §6.3 is answered: change `two` to `three` on `Program.cs:119`.** That word is the one line
+> §11.1 concedes, and it is spent on truth rather than on wiring. Regra 2/3 of
+> `Docs/regras-de-controle.md`: prose beside a mechanism describing it wrong is the defect leva 04
+> paid for twice (D35, and C2 of `EMENDA-04-03`). Registering the command still needs **zero** lines.
+>
+> **B3 — C07 of the proposed `.tsv` is green measuring the wrong thing, and this is the correction
+> that inverts a result.** Its label promises *no new visibility flag is born in the domain*; its
+> operand counts the literal `public bool IsActive`, which is one member of that class. Measured
+> outside the repository, against a `Domain/` holding `public bool IsVisible` and
+> `public bool IsRetiredFromFleet`, the written command answers **0** — the control passes on exactly
+> the input it exists to refuse. And the fifth flag is already in the tree: `Product.cs:43`,
+> `public bool IsBookable`, which C07 cannot see.
+>
+> **The operand becomes `public bool Is[A-Za-z]+`**, which measures **5** today (four `IsActive`,
+> one `IsBookable`), answers **2** against the sandbox input above, and gets the label it can carry:
+> *nenhuma bandeira booleana de visibilidade nova nasce no domínio* — expected **5** at the end,
+> because `Battery` carries `Status`, not a flag. C08 stays as written; it is a correct reach sibling
+> and moves from `nao` to `sim`.
+>
+> **B4 — C05 of the proposed `.tsv` is dropped: it duplicates C16 of `public-site.tsv`.** C16 sweeps
+> **all of `src/`**, excludes the same single file by the same name, and covers the same two slugs
+> plus nine more; C05 sweeps one folder and covers two. It is a strict subset, and a control file
+> that re-measures a permanent control grows by one line per front for nothing. **C06 survives** and
+> becomes the reach sibling of C16, with its label saying so: *ALCANCE do C16 de `public-site` — o
+> seed novo alcança o modelo por consulta e não por literal*. The `.tsv` ships with **seven**
+> controls, and the `.tsv` header names C16 among the permanent controls this leva re-measures rather
+> than duplicates.
+>
+> **B5 — §11.2 item 3 is wrong, and the agent's §6.4 is right.** Measured at `13412f2`:
+> `OnPost[A-Za-z]*Async` over `Pages/Admin/` counts **6** and `[.]Record[(]` counts **4**, so C05 of
+> `admin-catalog.tsv` is **2**. §5 lists four routes and only **three** write:
+> `batteries/create`, `batteries/edit`, `settings`. **The operand of C06 rises from 6 to 9, not to
+> 10**, and the difference stays 2 only if each of the three new handlers carries exactly one
+> `.Record(`. The number 10 is struck; it was never measured.
+>
+> **B6 — the enum-parity test carries a cardinal, and it must be named.**
+> `AdminCrudTests.cs:644` asserts `Assert.Equal(13, keys.Count)`. Adding `BatteryKind` (two members)
+> makes it **15**. §6.5 of the plan says the test is *extended* without naming the number; a
+> forgotten cardinal reds like a real failure and costs a round.
+>
+> **B7 — two measurements the plan asserts were not measured, and neither changes a decision.**
+> `git ls-files` counts **189**, not 190, and the gap from the §0 figure of 187 is **two** new files,
+> not three. The P1 report carries these re-measured, not copied.
+>
+> **What the review confirmed, so nobody spends a round re-deriving it:** C01 refuses all four
+> redactions of the forbidden form, the multi-line one included, because its second alternative is
+> anchored on `.Kind ==` rather than on `Where(`; C03 refuses `.Add(`, `.Remove(` and
+> `Set<OperationalSettings>().Remove(`; C02's key `Admin_BatteryKind` matches the convention the
+> screens actually use — `Units/Index.cshtml:35` builds `Admin_Status{...}` in the `.cshtml`, so the
+> interpolation must stay in the view for C02 to see it; and **C10 of `public-site.tsv` filters
+> `_AdminLayout.cshtml:` lines out with a `grep -v`**, so the two new navigation destinations are
+> safe there and C10 needs no change.
+>
+> **Proof of reading:** occurrences of the chain `EMENDA-04B-02` in the next artifact the agent
+> commits — the P1 report — counted with
+> `grep -c "EMENDA-04B-02" Docs/relatorio-leva-04b-etapa-1.md`, **expected greater than zero**.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-09` whose
