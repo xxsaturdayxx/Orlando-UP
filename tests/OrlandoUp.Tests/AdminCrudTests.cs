@@ -960,6 +960,64 @@ public class AdminCrudTests : IAsyncLifetime
         Assert.Equal(15, columns.Count);
     }
 
+
+    // ---------------------------------------------------------------------------------------
+    // The dashboard's one absent-able number (EMENDA-04B-04 D1)
+    // ---------------------------------------------------------------------------------------
+
+    [Fact]
+    public void The_dashboard_charger_count_is_nullable_so_absence_cannot_become_zero()
+    {
+        // A type assertion, because a type is a barrier and a habit is not. Projected onto a
+        // non-nullable int, FirstOrDefault answers 0 for a missing row and the screen would state
+        // that the operation owns no chargers — a claim about the fleet, not about a missing row.
+        //
+        // No control catches this: C17 of foundation.tsv is labelled "an absent price never
+        // coalesces to zero" and its operand names two forms, ?? 0 and GetValueOrDefault(. A
+        // value-type projection through FirstOrDefault is a third member of the same class, and
+        // C17 measures 0 with the defect present. Widening that grep would separate a value-type
+        // projection from a reference-type one by shape, which is how a control ends up false
+        // green — eleven of the twelve FirstOrDefault calls in src/ land on entities or strings
+        // and are right as they stand. So the instrument is here.
+        Assert.Equal(
+            typeof(int?),
+            typeof(OrlandoUp.Pages.Admin.IndexModel).GetProperty(nameof(OrlandoUp.Pages.Admin.IndexModel.ChargerCount))!
+                .PropertyType);
+    }
+
+    [Fact]
+    public async Task The_dashboard_shows_the_chargers_as_not_set_when_the_settings_row_is_missing()
+    {
+        // The test host is the one environment where the row genuinely is absent: the suite builds
+        // its schema from the model and never runs the migration that creates it (EMENDA-04B-02
+        // B1). On Rod's database the row exists, so item 0 of the roteiro passes either way — which
+        // is exactly why this is carried by a test and not by the eye.
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Assert.False(await db.OperationalSettings.AnyAsync());
+        }
+
+        string html = await _factory.CreateStaffClient().GetStringAsync("/admin");
+
+        Assert.Contains("""<span class="stat__value todo" id="stat-chargers">""", html);
+        Assert.DoesNotContain("""<span class="stat__value" id="stat-chargers">0</span>""", html);
+
+        // The presence half, and it is the distinction the whole item is about: an empty Batteries
+        // table honestly holds zero, so THAT stat does read 0 on the same page. Absence and zero
+        // are different answers and the dashboard now gives each one its own.
+        Assert.Contains("""<span class="stat__value">0</span>""", html);
+
+        // And with the row in place the same stat carries the number, so the marker above is the
+        // absence and not a stat that stopped rendering.
+        await ArrangeSettingsRowAsync();
+
+        string filled = await _factory.CreateStaffClient().GetStringAsync("/admin");
+
+        Assert.Contains("""<span class="stat__value" id="stat-chargers">14</span>""", filled);
+    }
+
     // ---------------------------------------------------------------------------------------
     // Helpers for the battery assertions
     // ---------------------------------------------------------------------------------------

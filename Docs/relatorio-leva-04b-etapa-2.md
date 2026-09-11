@@ -282,3 +282,49 @@ devolve esses dois e mais nenhum.
 reabrir. Se aproveitar, o valor da segunda bateria — os **8.00** que eu escolhi como meio da faixa
 que a D37 nomeia, e que a `EMENDA-04B-03` C2 deixou de pé — é editável na mesma tela. Uma edição, sem
 migration, que é exatamente o que a D4/04b comprou.
+
+---
+
+## 7. Fechamento — uma correção entrou depois desta parada, em commit próprio
+
+**A etapa 2 foi aprovada pela `EMENDA-04B-04` com uma correção, e ela está aplicada antes da
+conferência visual, num commit só dela.**
+
+**D1 — o painel transformava linha ausente em zero carregadores, e a D15 diz que ausência nunca é
+zero.** `Pages/Admin/Index.cshtml.cs` projetava a contagem num `int` não anulável, então um banco sem
+a linha de configuração devolvia `0`, e a tela imprimia **"0 carregadores"** ao lado de baterias —
+que é uma afirmação sobre a frota e não sobre uma linha que falta. O comentário que eu tinha escrito
+ali dizia a troca em voz alta — *"mostra zero em vez de lançar"* — e a troca estava errada: a
+terceira saída é **mostrar a ausência**, e ela já existia nesta frente, uma tela ao lado, em
+`Settings/Index.cshtml`.
+
+**A correção, duas linhas:** a propriedade vira `int?`, a projeção vira `(int?)row.ChargerCount`, e a
+marca renderiza `Admin_NotSet` sob `class="todo"` — **sem chave de recurso nova e sem estilo novo**.
+
+**Nenhum controle pega isso, e essa é a metade que importa.** O C17 do `foundation.tsv` chama-se
+*preço ausente nunca coalesce para zero* e o operando dele nomeia **duas** formas, `?? 0` e
+`GetValueOrDefault(`. Uma projeção de tipo de valor por `FirstOrDefault` é um **terceiro membro da
+mesma classe**, e o C17 media **0** com o defeito presente — exatamente a forma que a
+`EMENDA-04B-02` B3 nomeou no C07: o rótulo nomeia uma classe, o operando conta membros dela.
+**O C17 não foi alargado**, e o motivo é medido: **onze** das doze chamadas `FirstOrDefault*` de
+`src/` caem sobre entidade ou cadeia e estão certas como estão, então um grep que separasse
+projeção de tipo de valor por forma é o tipo de fórmula esperta que acaba verde falso.
+
+**O instrumento é teste, e um deles é asserção de tipo, porque tipo é barreira e hábito não é:**
+
+| Teste | O que afirma |
+|---|---|
+| `The_dashboard_charger_count_is_nullable_so_absence_cannot_become_zero` | `ChargerCount` é `int?` |
+| `The_dashboard_shows_the_chargers_as_not_set_when_the_settings_row_is_missing` | com a linha ausente a marca aparece e **não** há estatística de carregador lendo zero; **e a de baterias lê 0 na mesma página**, porque tabela vazia honestamente tem zero — ausência e zero são respostas diferentes e o painel passa a dar uma para cada; com a linha posta, a mesma estatística lê **14** |
+
+**Os dois eram vermelhos em `8c98d26`, e isso está medido e não suposto:** `git show` daquele commit
+mostra `<span class="stat__value">@Model.ChargerCount</span>` sem o `id`, e
+`public int ChargerCount` sem interrogação.
+
+**O roteiro não muda.** O item 0 já lê as cinco contagens do painel, e no seu banco a linha existe —
+então ele passaria dos dois jeitos. **É por isso que quem carrega este achado é o teste e não o
+olho.**
+
+**Portões depois da correção:** `dotnet build` limpo com **0 avisos**; `dotnet test` **183 passando,
+0 falhando** (eram 181); os quatro `.tsv` com **54 controles, 0 fora do esperado**; o C17 continua
+medindo **0**, agora sem o defeito por baixo.

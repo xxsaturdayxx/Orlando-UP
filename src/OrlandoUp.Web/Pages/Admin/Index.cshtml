@@ -26,8 +26,19 @@
                 <span class="stat__value">@Model.BatteryCount</span>
                 <span class="stat__label">@L["Admin_CountBatteries"]</span>
             </div>
+            @* The one stat that can be ABSENT rather than zero: it comes from a row, not from a
+               count. An empty Batteries table honestly holds zero; a missing settings row means
+               nobody knows how many chargers there are, and saying "0" would be a claim about the
+               fleet (D15). Same vocabulary the settings screen uses for the same absence. *@
             <div class="stat">
-                <span class="stat__value">@Model.ChargerCount</span>
+                @if (Model.ChargerCount is int chargers)
+                {
+                    <span class="stat__value" id="stat-chargers">@chargers</span>
+                }
+                else
+                {
+                    <span class="stat__value todo" id="stat-chargers">@L["Admin_NotSet"]</span>
+                }
                 <span class="stat__label">@L["Admin_CountChargers"]</span>
             </div>
         </div>
