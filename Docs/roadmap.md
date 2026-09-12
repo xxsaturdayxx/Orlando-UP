@@ -23,6 +23,13 @@ editor, fleet CRUD, audit trail — is `Docs/spec-04-admin-catalog.md` and is ex
 numbers follow these phase numbers, not the order of execution: leva 04 is written and executed
 before leva 03.
 
+**Phase 3 is split too (D39, 2026-09-12).** Leva 03 (`Docs/spec-03-booking-core.md`) is the core:
+the booking tables, availability that counts units, batteries and chargers with the turnaround
+(D40), the frozen quote, the public *check availability and price* page, and bookings entered by
+staff — nothing in it waits on the Stripe account or on the liability text. Leva 03b is Stripe
+Checkout, the public booking form, the confirmation e-mail with its manage link, the hold and its
+sweeper, and the refund; it waits on Q6 and Q15. "Done means" of phase 3 is reached when 03b closes.
+
 ## Cost envelope (monthly, USD, to be validated in phase 5)
 
 App Service: **0 extra** while Orlando Up (production and staging) runs as two apps on Ronatrip's

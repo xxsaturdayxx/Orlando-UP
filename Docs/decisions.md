@@ -484,3 +484,43 @@ one of those wants a control. That is a front with its own spec, not a corner of
 
 **Recorded as backlog rather than as an open question**, because nothing is waiting on Rod: the
 decision is taken, the sequencing is fixed, and the work is described.
+
+**D39 — 2026-09-12 (conversation 6, choosing the front) — Phase 3 is split: leva 03 is the booking
+CORE without payment; leva 03b is Stripe, the public booking form, the e-mail and the hold.**
+**[operator]**, on the reviewer's recommendation, choosing over "the whole phase in one leva" and
+"the aesthetics round first". Leva 03 writes the four booking tables, the availability rule that
+counts units, batteries and chargers per day with the turnaround, the frozen quote, the public
+*"check availability and price"* page, and the booking **entered by staff** — which is how a WhatsApp
+reservation lands in the system today. Nothing in it waits on Q6 (Stripe account) or Q15 (battery
+liability text); everything in 03b does. Same shape as the 04/04b split: schema and rule first, the
+surface that depends on an external account second. Both keep the phase number (D33).
+`Docs/spec-03-booking-core.md`.
+
+**D40 — 2026-09-12 (conversation 6) — Turnaround is ONE day, for the machine and for its batteries.**
+**[operator]**, on the scene *SCT-02 comes back Tuesday 20:00 at Pop Century; Wednesday 09:00 another
+customer wants a Scout at Art of Animation*: **no — it needs a day off** for cleaning, charge and
+check. `Products.TurnaroundDays`, seeded at 0 for every model since 2026-09-05 and read by nothing,
+moves to **1** for the three bookable products (the strollers stay 0: no fact). The battery pool of a
+model uses the model's number — one value, because the answer covered both pieces. **The running
+database is a copy the seed does not refresh:** Rod sets *"Dias de intervalo"* to 1 on the three
+products through the product editor (human step 3 of the spec's §0); until then the site is one day
+too generous. The extension to the wheelchair is the assistant's (the scene was a scooter; the reason
+given — cleaning and check — applies), editable on the screen.
+
+**D41 — 2026-09-12 (conversation 6) — Fixed delivery and pickup windows (8–10, 10–12, 14–16, 18–20)
+and a next-day cut-off at 18:00 Orlando time, both as Q3 assumed since 2026-09-04.** **[operator]**,
+on the scene *a customer books Friday 22:00 for Saturday 09:00 at Caribbean Beach* — refused for
+Saturday; Sunday is the earliest. The windows are an enum with explicit numbers (a change is a
+one-line adjustment); the cut-off hour is a column of `OperationalSettings`, editable on the
+settings screen, because it moves in December. The cut-off binds the public page only — staff enter
+what they have decided to deliver and are refused only the past. **Q3 stays open** for the zones,
+their fees and the meet-and-greet routine, which this does not answer.
+
+**D42 — 2026-09-12 (conversation 6) — Availability is a BARRIER on the public site and a WARNING for
+staff.** **[operator]**, on the scene *four Scouts booked 20–24 December, a fifth customer asks for
+22–23*: the site says sold out; **staff may enter it above the fleet, marked**, for the cases Rod
+solves by hand (a Spitfire instead, a purchase). The staff form computes the same availability the
+visitor sees, refuses by default, and accepts when the operator ticks the box that says so; the
+booking carries `IsOverbooked = true`, its first event names it, the list shows the badge.
+Deliberate over-selling is a business decision and this is it, written down — a system that
+forbade it by accident and one that allowed it by accident would be indistinguishable in code.
