@@ -37,6 +37,7 @@ internal sealed record SeedProduct(
     SeatConfiguration? Configuration,
     bool IsBookable,
     int UnitCount,
+    int TurnaroundDays,
     int? MaxRiderWeightLb,
     decimal? WidthIn,
     decimal? LengthIn,
@@ -71,7 +72,7 @@ internal static class CatalogSeedData
     [
         // 300 lb, 42.3 by 20.5 in, 9 miles and 14 with the extended battery - every one of those
         // is D26, verified from the manufacturer's published specification on 2026-09-05.
-        new("drive-scout-4", ProductCategory.MobilityScooter, null, true, 4, 300, 20.5m, 42.3m, null, 9m, 1,
+        new("drive-scout-4", ProductCategory.MobilityScooter, null, true, 4, 1, 300, 20.5m, 42.3m, null, 9m, 1,
             [new(1, 2, TierMode.FlatPerRental, 75m), new(3, 6, TierMode.PerDay, 32m), new(7, null, TierMode.PerDay, 27m)],
             ["cup-holder", "cane-holder", "rear-basket", "damage-waiver"],
             [
@@ -84,7 +85,7 @@ internal static class CatalogSeedData
             ]),
 
         // 300 lb, 39 by 19.5 in, 17 in seat, 9 miles and 15 with the 21 Ah pack - all D26.
-        new("drive-spitfire-ex", ProductCategory.MobilityScooter, null, true, 4, 300, 19.5m, 39m, 17m, 9m, 2,
+        new("drive-spitfire-ex", ProductCategory.MobilityScooter, null, true, 4, 1, 300, 19.5m, 39m, 17m, 9m, 2,
             [new(1, 2, TierMode.FlatPerRental, 75m), new(3, 6, TierMode.PerDay, 32m), new(7, null, TierMode.PerDay, 27m)],
             ["cup-holder", "cane-holder", "rear-basket", "damage-waiver"],
             [
@@ -99,7 +100,7 @@ internal static class CatalogSeedData
         // Every dimension is null on purpose: D26 records two Drive wheelchairs and not one
         // measurement of them, and Rod chose to rent it with no specification rather than to
         // publish a number nobody took (K2 b). The specification list does not render at all.
-        new("drive-wheelchair", ProductCategory.Wheelchair, null, true, 2, null, null, null, null, null, 3,
+        new("drive-wheelchair", ProductCategory.Wheelchair, null, true, 2, 1, null, null, null, null, null, 3,
             [new(1, 2, TierMode.FlatPerRental, 40m), new(3, null, TierMode.PerDay, 12m)],
             ["cup-holder", "cane-holder", "rear-basket", "damage-waiver"],
             [
@@ -114,7 +115,7 @@ internal static class CatalogSeedData
         // The four below are IsBookable = false until the units exist (D26). No tier, no add-on, no
         // dimension: nothing about them is known yet except the class of equipment and the park
         // rules that apply to it, both of which are in Docs/market-notes.md.
-        new("single-stroller", ProductCategory.Stroller, SeatConfiguration.Single, false, 0, null, null, null, null, null, 4,
+        new("single-stroller", ProductCategory.Stroller, SeatConfiguration.Single, false, 0, 0, null, null, null, null, null, 4,
             [],
             [],
             [
@@ -126,7 +127,7 @@ internal static class CatalogSeedData
                     ["Para uma criança", "Dentro do limite de 31 por 52 polegadas da Disney", "Wagons não são permitidos nos parques"]),
             ]),
 
-        new("double-stroller", ProductCategory.Stroller, SeatConfiguration.Double, false, 0, null, null, null, null, null, 5,
+        new("double-stroller", ProductCategory.Stroller, SeatConfiguration.Double, false, 0, 0, null, null, null, null, null, 5,
             [],
             [],
             [
@@ -138,7 +139,7 @@ internal static class CatalogSeedData
                     ["Dois assentos num quadro só", "Dentro do limite de 31 por 52 polegadas da Disney", "Wagons não são permitidos nos parques"]),
             ]),
 
-        new("triple-stroller", ProductCategory.Stroller, SeatConfiguration.Triple, false, 0, null, null, null, null, null, 6,
+        new("triple-stroller", ProductCategory.Stroller, SeatConfiguration.Triple, false, 0, 0, null, null, null, null, null, 6,
             [],
             [],
             [
@@ -150,7 +151,7 @@ internal static class CatalogSeedData
                     ["Três assentos num quadro só", "Medidas publicadas antes de abrir a reserva", "Wagons não são permitidos nos parques"]),
             ]),
 
-        new("infant-stroller", ProductCategory.Stroller, SeatConfiguration.Infant, false, 0, null, null, null, null, null, 7,
+        new("infant-stroller", ProductCategory.Stroller, SeatConfiguration.Infant, false, 0, 0, null, null, null, null, null, 7,
             [],
             [],
             [

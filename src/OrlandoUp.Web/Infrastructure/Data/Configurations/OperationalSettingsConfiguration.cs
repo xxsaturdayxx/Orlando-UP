@@ -18,5 +18,11 @@ public sealed class OperationalSettingsConfiguration : IEntityTypeConfiguration<
         builder.Property(s => s.ChargerCount).IsRequired();
         builder.Property(s => s.SecondBatteryPerDay).HasPrecision(10, 2).IsRequired();
         builder.Property(s => s.LostChargerFee).HasPrecision(10, 2).IsRequired();
+
+        // Required, and with no default declared here on purpose (D34): the migration writes 18
+        // into the one row that already exists and then removes the constraint the tool leaves
+        // behind, so the column's value is a fact about the operation and never something the
+        // database supplies on the next insert.
+        builder.Property(s => s.NextDayCutoffHour).IsRequired();
     }
 }

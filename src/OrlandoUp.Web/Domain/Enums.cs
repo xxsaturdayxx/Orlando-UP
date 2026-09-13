@@ -79,3 +79,62 @@ public enum BatteryKind
     Normal = 1,
     ExtendedRange = 2,
 }
+
+/// <summary>Where a booking stands in its life (D5/03).</summary>
+/// <remarks>
+/// Every member the architecture's machine names is written now, numbered explicitly, even though
+/// this leva reaches only two of the edges between them. The reason is that the set of statuses
+/// which HOLD INVENTORY is what the availability rule filters on: adding a member later would mean
+/// revisiting that rule with bookings already in the table. <c>PendingPayment</c> is here for the
+/// same reason — the payment front adds bookings in that status without touching either file.
+///
+/// The numbering has a gap on purpose: the states a booking passes through while it is alive are
+/// 1 to 8, and the ways it can end are 20 and up. A member inserted later goes at the end of its
+/// own band.
+/// </remarks>
+public enum BookingStatus
+{
+    Draft = 1,
+    PendingPayment = 2,
+    Confirmed = 3,
+    Scheduled = 4,
+    OutForDelivery = 5,
+    Active = 6,
+    PickedUp = 7,
+    Completed = 8,
+    Expired = 20,
+    Cancelled = 21,
+    Refunded = 22,
+}
+
+/// <summary>Who put the booking into the system.</summary>
+public enum BookingSource
+{
+    /// <summary>The customer, through the site. Nothing creates one of these yet.</summary>
+    Online = 1,
+
+    /// <summary>A member of staff, from a reservation that arrived some other way.</summary>
+    Staff = 2,
+}
+
+/// <summary>The four windows delivery and pickup are offered in (D3/03).</summary>
+/// <remarks>
+/// Four rows are not a table. They are an enum with explicit numbers, and the hours they stand for
+/// live in <see cref="DeliveryWindows"/> — never in a page, so that changing one is a one-line
+/// adjustment in a single file.
+/// </remarks>
+public enum DeliveryWindow
+{
+    Morning = 1,
+    LateMorning = 2,
+    Afternoon = 3,
+    Evening = 4,
+}
+
+/// <summary>What one line of a booking's history records.</summary>
+public enum BookingEventType
+{
+    Created = 1,
+    Cancelled = 2,
+    Note = 3,
+}

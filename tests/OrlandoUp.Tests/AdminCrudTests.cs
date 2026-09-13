@@ -956,8 +956,13 @@ public class AdminCrudTests : IAsyncLifetime
             Assert.Null(column.FindAnnotation(RelationalAnnotationNames.DefaultValueSql));
         }
 
-        // The presence half: the loop really walked the two tables' columns.
-        Assert.Equal(15, columns.Count);
+        // The presence half: the loop really walked the two tables' columns. Sixteen since the
+        // cut-off hour landed — the column whose migration writes a value into the single existing
+        // row and then drops the constraint that writing it leaves behind, which is precisely the
+        // pair this assertion exists to keep apart: the MODEL declares no default, and this test
+        // says so; whether the DATABASE kept one is read from its own catalogue after the
+        // migration is applied.
+        Assert.Equal(16, columns.Count);
     }
 
 

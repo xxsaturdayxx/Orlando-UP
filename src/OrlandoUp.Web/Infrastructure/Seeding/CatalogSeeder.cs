@@ -77,7 +77,11 @@ internal static class CatalogSeeder
                 LengthIn = seed.LengthIn,
                 SeatWidthIn = seed.SeatWidthIn,
                 RangeMiles = seed.RangeMiles,
-                TurnaroundDays = 0,
+
+                // A day off between two rentals of the same machine, for cleaning, charge and
+                // check (D2/03). It is seed data now rather than a literal, so the number is a
+                // fact about each product and the availability rule reads it per product.
+                TurnaroundDays = seed.TurnaroundDays,
                 IsActive = true,
                 SortOrder = seed.SortOrder,
                 IsBookable = seed.IsBookable,

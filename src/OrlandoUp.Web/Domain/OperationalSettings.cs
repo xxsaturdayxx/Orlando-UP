@@ -34,6 +34,19 @@ public class OperationalSettings
     /// <summary>What a lost charger costs to replace.</summary>
     public decimal LostChargerFee { get; set; }
 
+    /// <summary>
+    /// The hour, in Orlando wall time, after which a visitor may no longer ask for delivery
+    /// tomorrow (D3/03). Before it, the earliest delivery day is tomorrow; from it onwards, the
+    /// day after tomorrow. Valid from 0 to 23, which the settings screen enforces.
+    /// </summary>
+    /// <remarks>
+    /// It is a column and not a constant because it is the kind of number that moves in December,
+    /// when the routes are full and the office wants the cut-off earlier. It binds the PUBLIC page
+    /// only: staff enter what they have decided to deliver, including tomorrow at ten at night
+    /// (D9/03).
+    /// </remarks>
+    public int NextDayCutoffHour { get; set; }
+
     /// <summary>An instant, from <c>IClock</c>, so an edit is dated.</summary>
     public DateTime? UpdatedAtUtc { get; set; }
 }

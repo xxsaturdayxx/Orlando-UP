@@ -47,6 +47,14 @@ public class AppDbContext : IdentityDbContext<IdentityUser, IdentityRole, string
 
     public DbSet<OperationalSettings> OperationalSettings => Set<OperationalSettings>();
 
+    public DbSet<Booking> Bookings => Set<Booking>();
+
+    public DbSet<BookingLine> BookingLines => Set<BookingLine>();
+
+    public DbSet<BookingAddOn> BookingAddOns => Set<BookingAddOn>();
+
+    public DbSet<BookingEvent> BookingEvents => Set<BookingEvent>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
