@@ -23,6 +23,82 @@ the reason the split is safe (D39).
 
 ---
 
+> ## EMENDA-03-01 — 2026-09-13 — review of the P0 plan (`scratchpad/leva03/plano.md`). Wins over the body where they disagree.
+>
+> **Verdict: execute after the corrections below.** The plan is reviewable: files named, migration
+> declared, out-of-scope stated, every §11.3 measurement present with the HEAD value. Re-measured by
+> the reviewer before writing this note: `admin-catalog` C05 operands **9 − 7 = 2**; `CatalogSeeder.cs:31`
+> `if (await db.Products.AnyAsync(...)) return 0` — the seeder never updates an existing row;
+> `SeoTests.cs:197` is an **equality** on alternates, not a floor; `ClockTests.cs:50` already uses
+> `new SystemClock(() => instant)`; `ArrangeSettingsRowAsync` (`AdminCrudTests.cs:881,909,1014`) and
+> `RunBatterySeedAsync` exist; `origin/main...main` reads `0 0` (the operator pushed) and
+> `git ls-files` reads **212** — §0's 210 was counted at `6da3ff6`, before this spec's own commit; both
+> numbers are right for their commit and neither is a stop.
+>
+> **Corrections, numbered:**
+>
+> 1. **The default constraint is dropped in the same `Up`, not "if it stayed".** §4.5 says the P1
+>    after-read decides. D35 already measured what happens: `AddColumn(defaultValue: 18)` leaves a
+>    permanent unnamed `DF__…` constraint that no later migration removes. So the `Up` adds the column
+>    with `defaultValue: 18` (it is what fills the single existing row) **and immediately runs a
+>    `migrationBuilder.Sql` block that looks the constraint up in `sys.default_constraints` by table
+>    and column and drops it by name** (dynamic SQL — the name is generated). P1 classifies that block;
+>    the after-read of `sys.default_constraints` for `OperationalSettings.NextDayCutoffHour` expects
+>    **zero rows**, and a row is a stop. *If this passes unnoticed:* the model says "no store default"
+>    and the database keeps one forever — the exact D35 defect, on the column D34 exists to protect.
+> 2. **K1 accepted, plus a type barrier.** `Booking` gets a static factory in `Domain/Booking.cs`
+>    (`Booking.CreateByStaff(validated request, quote, actorEmail, nowUtc, acknowledgeOverbooking)`
+>    — the agent names the parameters) that sets `Status = BookingStatus.Confirmed` and
+>    `Source = BookingSource.Staff`; `BookingWriter` calls it and never assigns `Status`. **And
+>    `Booking.Status` is declared `{ get; private set; }`** — EF Core writes private setters, and a
+>    page that tried `booking.Status = x` would not compile. Control C03 of the new `.tsv` stays as the
+>    belt; the private setter is the barrier (architecture, not discipline). C04 (≥ 2 assignments in
+>    `Domain/`) is satisfied by the factory and by `Cancel`. `Docs/architecture.md` §2 already says
+>    *"writes go through services so that booking invariants live in one place"* — the factory is
+>    that place.
+> 3. **K2: the architecture note covers all SIX divergences, not two.** §11.1 authorises one dated
+>    note in `Docs/architecture.md`; its scope is widened to: the booking number (D6/03), the rounding
+>    (D7/03), `BookingEvent.Summary` instead of `Data` JSON (§4.4), the windows as an enum instead of
+>    `TimeOnly` pairs (§4.6), one `Phone` column instead of `Phone` + `WhatsApp` + `Country` (§4.1),
+>    and the rules in `Domain/` with loaders in `Infrastructure/Data/` instead of
+>    `IAvailabilityService`/`IBookingService` in `Application/` (§5–§6). One note, dated 2026-09-13,
+>    placed after the §3 table, each point in one sentence with the spec section. The file's own
+>    header says the code is measured and the file corrected; leaving four of six unwritten would
+>    leave two versions circulating.
+> 4. **§6 accepted: `FakeClock` delegates to `new SystemClock(() => _utcNow)`.** Deviation by
+>    improvement over §9.6, and it supersedes both options written there: one zone table, C06 of
+>    `foundation.tsv` unmoved (the fake never reads `DateTime.UtcNow`, and the control scans `src`
+>    only — confirmed by reading the command). `IClock.NowInOrlando()` is added as §5.4 says.
+> 5. **§5.1 (a) and (b) accepted.** C01's operand is
+>    `PricingTier|[.]PricingTiers|CatalogQueries|[Zz]one[.]DeliveryFee|db[.]AddOns` and C02's floor
+>    is **≥ 3** — the prose of §11.2 item 1 is superseded; `AddOn.Amount` and a bare `DeliveryFee`
+>    would have matched the snapshot columns the detail page must print (the regra-8 false positive,
+>    caught by the agent before it existed). C07 carries the `${s:-nenhum}` default so an empty
+>    `paste` never writes `ERRO` as the expected value.
+> 6. **K3 noted: 107 tests in 11 files** (four harness files carry no attribute). §3's "13 files" is
+>    wrong and the 107 is right; no consequence.
+> 7. **K4 accepted:** the settings row and the batteries are arranged **per test** through the
+>    existing helpers, never in `InitializeAsync`; `The_dashboard_shows_the_chargers_as_not_set_when_the_settings_row_is_missing`
+>    (`AdminCrudTests.cs:989`) keeps passing untouched (§12.1).
+> 8. **K5 noted for P3:** `SeoTests.cs:197` asserts `addresses.Count × 3 == alternates`; `/book`
+>    enters with both cultures and its `x-default`, and the P3 report prints the two numbers.
+>
+> **Confirmed, and not to be "fixed":** the C05 relation of `admin-catalog.tsv` stays at 2 by
+> design (two new handlers, two new `.Record(` through `BookingTimeline`); `fleet-batteries.tsv`
+> C06 is rebased 5 → 6 with the label untouched, and the plan's §4.2 sentence about the class/member
+> gap goes into the P1 report verbatim; `public-site.tsv` C10 stays 0 because every `asp-page=` the
+> leva writes outside `Admin/` carries `asp-route-culture=` on the same line.
+>
+> **Backlog, not this leva (written to `Docs/backlog-conhecido.md` by the reviewer):** a unit or
+> battery moved to *Em manutenção* / *Baixada* after bookings exist can silently put a future date
+> above the fleet, and no screen of this leva warns — the phase-4 half (assignment, calendar) is
+> where that reading belongs.
+>
+> **Proof of reading:** `grep -c "EMENDA-03-01" Docs/relatorio-leva-03-etapa-1.md` — expected **≥ 1**.
+> The P1 report also restates corrections 1 and 2 in its own words.
+
+---
+
 ## 0. Execution surface
 
 **Launcher phrase:** this spec is executed by the line of `Docs/fila-cc.md` dated `2026-09-12` whose
