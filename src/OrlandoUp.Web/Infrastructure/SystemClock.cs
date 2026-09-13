@@ -31,8 +31,9 @@ public sealed class SystemClock : IClock
 
     public DateTime UtcNow => _utcNowSource();
 
-    public DateOnly TodayInOrlando() =>
-        DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(UtcNow, OrlandoZone));
+    public DateOnly TodayInOrlando() => DateOnly.FromDateTime(NowInOrlando());
+
+    public DateTime NowInOrlando() => TimeZoneInfo.ConvertTimeFromUtc(UtcNow, OrlandoZone);
 
     private static TimeZoneInfo ResolveOrlandoZone()
     {

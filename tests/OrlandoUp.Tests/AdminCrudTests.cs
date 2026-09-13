@@ -1220,3 +1220,474 @@ public class AdminCrudTests : IAsyncLifetime
         return Assert.Single(lines);
     }
 }
+
+/// <summary>
+/// The booking services against the real schema: what the loaders read, what the writer writes,
+/// and what the availability rule answers once it is fed by a query instead of by a literal.
+/// </summary>
+/// <remarks>
+/// The screens come in the stop after this one. Everything here goes through
+/// <c>BookingWriter</c> and <c>AvailabilityQueries</c> directly, so that a defect found later on a
+/// page is known to be the page and not the rule underneath it.
+/// </remarks>
+public class BookingServiceTests : IAsyncLifetime
+{
+    private readonly SiteFactory _factory = new();
+
+    public async Task InitializeAsync()
+    {
+        await _factory.SeedAsync();
+        await ArrangeSettingsAsync();
+        await ArrangeBatteriesAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        _factory.Dispose();
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task The_seeded_fleet_is_what_the_availability_loader_reads()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Product scout = await FirstScooterAsync(db);
+
+        // Four machines, six batteries, one day of turnaround — the numbers D36 reasons about, read
+        // off the seeded database rather than restated.
+        Assert.Equal(4, await db.Units.CountAsync(unit => unit.ProductId == scout.Id));
+        Assert.Equal(6, await db.Batteries.CountAsync(battery => battery.ProductId == scout.Id));
+        Assert.Equal(1, scout.TurnaroundDays);
+        Assert.Equal(14, await db.OperationalSettings.Select(row => row.ChargerCount).SingleAsync());
+    }
+
+    [Fact]
+    public async Task An_empty_diary_offers_the_whole_fleet()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AvailabilityQueries availability = scope.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Product scout = await FirstScooterAsync(db);
+
+        AvailabilityResult answer = await availability.ForProductAsync(
+            scout.Id, new DateOnly(2026, 12, 20), new DateOnly(2026, 12, 24), 4, 0, CancellationToken.None);
+
+        Assert.True(answer.IsAvailable);
+        Assert.Equal(4, answer.MaxQuantity);
+    }
+
+    [Fact]
+    public async Task A_booking_entered_by_staff_is_numbered_priced_and_recorded_in_its_own_table()
+    {
+        int bookingId;
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            BookingWriteResult result = await CreateScoutBookingAsync(scope, extraBatteries: 1, perDay: 8m, withAddOn: true);
+
+            Assert.True(result.Succeeded);
+            bookingId = result.Booking!.Id;
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Booking booking = await db.Bookings.Include(row => row.Lines).SingleAsync(row => row.Id == bookingId);
+
+            Assert.Matches("^OU-[0-9]{6}$", booking.Number);
+            Assert.Equal(BookingStatus.Confirmed, booking.Status);
+            Assert.Equal(BookingSource.Staff, booking.Source);
+            Assert.Equal(5, booking.Days);
+            Assert.Equal(160m, booking.Subtotal);
+            Assert.Equal(40m, booking.ExtraBatteriesTotal);
+            Assert.Equal(5m, booking.AddOnsTotal);
+            Assert.Equal(0m, booking.DeliveryFee);
+            Assert.Equal(0m, booking.Tax);
+            Assert.Equal(205m, booking.Total);
+            Assert.False(booking.IsOverbooked);
+
+            // Presence: the history line exists, with the actor who wrote it.
+            BookingEvent line = await db.BookingEvents.SingleAsync(row => row.BookingId == bookingId);
+
+            Assert.Equal(BookingEventType.Created, line.Type);
+            Assert.Equal("staff@orlandoup.com", line.ActorEmail);
+
+            // Absence, and it is the half that gives the presence its meaning: a booking writes to
+            // its own timeline and never into the administration's trail.
+            Assert.Equal(0, await db.AuditEntries.CountAsync(row => row.EntityType == nameof(Booking)));
+        }
+    }
+
+    [Fact]
+    public async Task The_fifth_scooter_over_four_is_refused_and_says_how_many_are_left()
+    {
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            Assert.True((await CreateScoutBookingAsync(scope, quantity: 4)).Succeeded);
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            BookingWriteResult refused = await CreateScoutBookingAsync(scope, quantity: 1);
+
+            Assert.False(refused.Succeeded);
+
+            Shortfall short_ = Assert.Single(refused.Shortfalls);
+
+            Assert.Equal(1, short_.Asked);
+            Assert.Equal(0, short_.MaxQuantity);
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            // The refusal wrote nothing at all — not a draft, not an event.
+            Assert.Equal(1, await db.Bookings.CountAsync());
+            Assert.Equal(1, await db.BookingEvents.CountAsync());
+        }
+    }
+
+    [Fact]
+    public async Task The_same_request_acknowledged_is_written_marked_and_says_so_in_its_history()
+    {
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            Assert.True((await CreateScoutBookingAsync(scope, quantity: 4)).Succeeded);
+        }
+
+        int bookingId;
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            BookingWriteResult result = await CreateScoutBookingAsync(scope, quantity: 1, acknowledge: true);
+
+            Assert.True(result.Succeeded);
+            bookingId = result.Booking!.Id;
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Booking booking = await db.Bookings.SingleAsync(row => row.Id == bookingId);
+
+            Assert.True(booking.IsOverbooked);
+
+            BookingEvent line = await db.BookingEvents.SingleAsync(row => row.BookingId == bookingId);
+
+            Assert.Contains("overbooked", line.Summary, StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    [Fact]
+    public async Task The_battery_pool_refuses_a_fourth_scooter_the_machines_could_have_served()
+    {
+        // Three Scouts, each with a second battery: six batteries, the whole pool, while a fourth
+        // machine is still on the floor. This is D36 measured through the database.
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            Assert.True((await CreateScoutBookingAsync(scope, quantity: 3, extraBatteries: 3, perDay: 8m)).Succeeded);
+        }
+
+        using IServiceScope check = _factory.Services.CreateScope();
+        AvailabilityQueries availability = check.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+        AppDbContext db = check.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Product scout = await FirstScooterAsync(db);
+
+        AvailabilityResult fourth = await availability.ForProductAsync(
+            scout.Id, new DateOnly(2026, 12, 21), new DateOnly(2026, 12, 23), 1, 0, CancellationToken.None);
+
+        Assert.Equal(1, fourth.UnitsFree);
+        Assert.Equal(0, fourth.BatteriesFree);
+        Assert.False(fourth.IsAvailable);
+    }
+
+    [Fact]
+    public async Task The_turnaround_read_from_the_product_keeps_the_next_day_busy()
+    {
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            Assert.True((await CreateScoutBookingAsync(
+                scope, quantity: 4, start: new DateOnly(2026, 12, 10), end: new DateOnly(2026, 12, 12))).Succeeded);
+        }
+
+        using IServiceScope check = _factory.Services.CreateScope();
+        AvailabilityQueries availability = check.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+        AppDbContext db = check.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Product scout = await FirstScooterAsync(db);
+
+        // The 13th is still inside the padding of a rental that ended on the 12th; the 14th is not.
+        Assert.False((await availability.ForProductAsync(
+            scout.Id, new DateOnly(2026, 12, 13), new DateOnly(2026, 12, 13), 1, 0, CancellationToken.None)).IsAvailable);
+
+        Assert.True((await availability.ForProductAsync(
+            scout.Id, new DateOnly(2026, 12, 14), new DateOnly(2026, 12, 14), 4, 0, CancellationToken.None)).IsAvailable);
+    }
+
+    [Fact]
+    public async Task Cancelling_gives_the_machines_back_and_writes_a_second_line_of_history()
+    {
+        int bookingId;
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            bookingId = (await CreateScoutBookingAsync(scope, quantity: 4)).Booking!.Id;
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AvailabilityQueries availability = scope.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Product scout = await FirstScooterAsync(db);
+
+            Assert.False((await availability.ForProductAsync(
+                scout.Id, new DateOnly(2026, 12, 22), new DateOnly(2026, 12, 22), 1, 0, CancellationToken.None)).IsAvailable);
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+
+            Booking cancelled = await writer.CancelAsync(bookingId, "staff@orlandoup.com", "Customer changed dates", CancellationToken.None);
+
+            Assert.Equal(BookingStatus.Cancelled, cancelled.Status);
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AvailabilityQueries availability = scope.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Product scout = await FirstScooterAsync(db);
+
+            Assert.True((await availability.ForProductAsync(
+                scout.Id, new DateOnly(2026, 12, 22), new DateOnly(2026, 12, 22), 4, 0, CancellationToken.None)).IsAvailable);
+
+            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == bookingId));
+        }
+    }
+
+    [Fact]
+    public async Task Cancelling_twice_is_refused_by_the_domain_and_writes_nothing_the_second_time()
+    {
+        int bookingId;
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            bookingId = (await CreateScoutBookingAsync(scope)).Booking!.Id;
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+            await writer.CancelAsync(bookingId, "staff@orlandoup.com", "First", CancellationToken.None);
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                writer.CancelAsync(bookingId, "staff@orlandoup.com", "Second", CancellationToken.None));
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == bookingId));
+        }
+    }
+
+    [Fact]
+    public async Task The_stored_name_survives_the_product_being_renamed_afterwards()
+    {
+        int bookingId;
+        string nameWhenBooked;
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            bookingId = (await CreateScoutBookingAsync(scope)).Booking!.Id;
+
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            nameWhenBooked = await db.BookingLines.Where(row => row.BookingId == bookingId)
+                .Select(row => row.ProductName).SingleAsync();
+
+            // The snapshot is a real name and not an empty string, or the assertion below would
+            // pass on a line that never recorded anything.
+            Assert.NotEmpty(nameWhenBooked);
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Product scout = await FirstScooterAsync(db);
+
+            foreach (ProductTranslation text in await db.ProductTranslations.Where(row => row.ProductId == scout.Id).ToListAsync())
+            {
+                text.Name = "Renamed after the booking";
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            BookingLine line = await db.BookingLines.SingleAsync(row => row.BookingId == bookingId);
+
+            // The catalog really did change — otherwise this proves nothing about snapshots.
+            Product scout = await FirstScooterAsync(db);
+            Assert.All(
+                await db.ProductTranslations.Where(row => row.ProductId == scout.Id).ToListAsync(),
+                text => Assert.Equal("Renamed after the booking", text.Name));
+
+            // And the booking still says what it said on the day.
+            Assert.Equal(nameWhenBooked, line.ProductName);
+        }
+    }
+
+    [Fact]
+    public async Task A_quote_against_a_broken_price_list_refuses_and_writes_no_booking()
+    {
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            Product scout = await FirstScooterAsync(db);
+
+            // Punch a gap in the list: three to six days is no longer priced by anything.
+            PricingTier middle = await db.PricingTiers.SingleAsync(row => row.ProductId == scout.Id && row.MinDays == 3);
+
+            db.PricingTiers.Remove(middle);
+            await db.SaveChangesAsync();
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            BookingWriteResult result = await CreateScoutBookingAsync(scope);
+
+            Assert.False(result.Succeeded);
+            Assert.Equal(QuoteProblem.PriceListInvalid, result.Quote!.Problem);
+
+            // Fails closed: there is no breakdown at all, rather than one adding up to zero.
+            Assert.Null(result.Quote.Breakdown);
+        }
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Assert.Equal(0, await db.Bookings.CountAsync());
+        }
+    }
+
+    [Fact]
+    public async Task The_availability_loader_reports_a_missing_settings_row_instead_of_counting_zero_chargers()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        // Presence first: with the row there, the loader answers.
+        AvailabilityQueries availability = scope.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+        Product scout = await FirstScooterAsync(db);
+
+        Assert.True((await availability.ForProductAsync(
+            scout.Id, new DateOnly(2026, 12, 20), new DateOnly(2026, 12, 20), 1, 0, CancellationToken.None)).IsAvailable);
+
+        db.OperationalSettings.RemoveRange(await db.OperationalSettings.ToListAsync());
+        await db.SaveChangesAsync();
+
+        using IServiceScope after = _factory.Services.CreateScope();
+        AvailabilityQueries withoutRow = after.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => withoutRow.ForProductAsync(
+            scout.Id, new DateOnly(2026, 12, 20), new DateOnly(2026, 12, 20), 1, 0, CancellationToken.None));
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------------------------
+
+    private static async Task<Product> FirstScooterAsync(AppDbContext db) =>
+        await db.Products
+            .Where(product => product.Category == ProductCategory.MobilityScooter)
+            .OrderBy(product => product.SortOrder)
+            .FirstAsync();
+
+    private async Task<BookingWriteResult> CreateScoutBookingAsync(
+        IServiceScope scope,
+        int quantity = 1,
+        int extraBatteries = 0,
+        decimal perDay = 0m,
+        bool withAddOn = false,
+        bool acknowledge = false,
+        DateOnly? start = null,
+        DateOnly? end = null)
+    {
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+
+        Product scout = await FirstScooterAsync(db);
+        DeliveryZone zone = await db.DeliveryZones.OrderBy(row => row.SortOrder).FirstAsync();
+        DeliveryLocation location = await db.DeliveryLocations.Where(row => row.ZoneId == zone.Id).OrderBy(row => row.SortOrder).FirstAsync();
+
+        List<int> addOnIds = withAddOn
+            ? [await db.ProductAddOns.Where(row => row.ProductId == scout.Id).Select(row => row.AddOnId).FirstAsync()]
+            : [];
+
+        StaffBookingDetails details = new(
+            "en-US", "Ada", "Lovelace", "ada@example.com", "+1 407 555 0100",
+            zone.Id, location.Id, null, null,
+            start ?? new DateOnly(2026, 12, 20),
+            end ?? new DateOnly(2026, 12, 24),
+            DeliveryWindow.Morning, DeliveryWindow.Afternoon, null);
+
+        return await writer.CreateByStaffAsync(
+            details,
+            [new QuoteLineAsked(scout.Id, quantity, extraBatteries, perDay, addOnIds)],
+            "staff@orlandoup.com",
+            acknowledge,
+            CancellationToken.None);
+    }
+
+    private async Task ArrangeSettingsAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        if (await db.OperationalSettings.AnyAsync())
+        {
+            return;
+        }
+
+        db.OperationalSettings.Add(new OperationalSettings
+        {
+            Id = OperationalSettings.SingletonId,
+            ChargerCount = 14,
+            SecondBatteryPerDay = 8.00m,
+            LostChargerFee = 30.00m,
+            NextDayCutoffHour = 18,
+        });
+
+        await db.SaveChangesAsync();
+    }
+
+    private async Task ArrangeBatteriesAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        IClock clock = scope.ServiceProvider.GetRequiredService<IClock>();
+        ILogger logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Tests");
+
+        Assert.Equal(0, await BatterySeeder.RunAsync(db, clock, logger, CancellationToken.None));
+    }
+}

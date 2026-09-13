@@ -127,9 +127,134 @@ public class Booking
 
     public List<BookingEvent> Events { get; set; } = [];
 
-    // The two members that ASSIGN the status — the factory that creates a staff booking and the
-    // one that cancels — arrive with the rules front and the tests that prove them. They belong
-    // beside the transition table they consult, and a state change written before the test that
-    // pins it is the shape of defect the second stop of this leva exists to catch. The private
-    // setter above is already in force, so nothing outside this file can get ahead of them.
+    /// <summary>
+    /// Builds the booking a member of staff enters, already priced, already <see cref="BookingStatus.Confirmed"/>.
+    /// </summary>
+    /// <remarks>
+    /// This is one of the two members in the whole application that assign a status, and it is here
+    /// rather than in the writing service for a reason that outlives this leva: the invariant is
+    /// that a booking is never half-built — a status without a total, or a total that no quote
+    /// produced. Handing the quote in whole and getting the booking back whole is what makes that
+    /// unrepresentable instead of merely discouraged.
+    ///
+    /// The number is NOT set here: it is derived from the identity key, which the database has not
+    /// handed out yet. The writer assigns it in the same transaction as the insert (D6/03).
+    /// </remarks>
+    public static Booking CreateByStaff(
+        StaffBookingDetails details,
+        QuoteBreakdown quote,
+        string? actorEmail,
+        DateTime nowUtc,
+        bool isOverbooked)
+    {
+        Booking booking = new()
+        {
+            Status = BookingStatus.Confirmed,
+            Source = BookingSource.Staff,
+            Culture = details.Culture,
+            FirstName = details.FirstName,
+            LastName = details.LastName,
+            Email = details.Email,
+            Phone = details.Phone,
+            DeliveryZoneId = details.DeliveryZoneId,
+            DeliveryLocationId = details.DeliveryLocationId,
+            Address = details.Address,
+            DeliveryNotes = details.DeliveryNotes,
+            StartDate = details.StartDate,
+            EndDate = details.EndDate,
+            DeliveryWindow = details.DeliveryWindow,
+            PickupWindow = details.PickupWindow,
+            Days = quote.Days,
+            Subtotal = quote.Subtotal,
+            ExtraBatteriesTotal = quote.ExtraBatteriesTotal,
+            AddOnsTotal = quote.AddOnsTotal,
+            DeliveryFee = quote.DeliveryFee,
+            TaxRate = quote.TaxRate,
+            Tax = quote.Tax,
+            Total = quote.Total,
+            IsOverbooked = isOverbooked,
+            StaffNotes = details.StaffNotes,
+            CreatedAtUtc = nowUtc,
+            CreatedByEmail = actorEmail,
+        };
+
+        foreach (QuotedLine line in quote.Lines)
+        {
+            BookingLine bookingLine = new()
+            {
+                ProductId = line.ProductId,
+                ProductName = line.ProductName,
+                Quantity = line.Quantity,
+                ExtraBatteryCount = line.ExtraBatteryCount,
+                TierMinDays = line.TierMinDays,
+                TierMaxDays = line.TierMaxDays,
+                TierMode = line.TierMode,
+                TierAmount = line.TierAmount,
+                UnitPrice = line.UnitPrice,
+                LineTotal = line.LineTotal,
+                ExtraBatteryPerDay = line.ExtraBatteryPerDay,
+                ExtraBatteriesTotal = line.ExtraBatteriesTotal,
+            };
+
+            foreach (QuotedAddOn addOn in line.AddOns)
+            {
+                bookingLine.AddOns.Add(new BookingAddOn
+                {
+                    AddOnId = addOn.AddOnId,
+                    AddOnName = addOn.Name,
+                    PricingMode = addOn.Mode,
+                    Amount = addOn.Amount,
+                    Quantity = addOn.Quantity,
+                    Total = addOn.Total,
+                });
+            }
+
+            booking.Lines.Add(bookingLine);
+        }
+
+        return booking;
+    }
+
+    /// <summary>
+    /// Gives the equipment back to the pool: a cancelled booking does not hold inventory, so the
+    /// days it occupied become available to everyone again.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    /// The booking cannot be cancelled from the status it is in. Refused here and not in a page,
+    /// so that the refusal holds for every caller there will ever be.
+    /// </exception>
+    public void Cancel(DateTime nowUtc, string reason)
+    {
+        if (!BookingStatusRules.CanTransition(Status, BookingStatus.Cancelled))
+        {
+            throw new InvalidOperationException($"A booking in {Status} cannot be cancelled.");
+        }
+
+        Status = BookingStatus.Cancelled;
+        CancelledAtUtc = nowUtc;
+        CancelReason = reason;
+    }
 }
+
+/// <summary>
+/// Everything about a staff booking that the quote does not already carry.
+/// </summary>
+/// <remarks>
+/// A parameter object rather than fourteen arguments, so that two of the same type cannot be
+/// swapped at a call site without the compiler noticing the name.
+/// </remarks>
+public sealed record StaffBookingDetails(
+    string Culture,
+    string FirstName,
+    string LastName,
+    string Email,
+    string Phone,
+    int DeliveryZoneId,
+    int? DeliveryLocationId,
+    string? Address,
+    string? DeliveryNotes,
+    DateOnly StartDate,
+    DateOnly EndDate,
+    DeliveryWindow DeliveryWindow,
+    DeliveryWindow PickupWindow,
+    string? StaffNotes);

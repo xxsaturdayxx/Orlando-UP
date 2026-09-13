@@ -34,6 +34,13 @@ public sealed class SiteFactory : WebApplicationFactory<Program>
     private readonly List<string> _registeredServiceNames = [];
 
     /// <summary>
+    /// The clock this host runs on, frozen at the moment the factory was built. A test that cares
+    /// what day it is moves it; every test that does not is unaffected, which is why it starts at
+    /// the real instant rather than at some chosen date.
+    /// </summary>
+    public FakeClock Clock { get; } = new();
+
+    /// <summary>
     /// The full name of every service type the application registered. Kept so a test can assert
     /// what is NOT there: a registration that never happens leaves no other trace.
     /// </summary>
@@ -76,6 +83,11 @@ public sealed class SiteFactory : WebApplicationFactory<Program>
         // registered everything — precisely so the application does not have to know it exists.
         builder.ConfigureTestServices(services =>
         {
+            // Registered here rather than in ConfigureServices above, and the difference matters:
+            // the snapshot of registered service names is taken before this runs, so the reflection
+            // tests keep measuring what the APPLICATION registers and never see the test double.
+            services.AddSingleton<IClock>(Clock);
+
             services.AddAuthentication()
                 .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { });
 

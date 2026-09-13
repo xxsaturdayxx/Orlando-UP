@@ -112,6 +112,10 @@ builder.Services.AddScoped<CatalogQueries>();
 builder.Services.AddScoped<CatalogWriter>();
 builder.Services.AddScoped<AuditTrail>();
 builder.Services.AddScoped<PublicPages>();
+builder.Services.AddScoped<AvailabilityQueries>();
+builder.Services.AddScoped<QuoteBuilder>();
+builder.Services.AddScoped<BookingTimeline>();
+builder.Services.AddScoped<BookingWriter>();
 
 WebApplication app = builder.Build();
 

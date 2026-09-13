@@ -12,4 +12,16 @@ public interface IClock
 
     /// <summary>The calendar date in Orlando right now — a date, never an instant.</summary>
     DateOnly TodayInOrlando();
+
+    /// <summary>
+    /// The wall clock in Orlando right now: the same moment as <see cref="UtcNow"/>, read off the
+    /// clock on the office wall.
+    /// </summary>
+    /// <remarks>
+    /// The next-day cut-off needs the HOUR and not only the day (D3/03), and the hour is the part
+    /// that differs: at 23:00 UTC it is six in the evening in Orlando, which is past a cut-off of
+    /// eighteen, while the UTC hour is not. Returning it from here rather than letting a caller
+    /// convert is what keeps the zone in one place.
+    /// </remarks>
+    DateTime NowInOrlando();
 }
