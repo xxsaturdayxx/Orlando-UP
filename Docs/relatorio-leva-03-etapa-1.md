@@ -267,3 +267,69 @@ roteiro mede isso.
 nenhuma tela).
 
 **O push é seu.** Nenhum commit desta sessão foi empurrado.
+
+---
+
+## Revisão (Claude Web, 2026-09-13)
+
+**Conferido abrindo o código e o SQL, não o relato.** `grep -c EMENDA-03-01` neste relatório lê **5**.
+`git diff --stat 70d6d68..fb2439c`: 21 arquivos, todos dentro da §11.1 da spec. `Booking.Status`
+tem `private set` (correção 2) e a fábrica fica para o P2, junto do `Cancel` e dos testes que os
+prendem — aceito, é o lugar certo. `HasDefaultValue` não aparece em nenhuma configuração nova;
+`HasPrecision(10, 2)` aparece **13** vezes e `HasPrecision(5, 4)` **1** vez nas quatro configurações
+de reserva, e o domínio de reserva tem **14** propriedades `decimal` — batem. Os quatro enums têm
+número explícito. O `fleet-batteries.tsv` mudou em **1** linha, só a célula Esperado (5 → 6). O
+cardinal `AdminCrudTests` 15 → 16 foi movido com o motivo escrito ao lado.
+
+**Migration `AddBookings`, classificada pelo revisor a partir de `scratchpad/leva03/migration-AddBookings.sql`:**
+
+```
+Classificação: puramente aditiva, com dois itens de atenção justificados
+Operações: 4 tabelas novas, 1 coluna nova, 11 índices (1 único), 8 chaves estrangeiras
+Itens de atenção:
+  1. DROP CONSTRAINT dinâmico em OperationalSettings — é a correção 1 da EMENDA-03-01; derruba
+     apenas o constraint que o DEFAULT 18 da instrução anterior acabou de criar, na mesma
+     transação; o 18 fica gravado na linha única. Nada pré-existente é tocado.
+  2. CREATE UNIQUE INDEX em Bookings.Number — tabela recém-criada, vazia; duplicata é impossível.
+Armadilhas conferidas: sem HasData; enums com número explícito e novos membros só no fim da banda;
+  sem índice filtrado (QUOTED_IDENTIFIER irrelevante); sem SET NULL — cascata só Booking → Lines →
+  AddOns e Booking → Events, e NO ACTION em Products, AddOns, DeliveryZones, DeliveryLocations,
+  sem ciclo; datas de calendário em `date` (StartDate, EndDate) e instantes em `datetime2`
+  (CreatedAtUtc, CancelledAtUtc, OccurredAtUtc); todo texto com tamanho; dinheiro decimal(10,2)
+  (D15) e a taxa decimal(5,4); coluna nova NOT NULL em tabela com 1 linha coberta pelo DEFAULT.
+Recomendação: APLICAR.
+```
+
+**Os três achados da §2.1 são a razão de o `[H]` existir, e o terceiro pede uma ação do operador:**
+
+1. **`BSC-22` baixada (13 linhas, pool disponível 12)** — confirma a spec e vira o caso real do
+   teste *"bateria baixada não conta"*. Nada a fazer.
+2. **`LostChargerFee` = 32,00** — edição legítima pela tela; nada a fazer.
+3. **`single-stroller` reservável no banco, com preço e ZERO unidades.** A regra responderia
+   *esgotado* em toda data — honesto, mas é opção no seletor que nunca vende. **Recomendação ao
+   operador: desmarcar "Reservável" no carrinho simples pela tela de produto até as unidades
+   existirem** (a D32 define reservável como *"unidades e lista de preços existem"*; a validação
+   da leva 04 confere a lista, não as unidades). Se preferir mantê-lo, o passo humano 3 vale para
+   **quatro** produtos, como o relatório diz. Vai para o backlog: a tela de produto não avisa
+   "reservável sem unidade" — leitura do tipo "quem lê o estado", frente própria.
+
+**Veredito: EXECUTAR.** Sem correção antes do P2. Três lembretes para o P2, não correções:
+
+1. a fábrica `Booking.CreateByStaff(...)` e o `Cancel(...)` nascem no P2 **antes** dos carregadores,
+   e o C04 do `.tsv` novo (≥ 2 atribuições em `Domain/`) passa a `sim` nele — o P2 mede;
+2. a leitura de `sys.default_constraints` depois do `database update` entra na abertura do
+   relatório do P2 com o número, contra a linha de base da §3.3 (dois, nenhum em `OperationalSettings`);
+3. `FakeClock` por delegação a `new SystemClock(() => _utcNow)` (EMENDA-03-01, correção 4).
+
+**Você — ação, nesta ordem (PowerShell na raiz do repositório):**
+
+1. aplicar a migration:
+   ```
+   dotnet ef database update --project src/OrlandoUp.Web
+   ```
+2. em `/admin/produtos`: "Dias de intervalo" = **1** em *Drive Scout 4*, *Drive Spitfire EX* e
+   *Cadeira de rodas Drive*; e no *Carrinho simples*, desmarcar "Reservável" (recomendado) — ou pôr
+   também **1** em "Dias de intervalo", se quiser mantê-lo à venda.
+
+**Cole no Claude Code:** *"leia `Docs/relatorio-leva-03-etapa-1.md` e execute a seção Revisão — a P1 está aprovada; a migration foi aplicada; siga ao P2."*
+
