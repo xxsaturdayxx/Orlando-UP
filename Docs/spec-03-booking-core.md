@@ -97,6 +97,28 @@ the reason the split is safe (D39).
 > **Proof of reading:** `grep -c "EMENDA-03-01" Docs/relatorio-leva-03-etapa-1.md` — expected **≥ 1**.
 > The P1 report also restates corrections 1 and 2 in its own words.
 
+> ## EMENDA-03-02 — 2026-09-14 — corrections that came from execution (P2 and P3 reviews). Wins over the body where they disagree.
+>
+> 1. **§9.3, the "second battery not available" scene is 3 machines + 2 seconds, not 3 + 3.** Three
+>    seconds fill the pool of six; a fourth Scout then has no battery even for itself, which is
+>    *sold out*. The sentence needs exactly one battery free. Found by the agent at P3.
+> 2. **§9.1, the charger scene cannot be reached with today's fleet.** Two pools of six cap the
+>    chargers in use at 12 of 14, so the charger bound never bites first; the tests buy a smaller
+>    charger stock (7 and 8) and a sibling test records today's slack by number. Found at P3.
+> 3. **§6.3 stands: the writer records the events, inside the transaction.** P3 had moved the two
+>    `Record` calls into the page handlers to keep `admin-catalog.tsv` C05 counting *handler minus
+>    record*; the P3 review sends them back. C05's operand `c` is emended to also count
+>    `_writer.(CreateByStaffAsync|CancelAsync)(`, and `booking-core.tsv` gains C16 (`_timeline.Record(`
+>    in `BookingWriter.cs` = 2) and its reach C17 (`_writer.` under `Pages/Admin/Bookings/` ≥ 2).
+> 4. **§5.2 and §6.1: lines of the same request count against each other** (P2 review, correction 1)
+>    — `ForProductAsync` takes `alsoHolding`; and **§5.3: the line's shape is validated in
+>    `Quote.For`** (P2 review, correction 2) — `QuoteProblem` 8, 9, 10; §7.1 and §7.3 translate,
+>    never re-validate.
+> 5. **§3, the index/FK count in the P1 review was wrong (11/8); the migration carries 10 and 7.**
+>
+> **Proof of reading:** `grep -c "EMENDA-03-02" Docs/relatorio-leva-03-etapa-3.md` — the correction commit
+> of P3 restates point 3 in the report's own closing paragraph, expected **≥ 1**.
+
 ---
 
 ## 0. Execution surface

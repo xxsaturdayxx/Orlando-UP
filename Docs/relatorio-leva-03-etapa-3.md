@@ -191,3 +191,57 @@ EMENDA-03-01 autorizou. **`Docs/conferencia-leva-03.md` não foi tocado** — a 
    coluna Commit da linha da fila.
 
 **O push é seu.** Nenhum commit desta sessão foi empurrado.
+
+---
+
+## Revisão (Claude Web, 2026-09-14)
+
+**Medido pelo revisor no HEAD `84dea21`:** `verificar` nos cinco `.tsv` — `admin-catalog` 12/12,
+`booking-core` 15/15, `fleet-batteries` 7/7, `public-site` 17/17, `foundation` 16/18 (C14 e C15
+respondem 127 ao shell da ponte, como sempre; o relato do agente os dá verdes com 286 testes).
+`public-site` C10: 24 e 24. `admin-catalog` C05: 11 − 9 = 2. Os dois `.resx` com **401** chaves cada,
+`Product_BookingSoon` em **0** arquivos, a rota `@page "/book"`, `PublicPathList` com 23 endereços,
+`RenderedTextTests` com `/book` e `/pt/book`, a nota de seis pontos no `architecture.md`, as duas
+correções da P2 no código (`alsoHolding` no carregador e no writer; os três `QuoteProblem` 8, 9 e
+10 no fim do enum). As catorze frases em português que o roteiro cita foram lidas do `.resx` e
+batem palavra por palavra. A superfície do diff (27 arquivos) está inteira dentro da §11.1.
+
+**Aceito como melhoria, e volta para a spec (EMENDA-03-02):** a cena da §9.3 *"três Scouts com
+segunda → a segunda não está disponível"* estava errada — 3 + 3 = 6 esgota o pool e o quarto Scout
+não sai nem sem segunda; a frase exige **uma** bateria livre (3 máquinas + 2 segundas). E a cena do
+carregador com 11 ocupados é inalcançável com a frota de hoje (dois pools de 6 limitam a 12 de 14
+carregadores), então os testes compram um estoque menor e um teste irmão registra a folga real. Os
+dois achados são do agente e estão certos.
+
+**Uma correção antes do fechamento, e ela desfaz um recuo da P2:**
+
+1. **O evento `Created` saiu da transação.** Na P2 o `BookingWriter` gravava o evento **dentro** da
+   transação que insere a reserva e o número; na P3 os dois `Record` foram movidos para os handlers
+   (`Create.cshtml.cs:176`, `Details.cshtml.cs:87`) e o writer não grava mais nada — para que o C05
+   do `admin-catalog.tsv` continuasse contando *handler menos registro*. O controle moldou o código,
+   e o custo é duplo: a reserva é commitada e **só depois** o evento nasce (uma falha entre os dois
+   deixa reserva sem histórico), e o invariante *"toda reserva nasce com o seu evento"* passa a
+   morar na página — disciplina, não barreira — justamente onde a 03b, que não tem handler de
+   administração, vai esquecê-lo. **Saída:** os dois `_timeline.Record(` voltam para
+   `BookingWriter.CreateByStaffAsync` (antes do segundo `SaveChanges`, dentro da transação) e
+   `CancelAsync`; os handlers só chamam o writer. O C05 do `admin-catalog.tsv` é **emendado, e a
+   emenda não vem sozinha**: o operando `c` passa a contar `[.]Record[(]` **ou**
+   `_writer[.](CreateByStaffAsync|CancelAsync)[(]`, com o rótulo dizendo *"registro de auditoria
+   ou escrita pelo writer de reserva"*; e o `booking-core.tsv` ganha **C16** — `_timeline[.]Record[(]`
+   em `Infrastructure/Data/BookingWriter.cs` lê **2** (um por método de escrita) — e **C17**, seu
+   alcance: `_writer[.]` em `Pages/Admin/Bookings/` ≥ 2. **Teste:** chamar `CreateByStaffAsync`
+   direto (sem página) e afirmar que o evento `Created` existe com o número no texto; o par de
+   testes que conta **2** eventos continua passando. *Se passar sem isso:* a 03b cria reservas por
+   outro caminho e a primeira reserva online nasce sem histórico, com tudo verde.
+
+**Confirmado, não é para "consertar":** o guarda duplo do cancelar (`CanTransition` na página,
+exceção no domínio); a linha de configuração lida como linha na página pública (achado (c) do
+agente, a EMENDA-04B-04 evitada antes de compilar); `HtmlDecode` nas asserções em português; o
+`Docs/conferencia-leva-03.md` intocado.
+
+**Veredito: executar após a correção 1** — ela entra no commit de conteúdo, com o `verificar` nos
+cinco `.tsv` refeito. Depois dela, a conferência visual é do operador (`Docs/conferencia-leva-03.md`),
+e o fechamento em dois commits vem depois da conferência, nunca antes.
+
+**Cole no Claude Code:** *"leia `Docs/relatorio-leva-03-etapa-3.md` e execute a seção Revisão — a correção 1 vai para o commit de conteúdo; depois pare e espere a conferência visual."*
+
