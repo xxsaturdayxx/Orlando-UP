@@ -29,6 +29,13 @@ public sealed class AvailabilityQueries
     /// with <paramref name="extraBatteries"/> second batteries, from <paramref name="start"/> to
     /// <paramref name="end"/> inclusive.
     /// </summary>
+    /// <param name="alsoHolding">
+    /// Lines that are not in the database yet but will be if this request is accepted — the OTHER
+    /// lines of the same booking. Without them each line is measured against the diary alone, and
+    /// two lines that each fit can be written together into a fleet that cannot serve both: the
+    /// chargers are one pool shared by both scooter models, so a Scout line and a Spitfire line
+    /// add up even though neither touches the other's machines.
+    /// </param>
     /// <exception cref="InvalidOperationException">
     /// The <c>OperationalSettings</c> row is absent. A host without it is a deployment defect and
     /// is reported as one, never quietly treated as an operation that owns no chargers.
@@ -39,7 +46,8 @@ public sealed class AvailabilityQueries
         DateOnly end,
         int quantity,
         int extraBatteries,
-        CancellationToken cancellation)
+        CancellationToken cancellation,
+        IReadOnlyList<HoldingLine>? alsoHolding = null)
     {
         IReadOnlyDictionary<int, ProductFacts> products = await ProductFactsAsync(cancellation);
 
@@ -63,6 +71,11 @@ public sealed class AvailabilityQueries
             .CountAsync(battery => battery.ProductId == productId && battery.Status == UnitStatus.Available, cancellation);
 
         IReadOnlyList<HoldingLine> holding = await HoldingLinesAsync(start, end, products, cancellation);
+
+        if (alsoHolding is { Count: > 0 })
+        {
+            holding = [.. holding, .. alsoHolding];
+        }
 
         return Availability.For(
             productId,

@@ -106,6 +106,7 @@ public sealed class QuoteBuilder
             lines.Add(new QuoteLineRequest(
                 product.Id,
                 NameOf(product, culture),
+                product.Category == ProductCategory.MobilityScooter,
                 line.Quantity,
                 line.ExtraBatteryCount,
                 line.ExtraBatteryPerDay,

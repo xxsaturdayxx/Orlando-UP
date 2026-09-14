@@ -88,10 +88,38 @@ public sealed class BookingWriter
 
         List<Shortfall> shortfalls = [];
 
+        // Every line of this request is measured against the diary AND against its own siblings.
+        // Checking each line alone would let two lines that each fit be written together into a
+        // fleet that serves neither: the chargers are a single pool across both scooter models, so
+        // one Scout and one Spitfire, each with a second battery, draw four chargers between them
+        // while each line on its own draws two. A booking born above the fleet without the mark
+        // (D4/03) is the silent version of exactly what that flag exists to make visible.
+        IReadOnlyDictionary<int, ProductFacts> facts = await _availability.ProductFactsAsync(cancellation);
+
         foreach (QuoteLineAsked line in asked)
         {
+            List<HoldingLine> siblings = [];
+
+            foreach (QuoteLineAsked other in asked)
+            {
+                if (ReferenceEquals(other, line) || !facts.TryGetValue(other.ProductId, out ProductFacts? fact))
+                {
+                    continue;
+                }
+
+                siblings.Add(new HoldingLine(
+                    other.ProductId,
+                    fact.IsScooter,
+                    details.StartDate,
+                    details.EndDate,
+                    other.Quantity,
+                    other.ExtraBatteryCount,
+                    fact.TurnaroundDays));
+            }
+
             AvailabilityResult answer = await _availability.ForProductAsync(
-                line.ProductId, details.StartDate, details.EndDate, line.Quantity, line.ExtraBatteryCount, cancellation);
+                line.ProductId, details.StartDate, details.EndDate, line.Quantity, line.ExtraBatteryCount,
+                cancellation, siblings);
 
             if (answer.IsAvailable)
             {

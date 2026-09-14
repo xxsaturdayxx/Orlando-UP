@@ -1691,3 +1691,227 @@ public class BookingServiceTests : IAsyncLifetime
         Assert.Equal(0, await BatterySeeder.RunAsync(db, clock, logger, CancellationToken.None));
     }
 }
+
+/// <summary>
+/// The lines of ONE booking are counted against each other, and not only against the diary.
+/// </summary>
+/// <remarks>
+/// The chargers are a single pool shared by both scooter models, so a Scout line and a Spitfire
+/// line add up even though neither touches the other's machines or batteries. Measured one at a
+/// time each of them can fit while together they do not, and a booking written that way would sit
+/// above the fleet without carrying the mark that says so (D4/03).
+///
+/// <b>With the fleet as it stands today this cannot happen, and the tests say so with a number.</b>
+/// Chargers busy is the sum of the two models' battery draw, each capped by a pool of six, so at
+/// most twelve of the fourteen chargers can ever be out: the charger bound never bites first. The
+/// defect is therefore latent, not live — it wakes up the day a charger is lost or a battery is
+/// bought. So these tests set the charger count where the bound does bite, which is the only
+/// honest way to exercise a rule the current inventory hides.
+/// </remarks>
+public class BookingRequestTotalsTests : IAsyncLifetime
+{
+    private static readonly DateOnly Start = new(2026, 12, 20);
+    private static readonly DateOnly End = new(2026, 12, 24);
+
+    private readonly SiteFactory _factory = new();
+
+    public async Task InitializeAsync() => await _factory.SeedAsync();
+
+    public Task DisposeAsync()
+    {
+        _factory.Dispose();
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task Todays_fleet_cannot_run_out_of_chargers_before_it_runs_out_of_batteries()
+    {
+        await ArrangeAsync(chargerCount: 14);
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        int batteries = await db.Batteries.CountAsync(row => row.Status == UnitStatus.Available);
+        int chargers = await db.OperationalSettings.Select(row => row.ChargerCount).SingleAsync();
+
+        // Twelve working batteries against fourteen chargers: every battery that can go out has a
+        // charger waiting, so the charger bound is slack by two. This is why the tests below buy a
+        // smaller pool instead of arranging a bigger diary.
+        Assert.Equal(12, batteries);
+        Assert.Equal(14, chargers);
+        Assert.True(batteries < chargers);
+    }
+
+    [Theory]
+    // Four chargers out; three left. The pair needs four, so together they do not fit.
+    [InlineData(7, false)]
+    // One more charger in stock and the same pair fits exactly.
+    [InlineData(8, true)]
+    public async Task Two_lines_of_one_booking_are_measured_together_against_the_charger_pool(
+        int chargerCount, bool expected)
+    {
+        await ArrangeAsync(chargerCount);
+        await OccupyAsync();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+
+        (Product scout, Product spitfire) = await ScootersAsync(db);
+        DeliveryZone zone = await db.DeliveryZones.OrderBy(row => row.SortOrder).FirstAsync();
+
+        BookingWriteResult result = await writer.CreateByStaffAsync(
+            Details(zone.Id),
+            [
+                new QuoteLineAsked(scout.Id, 1, 1, 8m, []),
+                new QuoteLineAsked(spitfire.Id, 1, 1, 8m, []),
+            ],
+            "staff@orlandoup.com",
+            acknowledgeOverbooking: false,
+            CancellationToken.None);
+
+        Assert.Equal(expected, result.Succeeded);
+
+        if (expected)
+        {
+            Assert.Empty(result.Shortfalls);
+        }
+        else
+        {
+            // Refused, and nothing was written: the diary still holds only the booking that
+            // arranged it.
+            Assert.NotEmpty(result.Shortfalls);
+            Assert.Equal(1, await db.Bookings.CountAsync());
+        }
+    }
+
+    [Fact]
+    public async Task Each_line_measured_alone_would_have_fitted_which_is_the_whole_point()
+    {
+        await ArrangeAsync(chargerCount: 7);
+        await OccupyAsync();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        AvailabilityQueries availability = scope.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+
+        (Product scout, Product spitfire) = await ScootersAsync(db);
+
+        // One at a time against the diary alone, each draws two of the three free chargers.
+        Assert.True((await availability.ForProductAsync(
+            scout.Id, Start, End, 1, 1, CancellationToken.None)).IsAvailable);
+
+        Assert.True((await availability.ForProductAsync(
+            spitfire.Id, Start, End, 1, 1, CancellationToken.None)).IsAvailable);
+
+        // The same question with the sibling line declared: four of three, refused. Without the
+        // sibling the answer above is what the writer would have believed.
+        HoldingLine sibling = new(spitfire.Id, true, Start, End, 1, 1, spitfire.TurnaroundDays);
+
+        AvailabilityResult together = await availability.ForProductAsync(
+            scout.Id, Start, End, 1, 1, CancellationToken.None, [sibling]);
+
+        Assert.False(together.IsAvailable);
+        Assert.Equal(1, together.ChargersFree);
+    }
+
+    [Fact]
+    public async Task Acknowledged_the_pair_is_written_and_marked()
+    {
+        await ArrangeAsync(chargerCount: 7);
+        await OccupyAsync();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+
+        (Product scout, Product spitfire) = await ScootersAsync(db);
+        DeliveryZone zone = await db.DeliveryZones.OrderBy(row => row.SortOrder).FirstAsync();
+
+        BookingWriteResult result = await writer.CreateByStaffAsync(
+            Details(zone.Id),
+            [
+                new QuoteLineAsked(scout.Id, 1, 1, 8m, []),
+                new QuoteLineAsked(spitfire.Id, 1, 1, 8m, []),
+            ],
+            "staff@orlandoup.com",
+            acknowledgeOverbooking: true,
+            CancellationToken.None);
+
+        // The operator decided to solve it by hand, so it is written — and MARKED, which is the
+        // half that the silent version of this defect was losing.
+        Assert.True(result.Succeeded);
+        Assert.True(result.Booking!.IsOverbooked);
+        Assert.Equal(2, result.Booking.Lines.Count);
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------------------------
+
+    private static StaffBookingDetails Details(int zoneId) => new(
+        "en-US", "Ada", "Lovelace", "ada@example.com", "+1 407 555 0100",
+        zoneId, null, "1000 Resort Way", null, Start, End,
+        DeliveryWindow.Morning, DeliveryWindow.Afternoon, null);
+
+    private static async Task<(Product Scout, Product Spitfire)> ScootersAsync(AppDbContext db)
+    {
+        List<Product> scooters = await db.Products
+            .Where(product => product.Category == ProductCategory.MobilityScooter)
+            .OrderBy(product => product.SortOrder)
+            .ToListAsync();
+
+        return (scooters[0], scooters[1]);
+    }
+
+    /// <summary>
+    /// Puts two Scouts and two second batteries out on the request's dates — four chargers, and
+    /// four of the six Scout batteries, so that model still has room for one more machine with a
+    /// battery. Whatever refuses afterwards is therefore the charger pool and not the Scout's own.
+    /// </summary>
+    private async Task OccupyAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+
+        (Product scout, Product _) = await ScootersAsync(db);
+        DeliveryZone zone = await db.DeliveryZones.OrderBy(row => row.SortOrder).FirstAsync();
+
+        BookingWriteResult seeded = await writer.CreateByStaffAsync(
+            Details(zone.Id),
+            [new QuoteLineAsked(scout.Id, 2, 2, 8m, [])],
+            "staff@orlandoup.com",
+            acknowledgeOverbooking: false,
+            CancellationToken.None);
+
+        Assert.True(seeded.Succeeded, "the diary could not be arranged, so nothing after it would mean anything");
+        Assert.Equal(4, seeded.Booking!.Lines.Sum(line => line.Quantity + line.ExtraBatteryCount));
+    }
+
+    private async Task ArrangeAsync(int chargerCount)
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        IClock clock = scope.ServiceProvider.GetRequiredService<IClock>();
+        ILogger logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Tests");
+
+        if (!await db.OperationalSettings.AnyAsync())
+        {
+            db.OperationalSettings.Add(new OperationalSettings
+            {
+                Id = OperationalSettings.SingletonId,
+                ChargerCount = chargerCount,
+                SecondBatteryPerDay = 8.00m,
+                LostChargerFee = 30.00m,
+                NextDayCutoffHour = 18,
+            });
+
+            await db.SaveChangesAsync();
+        }
+
+        Assert.Equal(0, await BatterySeeder.RunAsync(db, clock, logger, CancellationToken.None));
+    }
+}

@@ -22,15 +22,30 @@ public enum QuoteProblem
 
     /// <summary>An amount the caller supplied is below zero.</summary>
     NegativeAmount = 7,
+
+    /// <summary>A line asks for fewer than one machine. A line of nothing is not a line.</summary>
+    QuantityOutOfRange = 8,
+
+    /// <summary>More second batteries than machines — at most one per machine (D36).</summary>
+    ExtrasAboveQuantity = 9,
+
+    /// <summary>A second battery on something that has no battery at all.</summary>
+    ExtrasOnNonScooter = 10,
 }
 
 /// <summary>One extra asked for on a line, at the price the catalog says today.</summary>
 public sealed record QuoteAddOnRequest(int AddOnId, string Name, AddOnPricingMode Mode, decimal Amount);
 
 /// <summary>One product asked for, with its live price list.</summary>
+/// <param name="IsScooter">
+/// Whether this product has a battery at all. The quote needs it to refuse a second battery on a
+/// wheelchair — which availability would simply ignore, leaving the customer charged for a battery
+/// that was never counted and never packed.
+/// </param>
 public sealed record QuoteLineRequest(
     int ProductId,
     string ProductName,
+    bool IsScooter,
     int Quantity,
     int ExtraBatteryCount,
     decimal ExtraBatteryPerDay,
@@ -157,6 +172,27 @@ public static class Quote
 
         foreach (QuoteLineRequest line in request.Lines)
         {
+            // The shape of the line is checked HERE and not only on the screen. A screen is one
+            // caller; the payment front is a second, and an invariant that only the first one
+            // knows does not survive the second (architecture.md §2 — writes go through services
+            // so that booking invariants live in one place).
+            if (line.Quantity < 1)
+            {
+                return QuoteResult.Failed(QuoteProblem.QuantityOutOfRange, line.ProductId);
+            }
+
+            if (line.ExtraBatteryCount > 0 && !line.IsScooter)
+            {
+                return QuoteResult.Failed(QuoteProblem.ExtrasOnNonScooter, line.ProductId);
+            }
+
+            // At most one second battery per machine (D36), and never a negative count: both ends
+            // matter, because a negative would subtract from a total nobody checked.
+            if (line.ExtraBatteryCount < 0 || line.ExtraBatteryCount > line.Quantity)
+            {
+                return QuoteResult.Failed(QuoteProblem.ExtrasAboveQuantity, line.ProductId);
+            }
+
             if (line.ExtraBatteryPerDay < 0)
             {
                 return QuoteResult.Failed(QuoteProblem.NegativeAmount, line.ProductId);

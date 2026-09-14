@@ -685,8 +685,9 @@ public class BookingRuleTests
         int extraBatteries = 0,
         decimal perDay = 0m,
         IReadOnlyList<PricingTier>? tiers = null,
-        IReadOnlyList<QuoteAddOnRequest>? addOns = null) =>
-        new(ScoutId, "Drive Scout 4", quantity, extraBatteries, perDay, tiers ?? ScoutTiers(), addOns ?? []);
+        IReadOnlyList<QuoteAddOnRequest>? addOns = null,
+        bool isScooter = true) =>
+        new(ScoutId, "Drive Scout 4", isScooter, quantity, extraBatteries, perDay, tiers ?? ScoutTiers(), addOns ?? []);
 
     private static QuoteRequest Request(
         string start, string end, QuoteLineRequest line, decimal deliveryFee = 0m, decimal taxRate = 0m) =>
@@ -713,5 +714,104 @@ public class BookingRuleTests
             "staff@orlandoup.com",
             new DateTime(2026, 12, 1, 12, 0, 0, DateTimeKind.Utc),
             isOverbooked: false);
+    }
+}
+
+/// <summary>
+/// The shape of a line, refused in the domain rather than only on the screen.
+/// </summary>
+/// <remarks>
+/// A screen is one caller. The payment front of the next leva is a second, and an invariant only
+/// the first one knows does not survive the second — which is why these three live beside the
+/// arithmetic they would otherwise corrupt.
+/// </remarks>
+public class QuoteLineShapeTests
+{
+    private const int ScoutId = 1;
+    private const int WheelchairId = 3;
+
+    [Fact]
+    public void A_line_of_no_machines_is_not_a_line()
+    {
+        Assert.Equal(QuoteProblem.QuantityOutOfRange, Price(quantity: 0).Problem);
+        Assert.Equal(QuoteProblem.QuantityOutOfRange, Price(quantity: -1).Problem);
+    }
+
+    [Fact]
+    public void A_second_battery_needs_a_machine_of_its_own()
+    {
+        // Two machines take two second batteries; three do not, because D36 allows one each.
+        Assert.Equal(QuoteProblem.None, Price(quantity: 2, extras: 2).Problem);
+        Assert.Equal(QuoteProblem.ExtrasAboveQuantity, Price(quantity: 2, extras: 3).Problem);
+        Assert.Equal(QuoteProblem.ExtrasAboveQuantity, Price(quantity: 1, extras: -1).Problem);
+    }
+
+    [Fact]
+    public void A_wheelchair_cannot_be_sold_a_second_battery_it_has_no_socket_for()
+    {
+        // Availability ignores batteries for a chair, so without this the customer would be
+        // charged for a battery that was never counted and never packed.
+        Assert.Equal(QuoteProblem.ExtrasOnNonScooter, Price(quantity: 1, extras: 1, isScooter: false).Problem);
+
+        // The presence half: the same chair with no second battery is priced normally.
+        QuoteResult chair = Price(quantity: 1, extras: 0, isScooter: false);
+
+        Assert.Equal(QuoteProblem.None, chair.Problem);
+        Assert.Equal(160m, chair.Breakdown!.Subtotal);
+    }
+
+    [Fact]
+    public void The_ordinary_line_still_prices()
+    {
+        QuoteResult ok = Price(quantity: 1, extras: 1, perDay: 8m);
+
+        Assert.Equal(QuoteProblem.None, ok.Problem);
+        Assert.Equal(40m, ok.Breakdown!.ExtraBatteriesTotal);
+    }
+
+    [Fact]
+    public void Every_refusal_names_the_product_and_carries_no_price()
+    {
+        foreach (QuoteResult refused in new[]
+        {
+            Price(quantity: 0),
+            Price(quantity: 2, extras: 3),
+            Price(quantity: 1, extras: 1, isScooter: false),
+        })
+        {
+            Assert.Null(refused.Breakdown);
+            Assert.Equal(ScoutId, refused.ProductId);
+        }
+    }
+
+    private static QuoteResult Price(int quantity = 1, int extras = 0, decimal perDay = 0m, bool isScooter = true)
+    {
+        PricingTier[] tiers =
+        [
+            new() { MinDays = 1, MaxDays = 2, Mode = TierMode.FlatPerRental, Amount = 75m },
+            new() { MinDays = 3, MaxDays = 6, Mode = TierMode.PerDay, Amount = 32m },
+            new() { MinDays = 7, MaxDays = null, Mode = TierMode.PerDay, Amount = 27m },
+        ];
+
+        QuoteLineRequest line = new(
+            ScoutId, "Drive Scout 4", isScooter, quantity, extras, perDay, tiers, []);
+
+        return Quote.For(new QuoteRequest(
+            new DateOnly(2026, 12, 20), new DateOnly(2026, 12, 24), 0m, 0m, [line]));
+    }
+
+    [Fact]
+    public void The_wheelchair_identifier_is_not_what_decides_it()
+    {
+        // The flag decides, not the key: a chair passed as a scooter would be allowed a battery,
+        // which is why QuoteBuilder reads the category and never the id.
+        QuoteLineRequest asChair = new(WheelchairId, "Drive wheelchair", false, 1, 1, 0m,
+            [new PricingTier { MinDays = 1, MaxDays = null, Mode = TierMode.PerDay, Amount = 12m }], []);
+
+        QuoteResult result = Quote.For(new QuoteRequest(
+            new DateOnly(2026, 12, 20), new DateOnly(2026, 12, 24), 0m, 0m, [asChair]));
+
+        Assert.Equal(QuoteProblem.ExtrasOnNonScooter, result.Problem);
+        Assert.Equal(WheelchairId, result.ProductId);
     }
 }
