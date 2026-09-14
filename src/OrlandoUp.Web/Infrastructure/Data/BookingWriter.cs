@@ -48,28 +48,32 @@ public sealed record BookingWriteResult
 /// It never assigns a status: the two members that do live in <see cref="Booking"/>, next to the
 /// transition table they consult.
 ///
-/// <b>It does not write the history either, and that is the house pattern and not an omission.</b>
-/// <c>CatalogWriter</c> does not touch the audit trail; the page that called it does, which is what
-/// makes "every POST handler of the administration leaves a trace" a countable relation over the
-/// pages folder rather than a claim about a call graph. The booking pages record through
-/// <see cref="BookingTimeline"/> for exactly the same reason.
+/// <b>It writes the first line of history inside the same transaction as the booking</b>, and that
+/// placement is the invariant: a booking is never born without its event. The catalog screens leave
+/// their audit line to the page that called them, and that is fine for a trail nobody reads back —
+/// here the history IS the record of the reservation, and the payment front will create bookings
+/// through this class with no administration handler anywhere near it. Discipline in a page does
+/// not reach that caller; a write inside this transaction does.
 /// </remarks>
 public sealed class BookingWriter
 {
     private readonly AppDbContext _db;
     private readonly AvailabilityQueries _availability;
     private readonly QuoteBuilder _quotes;
+    private readonly BookingTimeline _timeline;
     private readonly IClock _clock;
 
     public BookingWriter(
         AppDbContext db,
         AvailabilityQueries availability,
         QuoteBuilder quotes,
+        BookingTimeline timeline,
         IClock clock)
     {
         _db = db;
         _availability = availability;
         _quotes = quotes;
+        _timeline = timeline;
         _clock = clock;
     }
 
@@ -161,6 +165,15 @@ public sealed class BookingWriter
 
         booking.Number = BookingRules.FormatNumber(booking.Id);
 
+        _timeline.Record(
+            actorEmail,
+            booking.Id,
+            BookingEventType.Created,
+            isOverbooked
+                ? $"Booking {booking.Number} entered by staff, overbooked above the fleet."
+                : $"Booking {booking.Number} entered by staff.");
+
+        // The number and the first line of history land in the same commit as the booking.
         await _db.SaveChangesAsync(cancellation);
         await transaction.CommitAsync(cancellation);
 
@@ -174,12 +187,19 @@ public sealed class BookingWriter
     /// </exception>
     public async Task<Booking> CancelAsync(
         int bookingId,
+        string? actorEmail,
         string reason,
         CancellationToken cancellation)
     {
         Booking booking = await _db.Bookings.SingleAsync(row => row.Id == bookingId, cancellation);
 
         booking.Cancel(_clock.UtcNow, reason);
+
+        _timeline.Record(
+            actorEmail,
+            booking.Id,
+            BookingEventType.Cancelled,
+            $"Booking {booking.Number} cancelled: {reason}");
 
         await _db.SaveChangesAsync(cancellation);
 

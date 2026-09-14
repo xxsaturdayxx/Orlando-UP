@@ -22,14 +22,12 @@ public class CreateModel : PageModel
 {
     private readonly AppDbContext _db;
     private readonly BookingWriter _writer;
-    private readonly BookingTimeline _timeline;
     private readonly IClock _clock;
 
-    public CreateModel(AppDbContext db, BookingWriter writer, BookingTimeline timeline, IClock clock)
+    public CreateModel(AppDbContext db, BookingWriter writer, IClock clock)
     {
         _db = db;
         _writer = writer;
-        _timeline = timeline;
         _clock = clock;
     }
 
@@ -172,16 +170,6 @@ public class CreateModel : PageModel
         }
 
         Booking booking = result.Booking!;
-
-        _timeline.Record(
-            User.Identity?.Name,
-            booking.Id,
-            BookingEventType.Created,
-            booking.IsOverbooked
-                ? $"Booking {booking.Number} entered by staff, overbooked above the fleet."
-                : $"Booking {booking.Number} entered by staff.");
-
-        await _db.SaveChangesAsync(cancellationToken);
 
         TempData["Flash"] = "Admin_BookingCreated";
         TempData["FlashArgument"] = booking.Number;

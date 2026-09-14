@@ -78,19 +78,9 @@ public class DetailsModel : PageModel
             return Page();
         }
 
-        Booking cancelled = await _writer.CancelAsync(id, CancelReason.Trim(), cancellationToken);
-
-        // The trace is written HERE, by the handler that did the write, which is how every other
-        // administration screen works and what keeps the relation between handlers and records
-        // countable over this folder. A booking's history is its audit, so it goes to the table
-        // whose own screen shows it and never to the administration's trail.
-        _timeline.Record(
-            User.Identity?.Name,
-            cancelled.Id,
-            BookingEventType.Cancelled,
-            $"Booking {cancelled.Number} cancelled: {CancelReason.Trim()}");
-
-        await _db.SaveChangesAsync(cancellationToken);
+        // The writer records the cancellation itself, in the same save as the status change, so
+        // that no caller of it can end up with one without the other.
+        await _writer.CancelAsync(id, User.Identity?.Name, CancelReason.Trim(), cancellationToken);
 
         TempData["Flash"] = "Admin_BookingCancelled";
 

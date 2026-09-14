@@ -245,3 +245,62 @@ e o fechamento em dois commits vem depois da conferência, nunca antes.
 
 **Cole no Claude Code:** *"leia `Docs/relatorio-leva-03-etapa-3.md` e execute a seção Revisão — a correção 1 vai para o commit de conteúdo; depois pare e espere a conferência visual."*
 
+---
+
+## 8. Correção 1 da revisão da P3, executada em 2026-09-14
+
+**O evento `Created` voltou para dentro da transação do writer**, e os handlers voltaram a só
+chamar o writer. A revisão está certa e o meu recuo da P3 estava errado pelo motivo que ela dá: o
+invariante *"toda reserva nasce com o seu evento"* passou a morar na página, e a 03b cria reservas
+**sem handler de administração nenhum** — disciplina não alcança aquele chamador, uma escrita dentro
+desta transação alcança. O comentário do `BookingWriter` agora diz isso, e diz também por que o
+padrão das telas de catálogo (serviço muda, página registra) não vale aqui: lá a trilha é um
+registro que ninguém lê de volta, aqui o histórico **é** o registro da reserva.
+
+**O controle foi emendado, não contornado.** O C05 do `admin-catalog.tsv` passa a contar, no operando
+menor, `[.]Record[(]` **ou** `_writer[.](CreateByStaffAsync|CancelAsync)[(]`, e o rótulo passa a
+dizer *"registro de auditoria ou escrita pelo writer de reserva"*. Uma linha alterada, a do C05 —
+e registro que isso **alarga** o que a §11.1 me autorizava naquele arquivo (só o piso do C06), por
+instrução explícita da revisão. Medido: `a = 11`, `c = 9`, **diferença 2**.
+
+**E a emenda não veio sozinha**, que é o que impede o operando novo de virar uma porta aberta:
+
+| Controle novo | O que afirma | Medido |
+|---|---|---|
+| `booking-core` **C16** | `_timeline[.]Record[(]` em `BookingWriter.cs` | **2** — um por método de escrita |
+| `booking-core` **C17** | ALCANCE: `_writer[.]` em `Pages/Admin/Bookings/` ≥ 2 | **sim** (2) |
+
+**O teste que a revisão pediu existe e morde.** `CreateByStaffAsync` é chamado **sem página
+nenhuma** e o teste afirma que o evento `Created` existe, com o ator e **com o número da reserva no
+texto**. Provei que morde: neutralizando o `Record` do writer, **5 testes falham**, entre eles os
+dois pares que contam 2 eventos. Os testes de serviço voltaram a afirmar o histórico — e agora isso
+significa algo que os testes de tela não diziam: o caminho sem tela também nasce com histórico.
+
+### 8.1 Portão refeito
+
+```
+dotnet build   Build succeeded. 0 Warning(s). 0 Error(s).
+dotnet test    Passed! Failed: 0, Passed: 286, Skipped: 0, Total: 286
+```
+
+| Arquivo de controle | Resultado |
+|---|---|
+| `admin-catalog.tsv` | 12 controles, **0 fora do esperado** |
+| `public-site.tsv` | 17 controles, **0 fora do esperado** |
+| `fleet-batteries.tsv` | 7 controles, **0 fora do esperado** |
+| `foundation.tsv` | 18 controles, **0 fora do esperado** |
+| `booking-core.tsv` | **17 controles, 0 fora do esperado** |
+
+**Setenta e um controles em cinco arquivos, todos no alvo.** O `booking-core.tsv` foi de 15 para 17.
+
+### 8.2 O que NÃO fiz, e é de propósito
+
+**Não fiz o commit de fechamento.** A revisão diz que ele vem depois da conferência visual, nunca
+antes, e a coluna Estado da linha da fila continua lendo `aguardando`. **O commit de conteúdo cuja
+hash o fechamento vai gravar é o desta correção**, não o `84dea21` — porque é este que deixa a
+árvore no estado que a conferência vai conferir.
+
+`Docs/conferencia-leva-03.md` continua intocado. A bola é sua: o roteiro, o "Dias de intervalo" = 1
+nos produtos reserváveis (medido hoje: os sete ainda leem **0**), e a decisão sobre o carrinho
+simples.
+

@@ -1284,7 +1284,7 @@ public class BookingServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task A_booking_entered_by_staff_is_numbered_and_priced_from_the_quote()
+    public async Task A_booking_entered_by_staff_is_numbered_priced_and_born_with_its_first_event()
     {
         int bookingId;
 
@@ -1314,9 +1314,16 @@ public class BookingServiceTests : IAsyncLifetime
             Assert.Equal(205m, booking.Total);
             Assert.False(booking.IsOverbooked);
 
-            // The writer does not write the history — the handler that called it does, which is
-            // the house pattern and what the screen tests below assert. What IS asserted here is
-            // the absence that never changes: a booking never reaches the administration's trail.
+            // Written with NO page anywhere in the call: the first line of history is the writer's
+            // own, inside the same transaction as the booking, which is what the payment front will
+            // depend on when it creates bookings with no administration handler in sight.
+            BookingEvent line = await db.BookingEvents.SingleAsync(row => row.BookingId == bookingId);
+
+            Assert.Equal(BookingEventType.Created, line.Type);
+            Assert.Equal("staff@orlandoup.com", line.ActorEmail);
+            Assert.Contains(booking.Number, line.Summary, StringComparison.Ordinal);
+
+            // The absence that gives it meaning: a booking never reaches the administration's trail.
             Assert.Equal(0, await db.AuditEntries.CountAsync(row => row.EntityType == nameof(Booking)));
         }
     }
@@ -1345,8 +1352,9 @@ public class BookingServiceTests : IAsyncLifetime
         {
             AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // The refusal wrote nothing at all — the first booking is still the only one.
+            // The refusal wrote nothing at all: not a booking, and not an event either.
             Assert.Equal(1, await db.Bookings.CountAsync());
+            Assert.Equal(1, await db.BookingEvents.CountAsync());
         }
     }
 
@@ -1375,6 +1383,10 @@ public class BookingServiceTests : IAsyncLifetime
             Booking booking = await db.Bookings.SingleAsync(row => row.Id == bookingId);
 
             Assert.True(booking.IsOverbooked);
+
+            BookingEvent line = await db.BookingEvents.SingleAsync(row => row.BookingId == bookingId);
+
+            Assert.Contains("overbooked", line.Summary, StringComparison.OrdinalIgnoreCase);
         }
     }
 
@@ -1426,7 +1438,7 @@ public class BookingServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Cancelling_gives_the_machines_back_to_the_pool()
+    public async Task Cancelling_gives_the_machines_back_and_writes_a_second_line_of_history()
     {
         int bookingId;
 
@@ -1449,7 +1461,7 @@ public class BookingServiceTests : IAsyncLifetime
         {
             BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
 
-            Booking cancelled = await writer.CancelAsync(bookingId, "Customer changed dates", CancellationToken.None);
+            Booking cancelled = await writer.CancelAsync(bookingId, "staff@orlandoup.com", "Customer changed dates", CancellationToken.None);
 
             Assert.Equal(BookingStatus.Cancelled, cancelled.Status);
         }
@@ -1462,11 +1474,14 @@ public class BookingServiceTests : IAsyncLifetime
 
             Assert.True((await availability.ForProductAsync(
                 scout.Id, new DateOnly(2026, 12, 22), new DateOnly(2026, 12, 22), 4, 0, CancellationToken.None)).IsAvailable);
+
+            // Two lines of history, both written by the writer.
+            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == bookingId));
         }
     }
 
     [Fact]
-    public async Task Cancelling_twice_is_refused_by_the_domain()
+    public async Task Cancelling_twice_is_refused_by_the_domain_and_writes_nothing_the_second_time()
     {
         int bookingId;
 
@@ -1478,7 +1493,7 @@ public class BookingServiceTests : IAsyncLifetime
         using (IServiceScope scope = _factory.Services.CreateScope())
         {
             BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
-            await writer.CancelAsync(bookingId, "First", CancellationToken.None);
+            await writer.CancelAsync(bookingId, "staff@orlandoup.com", "First", CancellationToken.None);
         }
 
         using (IServiceScope scope = _factory.Services.CreateScope())
@@ -1486,18 +1501,20 @@ public class BookingServiceTests : IAsyncLifetime
             BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                writer.CancelAsync(bookingId, "Second", CancellationToken.None));
+                writer.CancelAsync(bookingId, "staff@orlandoup.com", "Second", CancellationToken.None));
         }
 
         using (IServiceScope scope = _factory.Services.CreateScope())
         {
             AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // Still cancelled once, with the first reason: the refusal changed nothing.
+            // Still cancelled once, with the first reason, and no third line of history: the
+            // refusal happened before anything was staged.
             Booking booking = await db.Bookings.SingleAsync(row => row.Id == bookingId);
 
             Assert.Equal(BookingStatus.Cancelled, booking.Status);
             Assert.Equal("First", booking.CancelReason);
+            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == bookingId));
         }
     }
 
