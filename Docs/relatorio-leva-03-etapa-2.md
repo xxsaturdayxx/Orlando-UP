@@ -203,3 +203,77 @@ pública), a nota datada de **seis pontos** no `Docs/architecture.md` (EMENDA-03
 3. aprovar esta etapa.
 
 **O push é seu.** Nenhum commit desta sessão foi empurrado.
+
+---
+
+## Revisão (Claude Web, 2026-09-14)
+
+**Conferido abrindo o código, não o relato:** `Domain/Availability.cs` (padding nas linhas existentes
+contra o pedido cru; pior dia decide; pool vazio de scooter recusa; piso zero nos máximos),
+`Domain/Quote.cs` (validador único, faixa que cobre, imposto arredondado uma vez `AwayFromZero`),
+`Domain/BookingStatusRules.cs` (cinco status seguram estoque; `from == to` é falso),
+`Domain/Booking.cs` (fábrica e `Cancel` são as duas únicas atribuições de `Status`),
+`Infrastructure/Data/AvailabilityQueries.cs` (`SingleAsync` na linha de configuração; janela
+alargada pelo maior `TurnaroundDays` lido, não assumido; `HoldsInventory` filtrado em memória;
+nenhum agregado de dinheiro em SQL), `BookingWriter.cs` (número na mesma transação),
+`FakeClock.cs` (delegação a `SystemClock(Func)`, como a EMENDA-03-01 pediu) e o `SiteFactory`
+(o relógio entra em `ConfigureTestServices`, fora do instantâneo de registros). **148** atributos
+de teste nos arquivos, 251 casos executados (relato). O `sys.default_constraints` lê dois, nenhum
+em `OperationalSettings` — a correção 1 da EMENDA-03-01 está medida no banco.
+
+**Correção que devo à P1:** a revisão escreveu 11 índices e 8 chaves estrangeiras; o relatório da P1
+e o banco dizem **10 e 7** (contei de novo no SQL: 5 + 2 + 2 + 1 índices; 2 + 1 + 2 + 2 FKs). O
+agente estava certo nas duas contagens.
+
+**Duas correções antes de qualquer tela, e a primeira inverte resultado:**
+
+1. **O limite de carregadores (e de pool) não soma as linhas do MESMO pedido.**
+   `BookingWriter.CreateByStaffAsync` chama `ForProductAsync` por linha, e cada linha é conferida
+   contra o diário existente **sozinha**. Cena que passa errado: 11 carregadores ocupados no diário;
+   pedido de 1 Scout + segunda bateria e 1 Spitfire + segunda bateria — cada linha pede 2, cada
+   uma sozinha lê 13 ≤ 14 e passa; juntas pedem 4 → 15 > 14, e a reserva nasce **acima da frota
+   sem `IsOverbooked`**. É exatamente o modo de falha silencioso que a D4/03 existe para marcar.
+   **Saída:** `AvailabilityQueries.ForProductAsync` ganha um parâmetro
+   `IReadOnlyList<HoldingLine> alsoHolding`, e o `BookingWriter` passa, ao conferir a linha *i*, as
+   outras linhas do mesmo pedido como `HoldingLine` sobre as datas do pedido (produto, `IsScooter` e
+   `TurnaroundDays` lidos de `ProductFacts`, quantidade e segundas baterias do pedido). O
+   `Availability.For` não muda. **Teste (DomainTests ou AdminCrudTests):** a cena acima, recusada
+   com o `Shortfall` da segunda linha nomeando o carregador (`MaxExtras` < pedido), e a mesma cena
+   com 10 carregadores ocupados, aceita.
+2. **A linha do pedido não é validada em lugar nenhum abaixo da tela.** `Quote.For` aceita
+   `Quantity = 0` (linha de total zero), `ExtraBatteryCount > Quantity` (a disponibilidade conta
+   `q + e` e o cliente paga baterias que a D36 não permite) e segunda bateria numa cadeira de rodas
+   (o `Availability` ignora, a `Quote` cobra). A spec §7.3 põe isso na tela, mas *"toda escrita
+   passa por serviço para que os invariantes vivam num lugar só"* (`architecture.md` §2), e um
+   invariante que só a tela conhece não sobrevive à segunda tela (03b). **Saída, no domínio:**
+   `QuoteLineRequest` ganha `bool IsScooter` (o `QuoteBuilder` já carrega o produto e o preenche
+   de `Category == MobilityScooter`); `Quote.For` devolve `QuoteProblem.QuantityOutOfRange` para
+   `Quantity < 1`, `ExtrasAboveQuantity` para `ExtraBatteryCount < 0` ou `> Quantity`, e
+   `ExtrasOnNonScooter` para extra > 0 sem scooter — três membros novos no fim do enum. As telas
+   da P3 traduzem os três para as chaves `Book_ErrorExtraOnlyScooters`,
+   `Book_ErrorExtraAboveQuantity` e as `Admin_Error…` correspondentes, em vez de validar de novo.
+   **Teste:** um caso por problema, e o caso `Quantity = 1, Extra = 1, IsScooter` continua precificado.
+
+**Desvio aceito (§6 do relatório):** `QuoteProblem.NoTierCovers` fica como valor de retorno
+nomeado. Correto.
+
+**Confirmado, e não é para "consertar":** `Active → Cancelled` é ilegal na tabela (equipamento em
+uso não se cancela; encerra-se), e `Cancelled → Refunded` é a única porta do reembolso; a fábrica
+congela a cotação linha a linha; o relógio falso não move teste nenhum.
+
+**Backlog (escrito pelo revisor em `Docs/backlog-conhecido.md`):** a conferência de disponibilidade
+e o `INSERT` não são atômicos — duas escritas simultâneas podem passar as duas. Com uma pessoa
+lançando reservas é tolerável; o fluxo público da 03b, com hold, precisa de serialização
+(transação serializável ou verificação repetida dentro dela).
+
+**Três lembretes para a P3, não correções:** o handler de cancelar confere `CanTransition` antes de
+chamar o `CancelAsync` e responde `Admin_ErrorCannotCancel` — a exceção do domínio é a segunda
+barreira, não a primeira; `CancelAsync` com id inexistente lança (`SingleAsync`) — a página
+responde 404 antes; a nota de seis pontos no `architecture.md` (EMENDA-03-01, correção 3).
+
+**Veredito: executar após as correções 1 e 2** — as duas nascem com os testes delas **antes** do
+primeiro `.cshtml` da P3, e o relatório da P3 abre dizendo os dois números (a cena do carregador
+recusada; os três `QuoteProblem` novos com um teste cada).
+
+**Cole no Claude Code:** *"leia `Docs/relatorio-leva-03-etapa-2.md` e execute a seção Revisão — a P2 está aprovada com as correções 1 e 2, que vêm antes de qualquer tela; siga à P3."*
+
