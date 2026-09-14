@@ -637,6 +637,9 @@ public class AdminCrudTests : IAsyncLifetime
         keys.AddRange(Enum.GetNames<TierMode>().Select(name => $"Admin_Tier{name}"));
         keys.AddRange(Enum.GetNames<AuditAction>().Select(name => $"Admin_Action{name}"));
         keys.AddRange(Enum.GetNames<BatteryKind>().Select(name => $"Admin_BatteryKind{name}"));
+        keys.AddRange(Enum.GetNames<BookingStatus>().Select(name => $"Admin_BookingStatus{name}"));
+        keys.AddRange(Enum.GetNames<DeliveryWindow>().Select(name => $"Admin_Window{name}"));
+        keys.AddRange(Enum.GetNames<BookingSource>().Select(name => $"Admin_BookingSource{name}"));
 
         // The screens build these key names with string interpolation, so LocalizationParityTests,
         // which compares the two files against each other, cannot notice one that nobody wrote:
@@ -644,7 +647,7 @@ public class AdminCrudTests : IAsyncLifetime
         List<string> missing = keys.Where(key => text[key].ResourceNotFound).ToList();
 
         Assert.Empty(missing);
-        Assert.Equal(15, keys.Count);
+        Assert.Equal(32, keys.Count);
     }
 
 
@@ -1281,7 +1284,7 @@ public class BookingServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task A_booking_entered_by_staff_is_numbered_priced_and_recorded_in_its_own_table()
+    public async Task A_booking_entered_by_staff_is_numbered_and_priced_from_the_quote()
     {
         int bookingId;
 
@@ -1311,14 +1314,9 @@ public class BookingServiceTests : IAsyncLifetime
             Assert.Equal(205m, booking.Total);
             Assert.False(booking.IsOverbooked);
 
-            // Presence: the history line exists, with the actor who wrote it.
-            BookingEvent line = await db.BookingEvents.SingleAsync(row => row.BookingId == bookingId);
-
-            Assert.Equal(BookingEventType.Created, line.Type);
-            Assert.Equal("staff@orlandoup.com", line.ActorEmail);
-
-            // Absence, and it is the half that gives the presence its meaning: a booking writes to
-            // its own timeline and never into the administration's trail.
+            // The writer does not write the history — the handler that called it does, which is
+            // the house pattern and what the screen tests below assert. What IS asserted here is
+            // the absence that never changes: a booking never reaches the administration's trail.
             Assert.Equal(0, await db.AuditEntries.CountAsync(row => row.EntityType == nameof(Booking)));
         }
     }
@@ -1347,9 +1345,8 @@ public class BookingServiceTests : IAsyncLifetime
         {
             AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            // The refusal wrote nothing at all — not a draft, not an event.
+            // The refusal wrote nothing at all — the first booking is still the only one.
             Assert.Equal(1, await db.Bookings.CountAsync());
-            Assert.Equal(1, await db.BookingEvents.CountAsync());
         }
     }
 
@@ -1378,10 +1375,6 @@ public class BookingServiceTests : IAsyncLifetime
             Booking booking = await db.Bookings.SingleAsync(row => row.Id == bookingId);
 
             Assert.True(booking.IsOverbooked);
-
-            BookingEvent line = await db.BookingEvents.SingleAsync(row => row.BookingId == bookingId);
-
-            Assert.Contains("overbooked", line.Summary, StringComparison.OrdinalIgnoreCase);
         }
     }
 
@@ -1433,7 +1426,7 @@ public class BookingServiceTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task Cancelling_gives_the_machines_back_and_writes_a_second_line_of_history()
+    public async Task Cancelling_gives_the_machines_back_to_the_pool()
     {
         int bookingId;
 
@@ -1456,7 +1449,7 @@ public class BookingServiceTests : IAsyncLifetime
         {
             BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
 
-            Booking cancelled = await writer.CancelAsync(bookingId, "staff@orlandoup.com", "Customer changed dates", CancellationToken.None);
+            Booking cancelled = await writer.CancelAsync(bookingId, "Customer changed dates", CancellationToken.None);
 
             Assert.Equal(BookingStatus.Cancelled, cancelled.Status);
         }
@@ -1469,13 +1462,11 @@ public class BookingServiceTests : IAsyncLifetime
 
             Assert.True((await availability.ForProductAsync(
                 scout.Id, new DateOnly(2026, 12, 22), new DateOnly(2026, 12, 22), 4, 0, CancellationToken.None)).IsAvailable);
-
-            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == bookingId));
         }
     }
 
     [Fact]
-    public async Task Cancelling_twice_is_refused_by_the_domain_and_writes_nothing_the_second_time()
+    public async Task Cancelling_twice_is_refused_by_the_domain()
     {
         int bookingId;
 
@@ -1487,7 +1478,7 @@ public class BookingServiceTests : IAsyncLifetime
         using (IServiceScope scope = _factory.Services.CreateScope())
         {
             BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
-            await writer.CancelAsync(bookingId, "staff@orlandoup.com", "First", CancellationToken.None);
+            await writer.CancelAsync(bookingId, "First", CancellationToken.None);
         }
 
         using (IServiceScope scope = _factory.Services.CreateScope())
@@ -1495,14 +1486,18 @@ public class BookingServiceTests : IAsyncLifetime
             BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
 
             await Assert.ThrowsAsync<InvalidOperationException>(() =>
-                writer.CancelAsync(bookingId, "staff@orlandoup.com", "Second", CancellationToken.None));
+                writer.CancelAsync(bookingId, "Second", CancellationToken.None));
         }
 
         using (IServiceScope scope = _factory.Services.CreateScope())
         {
             AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == bookingId));
+            // Still cancelled once, with the first reason: the refusal changed nothing.
+            Booking booking = await db.Bookings.SingleAsync(row => row.Id == bookingId);
+
+            Assert.Equal(BookingStatus.Cancelled, booking.Status);
+            Assert.Equal("First", booking.CancelReason);
         }
     }
 
@@ -1904,6 +1899,374 @@ public class BookingRequestTotalsTests : IAsyncLifetime
             {
                 Id = OperationalSettings.SingletonId,
                 ChargerCount = chargerCount,
+                SecondBatteryPerDay = 8.00m,
+                LostChargerFee = 30.00m,
+                NextDayCutoffHour = 18,
+            });
+
+            await db.SaveChangesAsync();
+        }
+
+        Assert.Equal(0, await BatterySeeder.RunAsync(db, clock, logger, CancellationToken.None));
+    }
+}
+
+/// <summary>
+/// The booking screens: what the gate does, what the form writes, and what the list shows.
+/// </summary>
+public class BookingScreenTests : IAsyncLifetime
+{
+    private readonly SiteFactory _factory = new();
+
+    public async Task InitializeAsync()
+    {
+        await _factory.SeedAsync();
+        await ArrangeAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        _factory.Dispose();
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task An_anonymous_visitor_is_sent_to_the_login_page()
+    {
+        HttpClient anonymous = _factory.CreateClient(
+            new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+
+        HttpResponseMessage response = await anonymous.GetAsync("/admin/bookings");
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        Assert.Contains("/admin/login", response.Headers.Location!.OriginalString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task The_administration_navigation_has_seven_destinations()
+    {
+        string html = await _factory.CreateStaffClient().GetStringAsync("/admin");
+
+        string nav = html[html.IndexOf("admin-nav__inner", StringComparison.Ordinal)..];
+        nav = nav[..nav.IndexOf("</div>", StringComparison.Ordinal)];
+
+        // The build-fresh proof of the roteiro: six before this leva, seven after.
+        Assert.Equal(7, System.Text.RegularExpressions.Regex.Matches(nav, "<a ").Count);
+        Assert.Contains("/admin/bookings", nav, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task An_empty_list_says_so_in_both_languages()
+    {
+        HttpClient staff = _factory.CreateStaffClient();
+
+        Assert.Contains("No booking yet.", await staff.GetStringAsync("/admin/bookings"), StringComparison.Ordinal);
+
+        HttpClient portuguese = _factory.CreateStaffClient();
+        portuguese.DefaultRequestHeaders.Add("Cookie", CulturePreferenceCookie("pt-BR"));
+
+        Assert.Contains(
+            "Nenhuma reserva ainda.",
+            System.Net.WebUtility.HtmlDecode(await portuguese.GetStringAsync("/admin/bookings")),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_booking_created_through_the_form_is_numbered_priced_and_has_one_line_of_history()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        FormFields form = await BookingFormAsync(staff, quantity: 1, extraBatteries: 1, withAddOn: true);
+
+        HttpResponseMessage response = await FormPoster.PostAsync(staff, "/admin/bookings/create", form);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Booking booking = await db.Bookings.SingleAsync();
+
+        Assert.Matches("^OU-[0-9]{6}$", booking.Number);
+        Assert.Equal(BookingStatus.Confirmed, booking.Status);
+        Assert.Equal(BookingSource.Staff, booking.Source);
+        Assert.Equal(5, booking.Days);
+        Assert.Equal(160m, booking.Subtotal);
+        Assert.Equal(40m, booking.ExtraBatteriesTotal);
+        Assert.Equal(5m, booking.AddOnsTotal);
+        Assert.Equal(0m, booking.DeliveryFee);
+        Assert.Equal(0m, booking.Tax);
+        Assert.Equal(205m, booking.Total);
+        Assert.False(booking.IsOverbooked);
+
+        // Presence: the handler recorded the write, with the actor.
+        BookingEvent line = await db.BookingEvents.SingleAsync();
+
+        Assert.Equal(BookingEventType.Created, line.Type);
+        Assert.Equal(TestAuthHandler.ActorEmail, line.ActorEmail);
+
+        // Absence, and it is what gives the presence its meaning: a booking never reaches the
+        // administration's trail.
+        Assert.Equal(0, await db.AuditEntries.CountAsync(row => row.EntityType == nameof(Booking)));
+    }
+
+    [Fact]
+    public async Task A_fifth_scooter_over_four_is_refused_until_the_box_is_ticked()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        Assert.Equal(
+            HttpStatusCode.Redirect,
+            (await FormPoster.PostAsync(staff, "/admin/bookings/create", await BookingFormAsync(staff, quantity: 4))).StatusCode);
+
+        HttpResponseMessage refused = await FormPoster.PostAsync(
+            staff, "/admin/bookings/create", await BookingFormAsync(staff, quantity: 1));
+
+        Assert.Equal(HttpStatusCode.OK, refused.StatusCode);
+        Assert.Contains("Not available:", await refused.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Assert.Equal(1, await db.Bookings.CountAsync());
+        }
+
+        FormFields acknowledged = await BookingFormAsync(staff, quantity: 1);
+        acknowledged.Set("Overbook", "true");
+
+        Assert.Equal(
+            HttpStatusCode.Redirect,
+            (await FormPoster.PostAsync(staff, "/admin/bookings/create", acknowledged)).StatusCode);
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Booking overbooked = await db.Bookings.OrderByDescending(row => row.Id).FirstAsync();
+
+            Assert.True(overbooked.IsOverbooked);
+
+            BookingEvent line = await db.BookingEvents.SingleAsync(row => row.BookingId == overbooked.Id);
+
+            Assert.Contains("overbooked", line.Summary, StringComparison.OrdinalIgnoreCase);
+        }
+
+        // And the list shows the badge, which is the only place the operator sees it.
+        Assert.Contains(
+            "Above the fleet",
+            await _factory.CreateStaffClient().GetStringAsync("/admin/bookings"),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Cancelling_through_the_screen_releases_the_dates_and_refuses_the_second_time()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        await FormPoster.PostAsync(staff, "/admin/bookings/create", await BookingFormAsync(staff, quantity: 4));
+
+        int id;
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            id = await db.Bookings.Select(row => row.Id).SingleAsync();
+        }
+
+        FormFields cancel = await FormPoster.ReadFormAsync(staff, $"/admin/bookings/{id}");
+        cancel.Set("CancelReason", "Customer changed dates");
+
+        Assert.Equal(
+            HttpStatusCode.Redirect,
+            (await FormPoster.PostAsync(staff, $"/admin/bookings/{id}?handler=Cancel", cancel)).StatusCode);
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            AvailabilityQueries availability = scope.ServiceProvider.GetRequiredService<AvailabilityQueries>();
+
+            Booking booking = await db.Bookings.SingleAsync();
+
+            Assert.Equal(BookingStatus.Cancelled, booking.Status);
+            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == id));
+
+            int scoutId = await db.Products
+                .Where(row => row.Category == ProductCategory.MobilityScooter)
+                .OrderBy(row => row.SortOrder)
+                .Select(row => row.Id)
+                .FirstAsync();
+
+            // Released through the screen, not only in the rule: the same four are free again.
+            Assert.True((await availability.ForProductAsync(
+                scoutId, new DateOnly(2026, 12, 22), new DateOnly(2026, 12, 22), 4, 0, CancellationToken.None)).IsAvailable);
+        }
+
+        // The page no longer offers the form, and says why in the operator's words.
+        string afterwards = await staff.GetStringAsync($"/admin/bookings/{id}");
+
+        Assert.Contains("cannot be cancelled", afterwards, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("name=\"CancelReason\"", afterwards, StringComparison.Ordinal);
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            // No third event: the refusal wrote nothing.
+            Assert.Equal(2, await db.BookingEvents.CountAsync(row => row.BookingId == id));
+        }
+    }
+
+    [Fact]
+    public async Task The_detail_page_prints_the_stored_name_after_the_product_is_renamed()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        await FormPoster.PostAsync(staff, "/admin/bookings/create", await BookingFormAsync(staff, quantity: 1));
+
+        int id;
+        string nameWhenBooked;
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            id = await db.Bookings.Select(row => row.Id).SingleAsync();
+            nameWhenBooked = await db.BookingLines.Select(row => row.ProductName).SingleAsync();
+
+            foreach (ProductTranslation text in await db.ProductTranslations.ToListAsync())
+            {
+                text.Name = "Renamed on the catalog screen";
+            }
+
+            await db.SaveChangesAsync();
+        }
+
+        string html = await _factory.CreateStaffClient().GetStringAsync($"/admin/bookings/{id}");
+
+        Assert.Contains(nameWhenBooked, html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Renamed on the catalog screen", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_cut_off_field_round_trips_and_refuses_an_hour_off_the_clock()
+    {
+        HttpClient staff = _factory.CreateStaffClient();
+
+        FormFields form = await FormPoster.ReadFormAsync(staff, "/admin/settings");
+        form.Set("NextDayCutoffHour", "15");
+
+        Assert.Equal(HttpStatusCode.OK, (await FormPoster.PostAsync(staff, "/admin/settings", form)).StatusCode);
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            Assert.Equal(15, await db.OperationalSettings.Select(row => row.NextDayCutoffHour).SingleAsync());
+
+            // The existing handler's audit line still lands: one more bound field did not cost it.
+            Assert.True(await db.AuditEntries.AnyAsync(row => row.EntityType == nameof(OperationalSettings)));
+        }
+
+        FormFields outOfRange = await FormPoster.ReadFormAsync(staff, "/admin/settings");
+        outOfRange.Set("NextDayCutoffHour", "24");
+
+        Assert.Contains(
+            "between 0 and 23",
+            await (await FormPoster.PostAsync(staff, "/admin/settings", outOfRange)).Content.ReadAsStringAsync(),
+            StringComparison.Ordinal);
+
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            // Refused means unchanged, not clamped.
+            Assert.Equal(15, await db.OperationalSettings.Select(row => row.NextDayCutoffHour).SingleAsync());
+        }
+    }
+
+    [Fact]
+    public async Task The_dashboard_counts_the_bookings_that_hold_equipment()
+    {
+        HttpClient staff = _factory.CreateStaffClient(allowAutoRedirect: false);
+
+        // An honest zero on an empty table, because it is a Count over a filter and not a row.
+        Assert.Contains(
+            """<span class="stat__value" id="stat-bookings">0</span>""",
+            await _factory.CreateStaffClient().GetStringAsync("/admin"),
+            StringComparison.Ordinal);
+
+        await FormPoster.PostAsync(staff, "/admin/bookings/create", await BookingFormAsync(staff, quantity: 1));
+
+        Assert.Contains(
+            """<span class="stat__value" id="stat-bookings">1</span>""",
+            await _factory.CreateStaffClient().GetStringAsync("/admin"),
+            StringComparison.Ordinal);
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------------------------------------
+
+    private static string CulturePreferenceCookie(string culture) =>
+        ".AspNetCore.Culture=" + Uri.EscapeDataString($"c={culture}|uic={culture}");
+
+    private async Task<FormFields> BookingFormAsync(
+        HttpClient staff, int quantity, int extraBatteries = 0, bool withAddOn = false)
+    {
+        FormFields form = await FormPoster.ReadFormAsync(staff, "/admin/bookings/create");
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Product scout = await db.Products
+            .Where(row => row.Category == ProductCategory.MobilityScooter)
+            .OrderBy(row => row.SortOrder)
+            .FirstAsync();
+
+        DeliveryLocation location = await db.DeliveryLocations.OrderBy(row => row.SortOrder).FirstAsync();
+
+        form.Set("FirstName", "Ada");
+        form.Set("LastName", "Lovelace");
+        form.Set("Email", "ada@example.com");
+        form.Set("Phone", "+1 407 555 0100");
+        form.Set("CustomerCulture", "en-US");
+        form.Set("StartDate", "2026-12-20");
+        form.Set("EndDate", "2026-12-24");
+        form.Set("DeliveryWindow", nameof(DeliveryWindow.Morning));
+        form.Set("PickupWindow", nameof(DeliveryWindow.Afternoon));
+        form.Set("Place", $"L{location.Id}");
+        form.Set($"Quantity[{scout.Id}]", quantity.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        form.Set($"ExtraBatteries[{scout.Id}]", extraBatteries.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        form.Set($"ExtraBatteryPerDay[{scout.Id}]", "8.00");
+
+        if (withAddOn)
+        {
+            int addOnId = await db.ProductAddOns
+                .Where(row => row.ProductId == scout.Id)
+                .Select(row => row.AddOnId)
+                .FirstAsync();
+
+            form.Set($"AddOns[{scout.Id}]", addOnId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        }
+
+        return form;
+    }
+
+    private async Task ArrangeAsync()
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        IClock clock = scope.ServiceProvider.GetRequiredService<IClock>();
+        ILogger logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Tests");
+
+        if (!await db.OperationalSettings.AnyAsync())
+        {
+            db.OperationalSettings.Add(new OperationalSettings
+            {
+                Id = OperationalSettings.SingletonId,
+                ChargerCount = 14,
                 SecondBatteryPerDay = 8.00m,
                 LostChargerFee = 30.00m,
                 NextDayCutoffHour = 18,

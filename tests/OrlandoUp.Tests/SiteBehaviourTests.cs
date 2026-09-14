@@ -1,3 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using OrlandoUp.Application;
+using OrlandoUp.Domain;
+using OrlandoUp.Infrastructure.Data;
+using OrlandoUp.Infrastructure.Seeding;
 using System.Net;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
@@ -121,6 +127,7 @@ public class SiteBehaviourTests : IAsyncLifetime
         "/contact", "/pt/contact",
         "/terms", "/pt/terms",
         "/privacy", "/pt/privacy",
+        "/book", "/pt/book",
     ];
 
     public static TheoryData<string> PublicPaths()
@@ -287,5 +294,228 @@ public class SiteBehaviourTests : IAsyncLifetime
             .ToList();
 
         Assert.Empty(senders);
+    }
+}
+
+/// <summary>
+/// The public booking page: what a visitor is told, and what he is not told.
+/// </summary>
+/// <remarks>
+/// It is a barrier (D4/03). Everything a member of staff may override, this page refuses — and the
+/// case the whole leva exists for is the one where the machines are free and the batteries are
+/// not, which no other rental site in Orlando answers honestly.
+/// </remarks>
+public class PublicBookingTests : IAsyncLifetime
+{
+    private readonly SiteFactory _factory = new();
+
+    private int _scoutId;
+    private string _scoutSlug = string.Empty;
+    private int _place;
+
+    public async Task InitializeAsync()
+    {
+        await _factory.SeedAsync();
+
+        using IServiceScope scope = _factory.Services.CreateScope();
+
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        IClock clock = scope.ServiceProvider.GetRequiredService<IClock>();
+        ILogger logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Tests");
+
+        db.OperationalSettings.Add(new OperationalSettings
+        {
+            Id = OperationalSettings.SingletonId,
+            ChargerCount = 14,
+            SecondBatteryPerDay = 8.00m,
+            LostChargerFee = 30.00m,
+            NextDayCutoffHour = 18,
+        });
+
+        await db.SaveChangesAsync();
+
+        Assert.Equal(0, await BatterySeeder.RunAsync(db, clock, logger, CancellationToken.None));
+
+        Product scout = await db.Products
+            .Where(row => row.Category == ProductCategory.MobilityScooter)
+            .OrderBy(row => row.SortOrder)
+            .FirstAsync();
+
+        _scoutId = scout.Id;
+        _scoutSlug = scout.Slug;
+        _place = await db.DeliveryLocations.OrderBy(row => row.SortOrder).Select(row => row.Id).FirstAsync();
+
+        // Pinned well before the dates asked for, so the cut-off never turns these into a refusal
+        // about the calendar.
+        _factory.Clock.Set(new DateTime(2026, 11, 1, 12, 0, 0, DateTimeKind.Utc));
+    }
+
+    public Task DisposeAsync()
+    {
+        _factory.Dispose();
+
+        return Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task An_available_request_is_answered_with_the_word_and_the_total()
+    {
+        string html = await _factory.CreateClient().GetStringAsync(Query());
+
+        Assert.Contains("Available for these dates", html, StringComparison.Ordinal);
+
+        // 160 rental for five days at 32, plus 40 for the second battery at 8 a day. Zone fee and
+        // tax rate are both zero, so the tax line prints the promise instead of US$ 0.00.
+        Assert.Contains("US$ 200.00", html, StringComparison.Ordinal);
+        Assert.Contains("Taxes included", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Sold out for these dates", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_portuguese_twin_answers_in_portuguese()
+    {
+        // Razor encodes every non-ASCII character, so the accented sentences arrive as entities.
+        // Decoded here the way the other Portuguese assertions of this file already do it.
+        string html = System.Net.WebUtility.HtmlDecode(
+            await _factory.CreateClient().GetStringAsync("/pt" + Query()));
+
+        Assert.Contains("Disponível nessas datas", html, StringComparison.Ordinal);
+        Assert.Contains("US$ 200.00", html, StringComparison.Ordinal);
+        Assert.Contains("Impostos incluídos", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Four_scooters_already_out_make_it_sold_out()
+    {
+        await OccupyAsync(quantity: 4, extras: 0);
+
+        string html = await _factory.CreateClient().GetStringAsync(Query(extras: 0));
+
+        Assert.Contains("Sold out for these dates", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Available for these dates", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Three_second_batteries_out_leave_the_machine_free_and_the_battery_not()
+    {
+        // Three Scouts with two second batteries between them: five of the six batteries, and one
+        // machine still on the floor. The fourth Scout can go out — the sixth battery is its own —
+        // but there is no seventh for a spare. That gap of exactly one is what the sentence is for.
+        //
+        // Three machines with three spares would be SOLD OUT rather than this, and the arithmetic
+        // is why: six batteries for three machines and three spares leaves nothing for a fourth
+        // machine at all.
+        await OccupyAsync(quantity: 3, extras: 2);
+
+        string html = await _factory.CreateClient().GetStringAsync(Query(extras: 1));
+
+        Assert.Contains("The second battery is not available for these dates", html, StringComparison.Ordinal);
+
+        // And the price shown is the rental WITHOUT it: 160, not 200.
+        Assert.Contains("US$ 160.00", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("US$ 200.00", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task A_day_before_the_cut_off_allows_is_refused_with_the_day_named()
+    {
+        // 23:00 UTC on 5 December is 18:00 in Orlando — at the cut-off, so the earliest is the 7th.
+        _factory.Clock.Set(new DateTime(2026, 12, 5, 23, 0, 0, DateTimeKind.Utc));
+
+        string html = await _factory.CreateClient().GetStringAsync(
+            $"/book?product={_scoutSlug}&start=2026-12-06&end=2026-12-08&quantity=1&extraBatteries=0&place=L{_place}");
+
+        Assert.Contains("The earliest delivery day is 2026-12-07", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Available for these dates", html, StringComparison.Ordinal);
+
+        // The presence half: one day later the same request is answered.
+        Assert.Contains(
+            "Available for these dates",
+            await _factory.CreateClient().GetStringAsync(
+                $"/book?product={_scoutSlug}&start=2026-12-07&end=2026-12-09&quantity=1&extraBatteries=0&place=L{_place}"),
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_page_never_offers_to_overbook()
+    {
+        await OccupyAsync(quantity: 4, extras: 0);
+
+        string html = await _factory.CreateClient().GetStringAsync(Query(extras: 0));
+
+        // Whatever else it says, it offers no way past the fleet and no price to act on.
+        Assert.DoesNotContain("Overbook", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Your price", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_product_page_links_here_instead_of_a_disabled_button()
+    {
+        string scooter = await _factory.CreateClient().GetStringAsync($"/rentals/{_scoutSlug}");
+
+        Assert.Contains("Check availability and price", scooter, StringComparison.Ordinal);
+        Assert.DoesNotContain("Booking opens soon", scooter, StringComparison.Ordinal);
+        Assert.Contains("/book?", scooter, StringComparison.Ordinal);
+
+        // The stroller keeps its coming-soon sentence: it is not on sale, and this leva did not
+        // touch that branch.
+        string stroller = await _factory.CreateClient().GetStringAsync("/rentals/single-stroller");
+
+        Assert.DoesNotContain("Check availability and price", stroller, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_sitemap_carries_both_addresses_with_their_alternates()
+    {
+        string xml = await _factory.CreateClient().GetStringAsync("/sitemap.xml");
+
+        Assert.Contains("/book<", xml, StringComparison.Ordinal);
+        Assert.Contains("/pt/book<", xml, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Without_the_settings_row_the_page_says_it_cannot_check_rather_than_quoting()
+    {
+        using (IServiceScope scope = _factory.Services.CreateScope())
+        {
+            AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            db.OperationalSettings.RemoveRange(await db.OperationalSettings.ToListAsync());
+            await db.SaveChangesAsync();
+        }
+
+        string html = await _factory.CreateClient().GetStringAsync(Query());
+
+        Assert.Contains("cannot check availability", html, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Available for these dates", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("US$ 200.00", html, StringComparison.Ordinal);
+    }
+
+    // ---------------------------------------------------------------------------------------
+
+    private string Query(int extras = 1) =>
+        $"/book?product={_scoutSlug}&start=2026-12-20&end=2026-12-24&quantity=1&extraBatteries={extras}&place=L{_place}";
+
+    private async Task OccupyAsync(int quantity, int extras)
+    {
+        using IServiceScope scope = _factory.Services.CreateScope();
+
+        BookingWriter writer = scope.ServiceProvider.GetRequiredService<BookingWriter>();
+        AppDbContext db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        DeliveryZone zone = await db.DeliveryZones.OrderBy(row => row.SortOrder).FirstAsync();
+
+        BookingWriteResult result = await writer.CreateByStaffAsync(
+            new StaffBookingDetails(
+                "en-US", "Ada", "Lovelace", "ada@example.com", "+1 407 555 0100",
+                zone.Id, _place, null, null,
+                new DateOnly(2026, 12, 20), new DateOnly(2026, 12, 24),
+                DeliveryWindow.Morning, DeliveryWindow.Afternoon, null),
+            [new QuoteLineAsked(_scoutId, quantity, extras, 8m, [])],
+            "staff@orlandoup.com",
+            acknowledgeOverbooking: false,
+            CancellationToken.None);
+
+        Assert.True(result.Succeeded, "the diary could not be arranged, so nothing after it would mean anything");
     }
 }

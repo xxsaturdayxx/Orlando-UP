@@ -1,0 +1,57 @@
+@page "/admin/bookings"
+@model OrlandoUp.Pages.Admin.Bookings.IndexModel
+@using OrlandoUp.Application
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_BookingsTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_BookingsTitle"]</h1>
+        <p class="section__lead">@L["Admin_BookingsLead"]</p>
+
+        <p><a class="button button--primary" asp-page="/Admin/Bookings/Create">@L["Admin_BookingNew"]</a></p>
+
+        @if (Model.Rows.Count == 0)
+        {
+            <p class="todo">@L["Admin_BookingsNone"]</p>
+        }
+        else
+        {
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Admin_ColNumber"]</th>
+                            <th scope="col">@L["Admin_ColCustomer"]</th>
+                            <th scope="col">@L["Admin_ColDates"]</th>
+                            <th scope="col">@L["Admin_ColPlace"]</th>
+                            <th scope="col">@L["Admin_ColStatus"]</th>
+                            <th scope="col">@L["Admin_ColTotal"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in Model.Rows)
+                        {
+                            <tr>
+                                <td><a asp-page="/Admin/Bookings/Details" asp-route-id="@row.Id">@row.Number</a></td>
+                                <td>@row.Customer</td>
+                                <td>@row.StartDate.ToString("yyyy-MM-dd") — @row.EndDate.ToString("yyyy-MM-dd")</td>
+                                <td>@row.Place</td>
+                                <td>
+                                    @L[$"Admin_BookingStatus{row.Status}"]
+                                    @if (row.IsOverbooked)
+                                    {
+                                        <em class="todo">@L["Admin_BookingOverbooked"]</em>
+                                    }
+                                </td>
+                                <td>@MoneyFormat.Usd(row.Total)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>

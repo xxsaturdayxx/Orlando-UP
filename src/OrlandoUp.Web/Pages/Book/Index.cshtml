@@ -1,0 +1,148 @@
+@page "/book"
+@model OrlandoUp.Pages.Book.IndexModel
+@using OrlandoUp.Application
+@using OrlandoUp.Infrastructure.Localization
+@{
+    ViewData["Title"] = L["Book_Title"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Book_Title"]</h1>
+        <p class="section__lead">@L["Book_Lead"]</p>
+
+        @if (Model.Error is string error)
+        {
+            <p class="todo" role="alert">
+                @(Model.ErrorArgument is string argument
+                    ? string.Format(L[error].Value, argument)
+                    : L[error].Value)
+            </p>
+        }
+
+        @* asp-page and asp-route-culture on ONE line: the public-link control is a relation
+           counted line by line, and a culture declared on the next line would not be seen. *@
+        <form method="get" asp-page="/Book/Index" asp-route-culture="@CultureLink.Current">
+            <p>
+                <label for="Product">@L["Book_FieldProduct"]</label>
+                <select id="Product" name="Product" required>
+                    <option value=""></option>
+                    @foreach (var product in Model.Products)
+                    {
+                        <option value="@product.Slug" selected="@(Model.Product == product.Slug)">@product.Name</option>
+                    }
+                </select>
+            </p>
+            <p>
+                <label for="Start">@L["Book_FieldStartDate"]</label>
+                <input id="Start" name="Start" type="date" required
+                       min="@Model.Earliest.ToString("yyyy-MM-dd")"
+                       value="@(Model.Start is DateOnly s ? s.ToString("yyyy-MM-dd") : string.Empty)" />
+            </p>
+            <p>
+                <label for="End">@L["Book_FieldEndDate"]</label>
+                <input id="End" name="End" type="date" required
+                       value="@(Model.End is DateOnly e ? e.ToString("yyyy-MM-dd") : string.Empty)" />
+            </p>
+            <p>
+                <label for="Quantity">@L["Book_FieldQuantity"]</label>
+                <input id="Quantity" name="Quantity" type="number" min="1" max="10" value="@Model.Quantity" />
+            </p>
+            <p>
+                <label for="ExtraBatteries">@L["Book_FieldExtraBatteries"]</label>
+                <input id="ExtraBatteries" name="ExtraBatteries" type="number" min="0" max="10" value="@Model.ExtraBatteries" />
+            </p>
+            <p class="section__lead">
+                @string.Format(L["Book_FieldExtraBatteriesHelp"].Value, MoneyFormat.Usd(Model.DefaultExtraBatteryPerDay))
+            </p>
+
+            @if (Model.AddOns.Count > 0)
+            {
+                <fieldset>
+                    <legend>@L["Book_FieldAddOns"]</legend>
+                    @foreach (var addOn in Model.AddOns)
+                    {
+                        <label>
+                            <input type="checkbox" name="Extras" value="@addOn.Id"
+                                   checked="@Model.Extras.Contains(addOn.Id)" />
+                            @addOn.Name
+                        </label>
+                    }
+                </fieldset>
+            }
+
+            <p>
+                <label for="Place">@L["Book_FieldPlace"]</label>
+                <select id="Place" name="Place" required>
+                    <option value=""></option>
+                    @foreach (var group in Model.Places.GroupBy(place => place.Group))
+                    {
+                        <optgroup label="@group.Key">
+                            @foreach (var place in group)
+                            {
+                                <option value="@place.Value" selected="@(Model.Place == place.Value)">@place.Label</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+            </p>
+
+            <p class="section__lead">@string.Format(L["Book_EarliestStart"].Value, Model.Earliest.ToString("yyyy-MM-dd"))</p>
+
+            <p><button class="button button--primary" type="submit">@L["Book_Submit"]</button></p>
+        </form>
+
+        @if (Model.Answered && Model.Price is not null)
+        {
+            <p>@string.Format(
+                L["Book_DaysCount"].Value,
+                Model.Price.Days,
+                Model.Start!.Value.ToString("yyyy-MM-dd"),
+                Model.End!.Value.ToString("yyyy-MM-dd"))</p>
+
+            <p><strong>@L["Book_Available"]</strong></p>
+
+            @if (Model.SecondBatteryUnavailable)
+            {
+                <p class="todo">@L["Book_ExtraBatteryUnavailable"]</p>
+            }
+
+            <h2>@L["Book_PriceTitle"]</h2>
+            <table>
+                <tbody>
+                    <tr><th scope="row">@L["Book_LineRental"]</th><td>@MoneyFormat.Usd(Model.Price.Subtotal)</td></tr>
+                    <tr><th scope="row">@L["Book_LineExtraBatteries"]</th><td>@MoneyFormat.Usd(Model.Price.ExtraBatteriesTotal)</td></tr>
+                    <tr><th scope="row">@L["Book_LineAddOns"]</th><td>@MoneyFormat.Usd(Model.Price.AddOnsTotal)</td></tr>
+                    <tr><th scope="row">@L["Book_LineDelivery"]</th><td>@MoneyFormat.Usd(Model.Price.DeliveryFee)</td></tr>
+                    <tr>
+                        <th scope="row">@L["Book_LineTax"]</th>
+                        <td>
+                            @* A rate of zero prints the promise rather than US$ 0.00, so the visitor
+                               reads what it means instead of a number that looks like an omission. *@
+                            @if (Model.Price.TaxRate == 0m)
+                            {
+                                @L["Book_TaxIncluded"]
+                            }
+                            else
+                            {
+                                @MoneyFormat.Usd(Model.Price.Tax)
+                            }
+                        </td>
+                    </tr>
+                    <tr><th scope="row">@L["Book_LineTotal"]</th><td><strong>@MoneyFormat.Usd(Model.Price.Total)</strong></td></tr>
+                </tbody>
+            </table>
+        }
+        else if (Model.Answered)
+        {
+            <p><strong>@L["Book_SoldOut"]</strong></p>
+
+            @if (Model.MaxQuantity > 0 && Model.MaxQuantity < Model.Quantity)
+            {
+                <p>@string.Format(L["Book_OnlyLeft"].Value, Model.MaxQuantity)</p>
+            }
+        }
+
+        <p class="section__lead">@L["Book_PaymentSoon"]</p>
+    </div>
+</section>

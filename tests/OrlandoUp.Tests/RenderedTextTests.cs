@@ -46,6 +46,8 @@ public class RenderedTextTests : IAsyncLifetime
     [InlineData("/contact")]
     [InlineData("/privacy")]
     [InlineData("/terms")]
+    [InlineData("/book")]
+    [InlineData("/pt/book")]
     [InlineData("/admin/login")]
     public async Task No_page_prints_a_resource_key(string path)
     {

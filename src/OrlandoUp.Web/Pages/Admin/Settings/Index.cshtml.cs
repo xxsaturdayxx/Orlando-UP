@@ -43,6 +43,13 @@ public class IndexModel : PageModel
     [BindProperty]
     public decimal LostChargerFee { get; set; }
 
+    /// <summary>
+    /// The hour after which the public page stops offering tomorrow (D3/03). Editable here because
+    /// it is the kind of number that moves in December, when the routes are full.
+    /// </summary>
+    [BindProperty]
+    public int NextDayCutoffHour { get; set; }
+
     public DateTime? UpdatedAtUtc { get; private set; }
 
     /// <summary>False when the row is missing, which the screen reports and never repairs.</summary>
@@ -91,6 +98,7 @@ public class IndexModel : PageModel
         settings.ChargerCount = ChargerCount;
         settings.SecondBatteryPerDay = SecondBatteryPerDay;
         settings.LostChargerFee = LostChargerFee;
+        settings.NextDayCutoffHour = NextDayCutoffHour;
 
         _writer.TouchSettings(settings);
 
@@ -100,7 +108,8 @@ public class IndexModel : PageModel
             settings.Id,
             AuditAction.Updated,
             $"Edited the operational settings: {ChargerCount} charger(s), " +
-            $"second battery {SecondBatteryPerDay:0.00}/day, lost charger {LostChargerFee:0.00}.");
+            $"second battery {SecondBatteryPerDay:0.00}/day, lost charger {LostChargerFee:0.00}, " +
+            $"next-day cut-off at {NextDayCutoffHour}.");
 
         await _writer.SaveAsync(cancellationToken);
 
@@ -131,6 +140,13 @@ public class IndexModel : PageModel
             return _text["Admin_ErrorAmountNegative"];
         }
 
+        // An hour outside the clock is not a cut-off. Refused by name rather than clamped, because
+        // a clamped 24 would silently become midnight and move every visitor's earliest day.
+        if (NextDayCutoffHour is < 0 or > 23)
+        {
+            return _text["Admin_ErrorCutoffRange"];
+        }
+
         return null;
     }
 
@@ -140,6 +156,7 @@ public class IndexModel : PageModel
         ChargerCount = settings.ChargerCount;
         SecondBatteryPerDay = settings.SecondBatteryPerDay;
         LostChargerFee = settings.LostChargerFee;
+        NextDayCutoffHour = settings.NextDayCutoffHour;
         UpdatedAtUtc = settings.UpdatedAtUtc;
     }
 }

@@ -177,9 +177,10 @@
         @if (product.IsBookable)
         {
             <p>
-                <button type="button" class="button button--disabled" disabled>@L["Product_BookingSoon"]</button>
+                @* asp-page and asp-route-culture on ONE line; the product is carried so the
+                   booking page opens already knowing what the visitor was looking at. *@
+                <a class="button button--primary" asp-page="/Book/Index" asp-route-culture="@CultureLink.Current" asp-route-product="@product.Slug">@L["Product_CheckAvailability"]</a>
             </p>
-            <p class="section__lead">@L["Product_BookingSoonNote"]</p>
         }
         else
         {

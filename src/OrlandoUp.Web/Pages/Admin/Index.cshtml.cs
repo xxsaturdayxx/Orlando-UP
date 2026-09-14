@@ -42,6 +42,16 @@ public class IndexModel : PageModel
     /// </remarks>
     public int? ChargerCount { get; private set; }
 
+    /// <summary>
+    /// Bookings that are occupying equipment right now — the set the availability rule filters on.
+    /// </summary>
+    /// <remarks>
+    /// A <c>Count</c> over a filtered set, so an empty table honestly answers zero: nothing is
+    /// being claimed about a row that is missing, which is what separates this number from the
+    /// charger count above.
+    /// </remarks>
+    public int ActiveBookingCount { get; private set; }
+
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         ProductCount = await _db.Products.CountAsync(cancellationToken);
@@ -56,5 +66,15 @@ public class IndexModel : PageModel
             .Where(row => row.Id == OperationalSettings.SingletonId)
             .Select(row => (int?)row.ChargerCount)
             .FirstOrDefaultAsync(cancellationToken);
+
+        // Filtered in memory on purpose: HoldsInventory is the one place that answers which
+        // statuses occupy equipment, and rewriting it as a query would be a second copy of the
+        // set it defines — free to drift from the rule the site actually promises against.
+        List<BookingStatus> statuses = await _db.Bookings
+            .AsNoTracking()
+            .Select(booking => booking.Status)
+            .ToListAsync(cancellationToken);
+
+        ActiveBookingCount = statuses.Count(BookingStatusRules.HoldsInventory);
     }
 }

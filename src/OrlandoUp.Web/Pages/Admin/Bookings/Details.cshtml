@@ -1,0 +1,156 @@
+@page "/admin/bookings/{id:int}"
+@model OrlandoUp.Pages.Admin.Bookings.DetailsModel
+@using OrlandoUp.Application
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = string.Format(L["Admin_BookingDetailTitle"].Value, Model.Booking.Number);
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@string.Format(L["Admin_BookingDetailTitle"].Value, Model.Booking.Number)</h1>
+
+        @if (Model.Flash is string flash)
+        {
+            <p role="status">@L[flash]</p>
+        }
+
+        @if (Model.Error is string error)
+        {
+            <p class="todo" role="alert">@L[error]</p>
+        }
+
+        <p>
+            @L[$"Admin_BookingStatus{Model.Booking.Status}"]
+            · @L[$"Admin_BookingSource{Model.Booking.Source}"]
+            @if (Model.Booking.IsOverbooked)
+            {
+                <em class="todo">@L["Admin_BookingOverbooked"]</em>
+            }
+        </p>
+
+        <h2>@L["Admin_BookingCustomerTitle"]</h2>
+        <p>
+            @Model.Booking.FirstName @Model.Booking.LastName<br />
+            @Model.Booking.Email<br />
+            @Model.Booking.Phone
+        </p>
+
+        <h2>@L["Admin_BookingDeliveryTitle"]</h2>
+        <p>
+            @Model.Booking.StartDate.ToString("yyyy-MM-dd")
+            (@L[$"Admin_Window{Model.Booking.DeliveryWindow}"])
+            —
+            @Model.Booking.EndDate.ToString("yyyy-MM-dd")
+            (@L[$"Admin_Window{Model.Booking.PickupWindow}"])<br />
+            @string.Format(L["Admin_BookingDays"].Value, Model.Booking.Days)<br />
+            @(Model.Booking.DeliveryLocation is null
+                ? Model.Booking.DeliveryZone!.Code
+                : Model.Booking.DeliveryLocation.Name)
+            @if (!string.IsNullOrWhiteSpace(Model.Booking.Address))
+            {
+                <br />@Model.Booking.Address
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Booking.DeliveryNotes))
+            {
+                <br />@Model.Booking.DeliveryNotes
+            }
+        </p>
+
+        <h2>@L["Admin_BookingLinesTitle"]</h2>
+
+        @* Every number below is a column of this booking. Nothing here reads the catalog: the
+           price list may have moved since, and what was charged did not (D7/03). *@
+        <div class="table-scroll">
+            <table>
+                <thead>
+                    <tr>
+                        <th scope="col">@L["Admin_ColProduct"]</th>
+                        <th scope="col">@L["Admin_ColQuantity"]</th>
+                        <th scope="col">@L["Admin_ColExtraBatteries"]</th>
+                        <th scope="col">@L["Admin_ColTotal"]</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.Booking.Lines)
+                    {
+                        <tr>
+                            <td>
+                                @line.ProductName
+                                @foreach (var addOn in line.AddOns)
+                                {
+                                    <br />
+                                    <small>@addOn.AddOnName — @MoneyFormat.Usd(addOn.Total)</small>
+                                }
+                            </td>
+                            <td>@line.Quantity</td>
+                            <td>
+                                @line.ExtraBatteryCount
+                                @if (line.ExtraBatteryCount > 0)
+                                {
+                                    <br />
+                                    <small>@MoneyFormat.Usd(line.ExtraBatteryPerDay) / @L["Admin_BookingDays"].Value.Replace("{0}", "1")</small>
+                                }
+                            </td>
+                            <td>@MoneyFormat.Usd(line.LineTotal + line.ExtraBatteriesTotal)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <h2>@L["Admin_BookingPriceTitle"]</h2>
+        <table>
+            <tbody>
+                <tr><th scope="row">@L["Book_LineRental"]</th><td>@MoneyFormat.Usd(Model.Booking.Subtotal)</td></tr>
+                <tr><th scope="row">@L["Book_LineExtraBatteries"]</th><td>@MoneyFormat.Usd(Model.Booking.ExtraBatteriesTotal)</td></tr>
+                <tr><th scope="row">@L["Book_LineAddOns"]</th><td>@MoneyFormat.Usd(Model.Booking.AddOnsTotal)</td></tr>
+                <tr><th scope="row">@L["Book_LineDelivery"]</th><td>@MoneyFormat.Usd(Model.Booking.DeliveryFee)</td></tr>
+                <tr>
+                    <th scope="row">@L["Book_LineTax"]</th>
+                    <td>
+                        @if (Model.Booking.TaxRate == 0m)
+                        {
+                            @L["Book_TaxIncluded"]
+                        }
+                        else
+                        {
+                            @MoneyFormat.Usd(Model.Booking.Tax)
+                        }
+                    </td>
+                </tr>
+                <tr><th scope="row">@L["Book_LineTotal"]</th><td><strong>@MoneyFormat.Usd(Model.Booking.Total)</strong></td></tr>
+            </tbody>
+        </table>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Booking.StaffNotes))
+        {
+            <h2>@L["Admin_FieldStaffNotes"]</h2>
+            <p>@Model.Booking.StaffNotes</p>
+        }
+
+        <h2>@L["Admin_BookingEventsTitle"]</h2>
+        <ul>
+            @foreach (var line in Model.Events)
+            {
+                <li>@line.OccurredAtUtc.ToString("yyyy-MM-dd HH:mm") — @line.Summary</li>
+            }
+        </ul>
+
+        @if (Model.CanCancel)
+        {
+            <h2>@L["Admin_BookingCancelTitle"]</h2>
+            <form method="post" asp-page-handler="Cancel">
+                <p>
+                    <label for="CancelReason">@L["Admin_FieldCancelReason"]</label>
+                    <input id="CancelReason" name="CancelReason" value="@Model.CancelReason" required />
+                </p>
+                <p><button class="button button--primary" type="submit">@L["Admin_BookingCancel"]</button></p>
+            </form>
+        }
+        else
+        {
+            <p class="section__lead">@L["Admin_ErrorCannotCancel"]</p>
+        }
+    </div>
+</section>

@@ -47,6 +47,13 @@
                     <p class="field__help" id="lost-help">@L["Admin_FieldLostChargerHelp"]</p>
                 </div>
 
+                <div class="field">
+                    <label for="cutoffHour">@L["Admin_FieldCutoffHour"]</label>
+                    <input id="cutoffHour" name="NextDayCutoffHour" type="number" step="1" min="0" max="23"
+                           value="@Model.NextDayCutoffHour" aria-describedby="cutoff-help" required />
+                    <p class="field__help" id="cutoff-help">@L["Admin_FieldCutoffHourHelp"]</p>
+                </div>
+
                 <button type="submit" class="button button--primary">@L["Admin_Save"]</button>
             </form>
 

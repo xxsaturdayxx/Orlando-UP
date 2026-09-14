@@ -1,0 +1,175 @@
+@page "/admin/bookings/create"
+@model OrlandoUp.Pages.Admin.Bookings.CreateModel
+@using OrlandoUp.Application
+@using OrlandoUp.Domain
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = L["Admin_BookingCreateTitle"].Value;
+}
+
+<section class="section">
+    <div class="page">
+        <h1>@L["Admin_BookingCreateTitle"]</h1>
+        <p class="section__lead">@L["Admin_BookingCreateLead"]</p>
+
+        @if (Model.Error is string error)
+        {
+            <p class="todo" role="alert">
+                @(Model.ErrorArgument is string argument
+                    ? string.Format(L[error].Value, argument)
+                    : L[error].Value)
+            </p>
+        }
+
+        <form method="post">
+            <h2>@L["Admin_BookingCustomerTitle"]</h2>
+
+            <p>
+                <label for="FirstName">@L["Admin_FieldFirstName"]</label>
+                <input id="FirstName" name="FirstName" value="@Model.FirstName" required />
+            </p>
+            <p>
+                <label for="LastName">@L["Admin_FieldLastName"]</label>
+                <input id="LastName" name="LastName" value="@Model.LastName" required />
+            </p>
+            <p>
+                <label for="Email">@L["Admin_FieldEmail"]</label>
+                <input id="Email" name="Email" type="email" value="@Model.Email" required />
+            </p>
+            <p>
+                <label for="Phone">@L["Admin_FieldPhone"]</label>
+                <input id="Phone" name="Phone" value="@Model.Phone" required />
+            </p>
+            <p>
+                <label for="CustomerCulture">@L["Admin_FieldCustomerLanguage"]</label>
+                <select id="CustomerCulture" name="CustomerCulture">
+                    <option value="en-US" selected="@(Model.CustomerCulture == "en-US")">English</option>
+                    <option value="pt-BR" selected="@(Model.CustomerCulture == "pt-BR")">Português</option>
+                </select>
+            </p>
+
+            <h2>@L["Admin_BookingDeliveryTitle"]</h2>
+
+            <p>
+                <label for="StartDate">@L["Admin_FieldStartDate"]</label>
+                <input id="StartDate" name="StartDate" type="date" value="@Model.StartDate.ToString("yyyy-MM-dd")" required />
+            </p>
+            <p>
+                <label for="EndDate">@L["Admin_FieldEndDate"]</label>
+                <input id="EndDate" name="EndDate" type="date" value="@Model.EndDate.ToString("yyyy-MM-dd")" required />
+            </p>
+            <p>
+                <label for="DeliveryWindow">@L["Admin_FieldDeliveryWindow"]</label>
+                <select id="DeliveryWindow" name="DeliveryWindow">
+                    @foreach (DeliveryWindow window in Enum.GetValues<DeliveryWindow>())
+                    {
+                        <option value="@window" selected="@(Model.DeliveryWindow == window)">@L[$"Admin_Window{window}"]</option>
+                    }
+                </select>
+            </p>
+            <p>
+                <label for="PickupWindow">@L["Admin_FieldPickupWindow"]</label>
+                <select id="PickupWindow" name="PickupWindow">
+                    @foreach (DeliveryWindow window in Enum.GetValues<DeliveryWindow>())
+                    {
+                        <option value="@window" selected="@(Model.PickupWindow == window)">@L[$"Admin_Window{window}"]</option>
+                    }
+                </select>
+            </p>
+            <p>
+                <label for="Place">@L["Admin_FieldPlace"]</label>
+                <select id="Place" name="Place" required>
+                    <option value=""></option>
+                    @foreach (var group in Model.Places.GroupBy(place => place.Group))
+                    {
+                        <optgroup label="@group.Key">
+                            @foreach (var place in group)
+                            {
+                                <option value="@place.Value" selected="@(Model.Place == place.Value)">@place.Label</option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+            </p>
+            <p>
+                <label for="Address">@L["Admin_FieldAddress"]</label>
+                <input id="Address" name="Address" value="@Model.Address" />
+            </p>
+            <p>
+                <label for="DeliveryNotes">@L["Admin_FieldDeliveryNotes"]</label>
+                <input id="DeliveryNotes" name="DeliveryNotes" value="@Model.DeliveryNotes" />
+            </p>
+
+            <h2>@L["Admin_BookingLinesTitle"]</h2>
+
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">@L["Admin_ColProduct"]</th>
+                            <th scope="col">@L["Admin_ColQuantity"]</th>
+                            <th scope="col">@L["Admin_ColExtraBatteries"]</th>
+                            <th scope="col">@L["Admin_ColExtraBatteryPerDay"]</th>
+                            <th scope="col">@L["Admin_ColAddOns"]</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in Model.Lines)
+                        {
+                            <tr>
+                                <td>
+                                    <label for="Quantity_@line.ProductId">@line.Name</label>
+                                </td>
+                                <td>
+                                    <input id="Quantity_@line.ProductId" name="Quantity[@line.ProductId]"
+                                           type="number" min="0" max="10"
+                                           value="@(Model.Quantity.TryGetValue(line.ProductId, out int q) ? q : 0)" />
+                                </td>
+                                <td>
+                                    @* Posted for every row; the server refuses a non-zero value on
+                                       anything that has no battery, so the refusal is one rule in
+                                       one place rather than a disabled field the browser could
+                                       re-enable. *@
+                                    <input name="ExtraBatteries[@line.ProductId]"
+                                           aria-label="@L["Admin_ColExtraBatteries"] @line.Name"
+                                           type="number" min="0" max="10"
+                                           value="@(Model.ExtraBatteries.TryGetValue(line.ProductId, out int e) ? e : 0)" />
+                                </td>
+                                <td>
+                                    <input name="ExtraBatteryPerDay[@line.ProductId]"
+                                           aria-label="@L["Admin_ColExtraBatteryPerDay"] @line.Name"
+                                           type="number" min="0" step="0.01"
+                                           value="@(Model.ExtraBatteryPerDay.TryGetValue(line.ProductId, out decimal p) ? MoneyFormat.Number(p) : MoneyFormat.Number(Model.DefaultExtraBatteryPerDay))" />
+                                </td>
+                                <td>
+                                    @foreach (var addOn in line.AddOns)
+                                    {
+                                        <label>
+                                            <input type="checkbox" name="AddOns[@line.ProductId]" value="@addOn.Id" />
+                                            @addOn.Name
+                                        </label>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <p>
+                <label for="StaffNotes">@L["Admin_FieldStaffNotes"]</label>
+                <input id="StaffNotes" name="StaffNotes" value="@Model.StaffNotes" />
+            </p>
+
+            <p>
+                <label>
+                    <input type="checkbox" name="Overbook" value="true" checked="@Model.Overbook" />
+                    @L["Admin_FieldOverbook"]
+                </label>
+            </p>
+            <p class="section__lead">@L["Admin_FieldOverbookHelp"]</p>
+
+            <p><button class="button button--primary" type="submit">@L["Admin_BookingCreate"]</button></p>
+        </form>
+    </div>
+</section>

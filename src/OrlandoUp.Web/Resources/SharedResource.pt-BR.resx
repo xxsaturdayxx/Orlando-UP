@@ -280,12 +280,6 @@
   <data name="Product_AddOnPerDay" xml:space="preserve">
     <value>{0} por dia</value>
   </data>
-  <data name="Product_BookingSoon" xml:space="preserve">
-    <value>Reservas em breve</value>
-  </data>
-  <data name="Product_BookingSoonNote" xml:space="preserve">
-    <value>A reserva online ainda não está aberta. O seletor de datas chega na próxima entrega.</value>
-  </data>
   <data name="Config_Single" xml:space="preserve">
     <value>Uma criança</value>
   </data>
@@ -936,5 +930,335 @@
   </data>
   <data name="Admin_CountChargers" xml:space="preserve">
     <value>Carregadores</value>
+  </data>
+  <data name="Product_CheckAvailability" xml:space="preserve">
+    <value>Ver disponibilidade e preço</value>
+  </data>
+  <data name="Book_Title" xml:space="preserve">
+    <value>Disponibilidade e preço</value>
+  </data>
+  <data name="Book_Lead" xml:space="preserve">
+    <value>Escolha o equipamento, as datas e onde você vai ficar para ver se está disponível e quanto custa.</value>
+  </data>
+  <data name="Book_FieldProduct" xml:space="preserve">
+    <value>Equipamento</value>
+  </data>
+  <data name="Book_FieldStartDate" xml:space="preserve">
+    <value>Dia da entrega</value>
+  </data>
+  <data name="Book_FieldEndDate" xml:space="preserve">
+    <value>Dia da retirada</value>
+  </data>
+  <data name="Book_FieldQuantity" xml:space="preserve">
+    <value>Quantos</value>
+  </data>
+  <data name="Book_FieldExtraBatteries" xml:space="preserve">
+    <value>Segunda bateria (só scooters)</value>
+  </data>
+  <data name="Book_FieldExtraBatteriesHelp" xml:space="preserve">
+    <value>Toda scooter já vem com uma bateria e o carregador dela. A segunda custa {0} por dia e dobra a autonomia.</value>
+  </data>
+  <data name="Book_FieldAddOns" xml:space="preserve">
+    <value>Extras</value>
+  </data>
+  <data name="Book_FieldPlace" xml:space="preserve">
+    <value>Onde você vai ficar</value>
+  </data>
+  <data name="Book_Submit" xml:space="preserve">
+    <value>Ver disponibilidade e preço</value>
+  </data>
+  <data name="Book_DaysCount" xml:space="preserve">
+    <value>{0} dias, de {1} a {2}</value>
+  </data>
+  <data name="Book_Available" xml:space="preserve">
+    <value>Disponível nessas datas</value>
+  </data>
+  <data name="Book_SoldOut" xml:space="preserve">
+    <value>Esgotado nessas datas</value>
+  </data>
+  <data name="Book_OnlyLeft" xml:space="preserve">
+    <value>Restam só {0} nessas datas</value>
+  </data>
+  <data name="Book_ExtraBatteryUnavailable" xml:space="preserve">
+    <value>A segunda bateria não está disponível nessas datas — o preço abaixo é sem ela.</value>
+  </data>
+  <data name="Book_EarliestStart" xml:space="preserve">
+    <value>O primeiro dia de entrega possível é {0}.</value>
+  </data>
+  <data name="Book_ErrorEndBeforeStart" xml:space="preserve">
+    <value>O dia da retirada tem de ser o dia da entrega ou depois.</value>
+  </data>
+  <data name="Book_ErrorTooLong" xml:space="preserve">
+    <value>Aluguéis de mais de {0} dias: fale com a gente.</value>
+  </data>
+  <data name="Book_ErrorExtraOnlyScooters" xml:space="preserve">
+    <value>Só scooter leva segunda bateria.</value>
+  </data>
+  <data name="Book_ErrorExtraAboveQuantity" xml:space="preserve">
+    <value>No máximo uma segunda bateria por scooter.</value>
+  </data>
+  <data name="Book_ErrorPlaceRequired" xml:space="preserve">
+    <value>Diga onde você vai ficar.</value>
+  </data>
+  <data name="Book_ErrorProductRequired" xml:space="preserve">
+    <value>Escolha o equipamento primeiro.</value>
+  </data>
+  <data name="Book_ErrorQuantity" xml:space="preserve">
+    <value>Escolha pelo menos um.</value>
+  </data>
+  <data name="Book_PriceTitle" xml:space="preserve">
+    <value>Seu preço</value>
+  </data>
+  <data name="Book_LineRental" xml:space="preserve">
+    <value>Aluguel</value>
+  </data>
+  <data name="Book_LineExtraBatteries" xml:space="preserve">
+    <value>Segunda bateria</value>
+  </data>
+  <data name="Book_LineAddOns" xml:space="preserve">
+    <value>Extras</value>
+  </data>
+  <data name="Book_LineDelivery" xml:space="preserve">
+    <value>Entrega</value>
+  </data>
+  <data name="Book_LineTax" xml:space="preserve">
+    <value>Impostos</value>
+  </data>
+  <data name="Book_TaxIncluded" xml:space="preserve">
+    <value>Impostos incluídos</value>
+  </data>
+  <data name="Book_LineTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Book_PaymentSoon" xml:space="preserve">
+    <value>Pagamento e confirmação chegam na próxima entrega. Até lá, fale com a gente e seguramos as suas datas.</value>
+  </data>
+  <data name="Book_ErrorUnavailableNow" xml:space="preserve">
+    <value>Não conseguimos conferir a disponibilidade agora. Fale com a gente.</value>
+  </data>
+  <data name="Admin_BookingsTitle" xml:space="preserve">
+    <value>Reservas</value>
+  </data>
+  <data name="Admin_BookingsLead" xml:space="preserve">
+    <value>Todas as reservas, seja quem for que lançou.</value>
+  </data>
+  <data name="Admin_BookingsNone" xml:space="preserve">
+    <value>Nenhuma reserva ainda.</value>
+  </data>
+  <data name="Admin_BookingNew" xml:space="preserve">
+    <value>Nova reserva</value>
+  </data>
+  <data name="Admin_BookingCreateTitle" xml:space="preserve">
+    <value>Nova reserva (lançada pela equipe)</value>
+  </data>
+  <data name="Admin_BookingCreateLead" xml:space="preserve">
+    <value>Para reserva que chegou por WhatsApp, telefone ou e-mail e foi paga fora do site.</value>
+  </data>
+  <data name="Admin_ColNumber" xml:space="preserve">
+    <value>Número</value>
+  </data>
+  <data name="Admin_ColCustomer" xml:space="preserve">
+    <value>Cliente</value>
+  </data>
+  <data name="Admin_ColDates" xml:space="preserve">
+    <value>Datas</value>
+  </data>
+  <data name="Admin_ColPlace" xml:space="preserve">
+    <value>Entrega</value>
+  </data>
+  <data name="Admin_ColTotal" xml:space="preserve">
+    <value>Total</value>
+  </data>
+  <data name="Admin_ColQuantity" xml:space="preserve">
+    <value>Quantidade</value>
+  </data>
+  <data name="Admin_ColExtraBatteries" xml:space="preserve">
+    <value>Segundas baterias</value>
+  </data>
+  <data name="Admin_ColExtraBatteryPerDay" xml:space="preserve">
+    <value>Segunda bateria por dia (US$)</value>
+  </data>
+  <data name="Admin_ColAddOns" xml:space="preserve">
+    <value>Extras</value>
+  </data>
+  <data name="Admin_BookingStatusDraft" xml:space="preserve">
+    <value>Rascunho</value>
+  </data>
+  <data name="Admin_BookingStatusPendingPayment" xml:space="preserve">
+    <value>Aguardando pagamento</value>
+  </data>
+  <data name="Admin_BookingStatusConfirmed" xml:space="preserve">
+    <value>Confirmada</value>
+  </data>
+  <data name="Admin_BookingStatusScheduled" xml:space="preserve">
+    <value>Programada</value>
+  </data>
+  <data name="Admin_BookingStatusOutForDelivery" xml:space="preserve">
+    <value>Saiu para entrega</value>
+  </data>
+  <data name="Admin_BookingStatusActive" xml:space="preserve">
+    <value>Em uso</value>
+  </data>
+  <data name="Admin_BookingStatusPickedUp" xml:space="preserve">
+    <value>Recolhida</value>
+  </data>
+  <data name="Admin_BookingStatusCompleted" xml:space="preserve">
+    <value>Concluída</value>
+  </data>
+  <data name="Admin_BookingStatusExpired" xml:space="preserve">
+    <value>Expirada</value>
+  </data>
+  <data name="Admin_BookingStatusCancelled" xml:space="preserve">
+    <value>Cancelada</value>
+  </data>
+  <data name="Admin_BookingStatusRefunded" xml:space="preserve">
+    <value>Reembolsada</value>
+  </data>
+  <data name="Admin_BookingSourceOnline" xml:space="preserve">
+    <value>Online</value>
+  </data>
+  <data name="Admin_BookingSourceStaff" xml:space="preserve">
+    <value>Lançada pela equipe</value>
+  </data>
+  <data name="Admin_WindowMorning" xml:space="preserve">
+    <value>8h–10h</value>
+  </data>
+  <data name="Admin_WindowLateMorning" xml:space="preserve">
+    <value>10h–12h</value>
+  </data>
+  <data name="Admin_WindowAfternoon" xml:space="preserve">
+    <value>14h–16h</value>
+  </data>
+  <data name="Admin_WindowEvening" xml:space="preserve">
+    <value>18h–20h</value>
+  </data>
+  <data name="Admin_FieldFirstName" xml:space="preserve">
+    <value>Nome</value>
+  </data>
+  <data name="Admin_FieldLastName" xml:space="preserve">
+    <value>Sobrenome</value>
+  </data>
+  <data name="Admin_FieldEmail" xml:space="preserve">
+    <value>E-mail</value>
+  </data>
+  <data name="Admin_FieldPhone" xml:space="preserve">
+    <value>Telefone / WhatsApp</value>
+  </data>
+  <data name="Admin_FieldCustomerLanguage" xml:space="preserve">
+    <value>Idioma do cliente</value>
+  </data>
+  <data name="Admin_FieldStartDate" xml:space="preserve">
+    <value>Dia da entrega</value>
+  </data>
+  <data name="Admin_FieldEndDate" xml:space="preserve">
+    <value>Dia da retirada</value>
+  </data>
+  <data name="Admin_FieldDeliveryWindow" xml:space="preserve">
+    <value>Janela de entrega</value>
+  </data>
+  <data name="Admin_FieldPickupWindow" xml:space="preserve">
+    <value>Janela de retirada</value>
+  </data>
+  <data name="Admin_FieldPlace" xml:space="preserve">
+    <value>Local de entrega</value>
+  </data>
+  <data name="Admin_FieldAddress" xml:space="preserve">
+    <value>Endereço (quando o local não está na lista)</value>
+  </data>
+  <data name="Admin_FieldDeliveryNotes" xml:space="preserve">
+    <value>Observações de entrega (quarto, portão, instruções)</value>
+  </data>
+  <data name="Admin_BookingLinesTitle" xml:space="preserve">
+    <value>Equipamentos</value>
+  </data>
+  <data name="Admin_FieldStaffNotes" xml:space="preserve">
+    <value>Observações internas (como foi pago, o que mais for)</value>
+  </data>
+  <data name="Admin_FieldOverbook" xml:space="preserve">
+    <value>Lançar acima da frota (resolvo à mão)</value>
+  </data>
+  <data name="Admin_FieldOverbookHelp" xml:space="preserve">
+    <value>Desmarcada, o sistema recusa o que a frota não tem nessas datas. Marcada, salva a reserva e marca.</value>
+  </data>
+  <data name="Admin_BookingCreate" xml:space="preserve">
+    <value>Criar reserva</value>
+  </data>
+  <data name="Admin_BookingCreated" xml:space="preserve">
+    <value>Reserva {0} criada.</value>
+  </data>
+  <data name="Admin_ErrorNoLine" xml:space="preserve">
+    <value>Escolha pelo menos um equipamento.</value>
+  </data>
+  <data name="Admin_ErrorNotAvailable" xml:space="preserve">
+    <value>Não disponível: {0}. Marque a caixa acima para lançar assim mesmo.</value>
+  </data>
+  <data name="Admin_ErrorAddressRequired" xml:space="preserve">
+    <value>Este local precisa de endereço.</value>
+  </data>
+  <data name="Admin_ErrorStartInPast" xml:space="preserve">
+    <value>O dia da entrega já passou.</value>
+  </data>
+  <data name="Admin_ErrorEndBeforeStart" xml:space="preserve">
+    <value>O dia da retirada tem de ser o dia da entrega ou depois.</value>
+  </data>
+  <data name="Admin_ErrorTooLong" xml:space="preserve">
+    <value>No máximo {0} dias.</value>
+  </data>
+  <data name="Admin_ErrorExtraOnlyScooters" xml:space="preserve">
+    <value>Só scooter leva segunda bateria.</value>
+  </data>
+  <data name="Admin_ErrorExtraAboveQuantity" xml:space="preserve">
+    <value>Segundas baterias não podem passar da quantidade.</value>
+  </data>
+  <data name="Admin_ErrorNegativeAmount" xml:space="preserve">
+    <value>Valor não pode ser negativo.</value>
+  </data>
+  <data name="Admin_BookingDetailTitle" xml:space="preserve">
+    <value>Reserva {0}</value>
+  </data>
+  <data name="Admin_BookingOverbooked" xml:space="preserve">
+    <value>Acima da frota</value>
+  </data>
+  <data name="Admin_BookingDays" xml:space="preserve">
+    <value>{0} dias</value>
+  </data>
+  <data name="Admin_BookingEventsTitle" xml:space="preserve">
+    <value>Histórico</value>
+  </data>
+  <data name="Admin_BookingCancelTitle" xml:space="preserve">
+    <value>Cancelar esta reserva</value>
+  </data>
+  <data name="Admin_FieldCancelReason" xml:space="preserve">
+    <value>Motivo</value>
+  </data>
+  <data name="Admin_BookingCancel" xml:space="preserve">
+    <value>Cancelar reserva</value>
+  </data>
+  <data name="Admin_BookingCancelled" xml:space="preserve">
+    <value>Reserva cancelada.</value>
+  </data>
+  <data name="Admin_ErrorCannotCancel" xml:space="preserve">
+    <value>Esta reserva não pode ser cancelada na situação atual.</value>
+  </data>
+  <data name="Admin_DashboardActiveBookings" xml:space="preserve">
+    <value>Reservas ativas</value>
+  </data>
+  <data name="Admin_FieldCutoffHour" xml:space="preserve">
+    <value>Corte para o dia seguinte (hora, horário de Orlando)</value>
+  </data>
+  <data name="Admin_FieldCutoffHourHelp" xml:space="preserve">
+    <value>Até esta hora o cliente pode reservar entrega para amanhã; depois dela, o primeiro dia possível é depois de amanhã.</value>
+  </data>
+  <data name="Admin_ErrorCutoffRange" xml:space="preserve">
+    <value>A hora tem de estar entre 0 e 23.</value>
+  </data>
+  <data name="Admin_BookingPriceTitle" xml:space="preserve">
+    <value>Preço como foi cobrado</value>
+  </data>
+  <data name="Admin_BookingCustomerTitle" xml:space="preserve">
+    <value>Cliente</value>
+  </data>
+  <data name="Admin_BookingDeliveryTitle" xml:space="preserve">
+    <value>Entrega</value>
   </data>
 </root>

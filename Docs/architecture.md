@@ -106,6 +106,37 @@ delivery fee from the zone; tax = rate × (taxable base) where the base and the 
 configuration (open question: whether medical scooter rentals are taxable). All rounding
 `MidpointRounding.ToEven` at 2 decimals, once, at the end of each line.
 
+> **Note of 2026-09-13 — six points of §3 the booking core changed, and the code is the authority.**
+> Leva 03 built the four booking tables and the availability rule, and it departed from this section
+> in six places. Each departure is recorded here rather than left to be rediscovered from a diff.
+>
+> 1. **The booking number is `OU-` plus the row id padded to six digits** (`OU-000123`), not
+>    `OU-YYYY-NNNNNN` (D6/03). A year-scoped sequence needs a database sequence the SQLite test host
+>    does not have; the identity key is already sequential and never reused, and the year is in
+>    `CreatedAtUtc`. It is stored, not derived, because a customer reads it aloud on the phone.
+> 2. **Rounding is `MidpointRounding.AwayFromZero`**, not `ToEven`, and it happens **once, on the
+>    tax line only** — every other amount is an integer multiple of a two-decimal price (D7/03).
+>    That is what `PricingTier.DailyEquivalent()` has been doing since leva 01; the sentence above
+>    described an intention the code never had.
+> 3. **`BookingEvent` carries `Summary`, one English sentence — never `Data` as JSON** (spec §4.4).
+>    It mirrors `AuditEntry`, which was built the same way and for the same reason: a serialized
+>    diff is not something a member of staff reads on a support call.
+> 4. **`DeliveryWindow` and `PickupWindow` are an enum with explicit numbers**, not `TimeOnly`
+>    start–end pairs on the booking (spec §4.6). The four windows are a fixed offer, and the hours
+>    they stand for live in one static table, `Domain/DeliveryWindows.cs`.
+> 5. **The customer has one `Phone` column**, not `Phone` + `WhatsApp` + `Country` (spec §4.1):
+>    WhatsApp is a phone number, and the country is in the number.
+> 6. **The rules live in `Domain/` and the loaders in `Infrastructure/Data/`** — `Availability`,
+>    `Quote`, `BookingStatusRules`, `BookingRules`, with `AvailabilityQueries`, `QuoteBuilder`,
+>    `BookingWriter` and `BookingTimeline` beside `CatalogQueries` — rather than as
+>    `IAvailabilityService` / `IBookingService` under `Application/` as §1 sketches. The
+>    architecture test forbids `Domain` from referencing any other layer, which is what keeps a
+>    `DbContext` out of the availability rule.
+>
+> What this note does **not** touch: `BookingUnit`, `Payment`, `Coupon`, `ManageToken` and the
+> waiver fields are still what §3 describes, and are still unbuilt — each belongs to the front that
+> first reads it (D5/03).
+
 ## 4. Localization (D8, D20, D21)
 
 - Route: `{culture?}` prefix on every public page via a `PageRouteModelConvention`; `""` = `en-US`,
