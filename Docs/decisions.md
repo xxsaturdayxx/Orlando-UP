@@ -524,3 +524,36 @@ visitor sees, refuses by default, and accepts when the operator ticks the box th
 booking carries `IsOverbooked = true`, its first event names it, the list shows the badge.
 Deliberate over-selling is a business decision and this is it, written down — a system that
 forbade it by accident and one that allowed it by accident would be indistinguishable in code.
+
+**D43 — 2026-09-15 (conversation 7) — The delivery fee belongs to the ZONE, is edited on the zone
+screen, and the staff booking screen may override it for one booking.** **[operator]**, on the scene
+*a family books Westgate Lakes, which is not on the list of hotels; the driver leaves it at the front
+desk exactly as at an I-Drive hotel*. Rod's answer named both moments he needs and refused the third:
+*"International Dr, a entrega será gratuita (por tempo limitado); regiões com distância superior a 15
+milhas teria um custo de $25"* — and, in the same breath, *"Não precisamos fazer isso necessariamente.
+Isso pode gerar muito trabalho"* about the distance rule. So: **the zone carries the standing price**
+(a column that already exists, now with a screen), and **the booking carries the price agreed in that
+conversation** (a nullable override, blank meaning the zone's fee, zero meaning zero). No address is
+geocoded and no radius is computed. The booking freezes the number it charged, as it already freezes
+every other amount (D7/03), and the first line of its history says when the number was set by hand —
+otherwise a total nobody can explain is a total the operator stops trusting.
+`Docs/spec-04c-zones-and-places.md` §6.
+
+**D44 — 2026-09-15 (conversation 7) — A zone `other-hotel` covers any hotel in Orlando or Kissimmee,
+and it is born with a fee of US$ 0.** **[operator]**: *"Se é em Orlando ou Kissimmee, qualquer hotel
+pode ser atendido"*, and free delivery kept **as an advertising instrument, temporarily**. Zero is
+today's promise, not a permanent one: it is a row with an edit screen, and changing it is a number in
+a field. **Nothing on the public site announces that it is temporary** — a promotion with a start and
+an end date is a second concept (coupons, phase 4) and would be a claim the site would have to keep.
+In code the zone is not a special case: it is an active zone with **no place list**, which the place
+selector already turns into an option that asks for a typed address (D3/04c). It appears on
+`/delivery-areas` in both languages, so a guest who does not find his hotel reads that we serve it.
+
+**D45 — 2026-09-15 (conversation 7) — The customer types the hotel address on `/book` itself.**
+**[operator]**, choosing it over the cheaper alternative the reviewer offered (show the option, ask
+for the address only when the booking form exists). Reason he gave: the booking form of leva 03b
+should be born already filled. `/book` is a GET whose state is the query string and persists nothing,
+so the address travels in the URL and is stored nowhere until 03b writes a booking. The field is
+always visible, because the public site has no JavaScript and this does not introduce any; the server
+refuses a blank address only for the options that ask for one — the same rule the staff screen has
+had since leva 03.
