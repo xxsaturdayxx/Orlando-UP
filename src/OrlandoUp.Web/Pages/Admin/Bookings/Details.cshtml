@@ -12,7 +12,7 @@
 
         @if (Model.Flash is string flash)
         {
-            <p role="status">@L[flash]</p>
+            <p role="status">@(Model.FlashArgument is string argument ? L[flash, argument] : L[flash])</p>
         }
 
         @if (Model.Error is string error)

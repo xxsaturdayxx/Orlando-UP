@@ -2026,6 +2026,13 @@ public class BookingScreenTests : IAsyncLifetime
         // Absence, and it is what gives the presence its meaning: a booking never reaches the
         // administration's trail.
         Assert.Equal(0, await db.AuditEntries.CountAsync(row => row.EntityType == nameof(Booking)));
+
+        // The redirect lands on a page that names the number. The conferência caught "Booking {0}
+        // created." — the key printed without its argument — so the raw marker is asserted absent.
+        string details = await staff.GetStringAsync(response.Headers.Location);
+
+        Assert.Contains($"<p role=\"status\">Booking {booking.Number} created.</p>", details, StringComparison.Ordinal);
+        Assert.DoesNotContain("{0}", details, StringComparison.Ordinal);
     }
 
     [Fact]

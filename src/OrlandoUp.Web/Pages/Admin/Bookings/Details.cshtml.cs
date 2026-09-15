@@ -40,6 +40,9 @@ public class DetailsModel : PageModel
 
     public string? Flash { get; private set; }
 
+    /// <summary>The value the flash key's <c>{0}</c> stands for — the number, after a create.</summary>
+    public string? FlashArgument { get; private set; }
+
     public string? Error { get; private set; }
 
     public async Task<IActionResult> OnGetAsync(int id, CancellationToken cancellationToken)
@@ -50,6 +53,7 @@ public class DetailsModel : PageModel
         }
 
         Flash = TempData["Flash"] as string;
+        FlashArgument = TempData["FlashArgument"] as string;
 
         return Page();
     }
